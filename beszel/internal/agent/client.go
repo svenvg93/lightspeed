@@ -232,10 +232,8 @@ func (client *WebSocketClient) handleHubRequest(msg *common.HubRequest[cbor.RawM
 		return client.sendSystemData()
 	case common.CheckFingerprint:
 		return client.handleAuthChallenge(msg)
-	case common.UpdatePingConfig:
-		return client.handlePingConfigUpdate(msg)
-	case common.UpdateDnsConfig:
-		return client.handleDnsConfigUpdate(msg)
+	case common.UpdateMonitoringConfig:
+		return client.handleMonitoringConfigUpdate(msg)
 	}
 	return nil
 }
@@ -246,41 +244,49 @@ func (client *WebSocketClient) sendSystemData() error {
 	return client.sendMessage(sysStats)
 }
 
-// PingConfigUpdate represents the ping configuration update from hub
-type PingConfigUpdate struct {
-	Targets  []system.PingTarget `json:"targets"`
-	Interval string              `json:"interval"` // Cron expression (e.g., "*/30 * * * * *" for every 30 seconds)
-}
-
-// handlePingConfigUpdate processes ping configuration updates from the hub.
-func (client *WebSocketClient) handlePingConfigUpdate(msg *common.HubRequest[cbor.RawMessage]) error {
-	var config PingConfigUpdate
+// handleMonitoringConfigUpdate processes unified monitoring configuration updates from the hub.
+func (client *WebSocketClient) handleMonitoringConfigUpdate(msg *common.HubRequest[cbor.RawMessage]) error {
+	var config system.MonitoringConfig
 	if err := cbor.Unmarshal(msg.Data, &config); err != nil {
 		return err
 	}
 
-	// Use cron expression directly
-	slog.Debug("Received ping config update", "targets", len(config.Targets))
-	client.agent.UpdatePingConfig(config.Targets, config.Interval)
-	return nil
-}
+	slog.Debug("Received unified monitoring config update",
+		"ping_enabled", config.Enabled.Ping,
+		"dns_enabled", config.Enabled.Dns,
+		"ping_targets", len(config.Ping.Targets),
+		"dns_targets", len(config.Dns.Targets))
 
-// DnsConfigUpdate represents the DNS configuration update from hub
-type DnsConfigUpdate struct {
-	Targets  []system.DnsTarget `json:"targets"`
-	Interval string             `json:"interval"` // Cron expression (e.g., "*/30 * * * * *" for every 30 seconds)
-}
-
-// handleDnsConfigUpdate processes DNS configuration updates from the hub.
-func (client *WebSocketClient) handleDnsConfigUpdate(msg *common.HubRequest[cbor.RawMessage]) error {
-	var config DnsConfigUpdate
-	if err := cbor.Unmarshal(msg.Data, &config); err != nil {
-		return err
+	// Update ping configuration if enabled
+	if config.Enabled.Ping && len(config.Ping.Targets) > 0 {
+		interval := config.Ping.Interval
+		if interval == "" {
+			interval = config.GlobalInterval
+		}
+		if interval == "" {
+			interval = "*/3 * * * *" // Default fallback
+		}
+		client.agent.UpdatePingConfig(config.Ping.Targets, interval)
+	} else {
+		// Disable ping if not enabled or no targets
+		client.agent.UpdatePingConfig([]system.PingTarget{}, "")
 	}
 
-	// Use cron expression directly
-	slog.Debug("Received DNS config update", "targets", len(config.Targets))
-	client.agent.UpdateDnsConfig(config.Targets, config.Interval)
+	// Update DNS configuration if enabled
+	if config.Enabled.Dns && len(config.Dns.Targets) > 0 {
+		interval := config.Dns.Interval
+		if interval == "" {
+			interval = config.GlobalInterval
+		}
+		if interval == "" {
+			interval = "*/5 * * * *" // Default fallback
+		}
+		client.agent.UpdateDnsConfig(config.Dns.Targets, interval)
+	} else {
+		// Disable DNS if not enabled or no targets
+		client.agent.UpdateDnsConfig([]system.DnsTarget{}, "")
+	}
+
 	return nil
 }
 

@@ -141,18 +141,10 @@ func (ws *WsConn) RequestSystemData(data *system.CombinedData) error {
 	return cbor.Unmarshal(message.Data.Bytes(), data)
 }
 
-// SendPingConfig sends ping configuration to the agent.
-func (ws *WsConn) SendPingConfig(config interface{}) error {
+// SendMonitoringConfig sends unified monitoring configuration to the agent.
+func (ws *WsConn) SendMonitoringConfig(config interface{}) error {
 	return ws.sendMessage(common.HubRequest[any]{
-		Action: common.UpdatePingConfig,
-		Data:   config,
-	})
-}
-
-// SendDnsConfig sends DNS configuration to the agent.
-func (ws *WsConn) SendDnsConfig(config interface{}) error {
-	return ws.sendMessage(common.HubRequest[any]{
-		Action: common.UpdateDnsConfig,
+		Action: common.UpdateMonitoringConfig,
 		Data:   config,
 	})
 }

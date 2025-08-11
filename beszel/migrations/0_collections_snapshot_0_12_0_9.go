@@ -513,19 +513,9 @@ func init() {
 			},
 			{
 				"hidden": false,
-				"id": "ping_config",
+				"id": "monitoring_config",
 				"maxSize": 2000000,
-				"name": "ping_config",
-				"presentable": false,
-				"required": false,
-				"system": false,
-				"type": "json"
-			},
-			{
-				"hidden": false,
-				"id": "dns_config",
-				"maxSize": 2000000,
-				"name": "dns_config",
+				"name": "monitoring_config",
 				"presentable": false,
 				"required": false,
 				"system": false,

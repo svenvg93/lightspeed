@@ -30,29 +30,7 @@ export interface SystemRecord extends RecordModel {
 	info: SystemInfo
 	v: string
 	
-	// Legacy separate configs (for backward compatibility)
-	ping_config?: {
-		targets: {
-			host: string
-			friendly_name?: string
-			count: number
-			timeout: number
-		}[]
-		interval: string | number // Cron expression or seconds for all ping tests
-	}
-	dns_config?: {
-		targets: {
-			domain: string
-			server: string
-			type: string
-			timeout: number
-			friendly_name?: string
-			protocol?: "udp" | "tcp" | "doh" | "dot" // DNS protocol to use
-		}[]
-		interval: string | number // Cron expression or seconds for all DNS tests
-	}
-	
-	// New unified monitoring configuration
+	// Unified monitoring configuration
 	monitoring_config?: {
 		enabled: {
 			ping: boolean
@@ -120,6 +98,10 @@ export interface SystemInfo {
 	ap?: number
 	/** average DNS lookup time across all targets (ms) */
 	ad?: number
+	/** average HTTP response time across all targets (ms) */
+	ah?: number
+	/** average speedtest download speed across all targets (Mbps) */
+	as?: number
 }
 
 
@@ -205,6 +187,27 @@ export interface DnsStatsRecord extends RecordModel {
 	created: string | number
 }
 
+export interface HttpStatsRecord extends RecordModel {
+	system: string
+	url: string
+	status: string
+	response_time: number
+	status_code: number
+	error_code: string
+	created: string | number
+}
+
+export interface SpeedtestStatsRecord extends RecordModel {
+	system: string
+	server_url: string
+	status: string
+	download_speed: number
+	upload_speed: number
+	latency: number
+	error_code: string
+	created: string | number
+}
+
 type ChartDataPing = {
 	created: number | null
 } & {
@@ -230,12 +233,39 @@ type ChartDataDns = {
 	} | null // Allow null for gap data points
 }
 
+type ChartDataHttp = {
+	created: number | null
+} & {
+	[key: string]: key extends "created" ? never : {
+		url: string
+		status: string
+		response_time: number
+		status_code: number
+		error_code: string
+	} | null // Allow null for gap data points
+}
+
+type ChartDataSpeedtest = {
+	created: number | null
+} & {
+	[key: string]: key extends "created" ? never : {
+		server_url: string
+		status: string
+		download_speed: number
+		upload_speed: number
+		latency: number
+		error_code: string
+	} | null // Allow null for gap data points
+}
+
 export interface ChartData {
 	agentVersion: SemVer
 	systemStats: SystemStatsRecord[]
 	containerData: ChartDataContainer[]
 	pingData?: ChartDataPing[] // Made optional since it's only used for ping charts
 	dnsData?: ChartDataDns[] // Made optional since it's only used for DNS charts
+	httpData?: ChartDataHttp[] // Made optional since it's only used for HTTP charts
+	speedtestData?: ChartDataSpeedtest[] // Made optional since it's only used for speedtest charts
 	orientation: "right" | "left"
 	ticks: number[]
 	domain: number[]

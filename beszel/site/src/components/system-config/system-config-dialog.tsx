@@ -28,11 +28,6 @@ interface PingTarget {
 	timeout: number
 }
 
-interface PingConfig {
-	targets: PingTarget[]
-	interval: string
-}
-
 interface DnsTarget {
 	domain: string
 	server: string
@@ -42,9 +37,30 @@ interface DnsTarget {
 	protocol?: "udp" | "tcp" | "doh" | "dot"
 }
 
-interface DnsConfig {
-	targets: DnsTarget[]
-	interval: string
+interface MonitoringConfig {
+	enabled: {
+		ping: boolean
+		dns: boolean
+		http?: boolean
+		speedtest?: boolean
+	}
+	global_interval?: string
+	ping?: {
+		targets: PingTarget[]
+		interval?: string
+	}
+	dns?: {
+		targets: DnsTarget[]
+		interval?: string
+	}
+	http?: {
+		targets: any[]
+		interval?: string
+	}
+	speedtest?: {
+		targets: any[]
+		interval?: string
+	}
 }
 
 const DNS_TYPES = [
@@ -66,20 +82,20 @@ const DNS_PROTOCOLS = [
 ]
 
 function PingConfigTab({ system }: { system: SystemRecord }): JSX.Element {
-	const [pingConfig, setPingConfig] = useState<PingConfig>({ targets: [], interval: "*/3 * * * *" })
+	const [pingConfig, setPingConfig] = useState<{ targets: PingTarget[], interval: string }>({ targets: [], interval: "*/3 * * * *" })
 	const [isLoading, setIsLoading] = useState(false)
 
-	// Load existing ping config
+	// Load existing ping config from unified monitoring_config
 	useEffect(() => {
-		if (system.ping_config && Array.isArray(system.ping_config.targets)) {
+		if (system.monitoring_config?.ping && Array.isArray(system.monitoring_config.ping.targets)) {
 			setPingConfig({
-				targets: system.ping_config.targets,
-				interval: String(system.ping_config.interval || "*/3 * * * *")
+				targets: system.monitoring_config.ping.targets,
+				interval: String(system.monitoring_config.ping.interval || system.monitoring_config.global_interval || "*/3 * * * *")
 			})
 		} else {
 			setPingConfig({ targets: [], interval: "*/3 * * * *" })
 		}
-	}, [system.ping_config])
+	}, [system.monitoring_config])
 
 	const addTarget = () => {
 		setPingConfig(prev => ({
@@ -156,19 +172,45 @@ function PingConfigTab({ system }: { system: SystemRecord }): JSX.Element {
 				target.timeout > 0
 			)
 
+			// Allow empty configurations to disable monitoring
 			if (validTargets.length === 0) {
-				toast({
-					title: t`No Valid Targets`,
-					description: t`Please add at least one valid ping target.`,
-					variant: "destructive"
+				// Get existing monitoring config or create new one
+				const existingConfig = system.monitoring_config || { 
+					enabled: { ping: false, dns: false }
+				}
+				
+				await pb.collection("systems").update(system.id, {
+					monitoring_config: {
+						...existingConfig,
+						enabled: { ...existingConfig.enabled, ping: false },
+						ping: {
+							targets: [],
+							interval: pingConfig.interval
+						}
+					}
 				})
+
+				toast({
+					title: t`Ping Configuration Saved`,
+					description: t`Ping monitoring has been disabled.`,
+				})
+				setIsLoading(false)
 				return
 			}
 
+			// Get existing monitoring config or create new one
+			const existingConfig = system.monitoring_config || { 
+				enabled: { ping: false, dns: false }
+			}
+			
 			await pb.collection("systems").update(system.id, {
-				ping_config: {
-					targets: validTargets,
-					interval: pingConfig.interval
+				monitoring_config: {
+					...existingConfig,
+					enabled: { ...existingConfig.enabled, ping: true },
+					ping: {
+						targets: validTargets,
+						interval: pingConfig.interval
+					}
 				}
 			})
 
@@ -325,20 +367,20 @@ function PingConfigTab({ system }: { system: SystemRecord }): JSX.Element {
 }
 
 function DnsConfigTab({ system }: { system: SystemRecord }): JSX.Element {
-	const [dnsConfig, setDnsConfig] = useState<DnsConfig>({ targets: [], interval: "*/5 * * * *" })
+	const [dnsConfig, setDnsConfig] = useState<{ targets: DnsTarget[], interval: string }>({ targets: [], interval: "*/5 * * * *" })
 	const [isLoading, setIsLoading] = useState(false)
 
-	// Load existing DNS config
+	// Load existing DNS config from unified monitoring_config
 	useEffect(() => {
-		if (system.dns_config && Array.isArray(system.dns_config.targets)) {
+		if (system.monitoring_config?.dns && Array.isArray(system.monitoring_config.dns.targets)) {
 			setDnsConfig({
-				targets: system.dns_config.targets,
-				interval: String(system.dns_config.interval || "*/5 * * * *")
+				targets: system.monitoring_config.dns.targets,
+				interval: String(system.monitoring_config.dns.interval || system.monitoring_config.global_interval || "*/5 * * * *")
 			})
 		} else {
 			setDnsConfig({ targets: [], interval: "*/5 * * * *" })
 		}
-	}, [system.dns_config])
+	}, [system.monitoring_config])
 
 	const addTarget = () => {
 		setDnsConfig(prev => ({
@@ -440,19 +482,45 @@ function DnsConfigTab({ system }: { system: SystemRecord }): JSX.Element {
 				target.timeout > 0
 			)
 
+			// Allow empty configurations to disable monitoring
 			if (validTargets.length === 0) {
-				toast({
-					title: t`No Valid Targets`,
-					description: t`Please add at least one valid DNS target.`,
-					variant: "destructive"
+				// Get existing monitoring config or create new one
+				const existingConfig = system.monitoring_config || { 
+					enabled: { ping: false, dns: false }
+				}
+				
+				await pb.collection("systems").update(system.id, {
+					monitoring_config: {
+						...existingConfig,
+						enabled: { ...existingConfig.enabled, dns: false },
+						dns: {
+							targets: [],
+							interval: dnsConfig.interval
+						}
+					}
 				})
+
+				toast({
+					title: t`DNS Configuration Saved`,
+					description: t`DNS monitoring has been disabled.`,
+				})
+				setIsLoading(false)
 				return
 			}
 
+			// Get existing monitoring config or create new one
+			const existingConfig = system.monitoring_config || { 
+				enabled: { ping: false, dns: false }
+			}
+			
 			await pb.collection("systems").update(system.id, {
-				dns_config: {
-					targets: validTargets,
-					interval: dnsConfig.interval
+				monitoring_config: {
+					...existingConfig,
+					enabled: { ...existingConfig.enabled, dns: true },
+					dns: {
+						targets: validTargets,
+						interval: dnsConfig.interval
+					}
 				}
 			})
 

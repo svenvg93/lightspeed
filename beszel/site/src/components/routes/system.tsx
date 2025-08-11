@@ -143,17 +143,17 @@ export default function SystemDetail({ name }: { name: string }) {
 		const pingData: any[] = []
 		let prevTimestamp = 0
 		
-		// Get the user-defined ping interval from the system configuration
+		// Get the user-defined ping interval from the unified monitoring configuration
 		let expectedInterval = 3 * 60 * 1000 // Default fallback: 3 minutes
-		if (system.ping_config?.interval) {
-			if (typeof system.ping_config.interval === 'string') {
-				const userInterval = parseCronInterval(system.ping_config.interval)
-				if (userInterval) {
-					expectedInterval = userInterval
-				}
-			} else if (typeof system.ping_config.interval === 'number') {
-				// Handle legacy format where interval was stored as seconds
-				expectedInterval = system.ping_config.interval * 1000
+		if (system.monitoring_config?.ping?.interval) {
+			const userInterval = parseCronInterval(String(system.monitoring_config.ping.interval))
+			if (userInterval) {
+				expectedInterval = userInterval
+			}
+		} else if (system.monitoring_config?.global_interval) {
+			const userInterval = parseCronInterval(String(system.monitoring_config.global_interval))
+			if (userInterval) {
+				expectedInterval = userInterval
 			}
 		}
 		
@@ -212,17 +212,17 @@ export default function SystemDetail({ name }: { name: string }) {
 			// Group DNS records by timestamp
 			let prevDnsTimestamp = 0
 			
-			// Get the user-defined DNS interval from the system configuration
+			// Get the user-defined DNS interval from the unified monitoring configuration
 			let dnsExpectedInterval = 5 * 60 * 1000 // Default fallback: 5 minutes
-			if (system.dns_config?.interval) {
-				if (typeof system.dns_config.interval === 'string') {
-					const userInterval = parseCronInterval(system.dns_config.interval)
-					if (userInterval) {
-						dnsExpectedInterval = userInterval
-					}
-				} else if (typeof system.dns_config.interval === 'number') {
-					// Handle legacy format where interval was stored as seconds
-					dnsExpectedInterval = system.dns_config.interval * 1000
+			if (system.monitoring_config?.dns?.interval) {
+				const userInterval = parseCronInterval(String(system.monitoring_config.dns.interval))
+				if (userInterval) {
+					dnsExpectedInterval = userInterval
+				}
+			} else if (system.monitoring_config?.global_interval) {
+				const userInterval = parseCronInterval(String(system.monitoring_config.global_interval))
+				if (userInterval) {
+					dnsExpectedInterval = userInterval
 				}
 			}
 			
@@ -307,8 +307,8 @@ export default function SystemDetail({ name }: { name: string }) {
 		
 		// Create a map of host to friendly name from ping config
 		const hostToFriendlyName = new Map<string, string>()
-		if (system.ping_config?.targets) {
-			system.ping_config.targets.forEach(target => {
+		if (system.monitoring_config?.ping?.targets) {
+			system.monitoring_config.ping.targets.forEach((target: any) => {
 				if (target.friendly_name && target.friendly_name.trim()) {
 					hostToFriendlyName.set(target.host, target.friendly_name.trim())
 				}
@@ -319,14 +319,14 @@ export default function SystemDetail({ name }: { name: string }) {
 			host,
 			friendlyName: hostToFriendlyName.get(host) || host
 		}))
-	}, [pingStats, system.ping_config])
+	}, [pingStats, system.monitoring_config])
 
 	// Get unique DNS targets from DNS stats with friendly names
 	const dnsTargets = useMemo(() => {
 		// Start with DNS config targets to ensure we have friendly names
 		const configTargets = new Map<string, string>()
-		if (system.dns_config?.targets) {
-			system.dns_config.targets.forEach(target => {
+		if (system.monitoring_config?.dns?.targets) {
+			system.monitoring_config.dns.targets.forEach(target => {
 				// Handle empty type field - if type is empty, don't include it in the key
 				const typePart = target.type && target.type.trim() ? target.type : ''
 				const protocol = target.protocol || 'udp'
@@ -390,7 +390,7 @@ export default function SystemDetail({ name }: { name: string }) {
 				}
 			}
 		})
-	}, [dnsStats, system.dns_config])
+	}, [dnsStats, system.monitoring_config])
 
 	// values for system info bar
 	const systemInfo = useMemo(() => {
@@ -611,9 +611,9 @@ export default function SystemDetail({ name }: { name: string }) {
 									
 									// Get protocol from DNS config for this target
 									let protocol = 'UDP'
-									if (system.dns_config?.targets) {
+									if (system.monitoring_config?.dns?.targets) {
 										// Try to find the target by matching domain, server, and type
-										const target = system.dns_config.targets.find(t => {
+										const target = system.monitoring_config.dns.targets.find((t: any) => {
 											const configTypePart = t.type && t.type.trim() ? t.type : ''
 											const configKey = `${t.domain}@${t.server}#${configTypePart}`
 											return configKey === key
@@ -623,7 +623,7 @@ export default function SystemDetail({ name }: { name: string }) {
 											protocol = target.protocol.toUpperCase()
 										} else {
 											// Fallback: try to find by domain and server only
-											const fallbackTarget = system.dns_config.targets.find(t => 
+											const fallbackTarget = system.monitoring_config.dns.targets.find((t: any) => 
 												t.domain === domainPart && t.server === server
 											)
 											if (fallbackTarget?.protocol) {

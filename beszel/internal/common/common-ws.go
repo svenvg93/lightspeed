@@ -10,10 +10,8 @@ const (
 	GetData WebSocketAction = iota
 	// Check the fingerprint of the agent
 	CheckFingerprint
-	// Send ping configuration to agent
-	UpdatePingConfig
-	// Send DNS configuration to agent
-	UpdateDnsConfig
+	// Send unified monitoring configuration to agent
+	UpdateMonitoringConfig
 )
 
 // HubRequest defines the structure for requests sent from hub to agent.
