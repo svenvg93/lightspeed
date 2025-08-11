@@ -5,7 +5,7 @@ import {
 	pb,
 	$chartTime,
 } from "@/lib/stores"
-import { SystemRecord, PingStatsRecord, ChartData, ChartTimes } from "@/types"
+import { SystemRecord, PingStatsRecord, DnsStatsRecord, ChartData, ChartTimes } from "@/types"
 import React, { lazy, useEffect, useMemo, useState } from "react"
 import { Card, CardHeader, CardTitle, CardDescription } from "../ui/card"
 import { useStore } from "@nanostores/react"
@@ -29,8 +29,11 @@ import Spinner from "../spinner"
 import { useIntersectionObserver } from "@/lib/use-intersection-observer"
 import ChartTimeSelect from "../charts/chart-time-select"
 import { Button } from "../ui/button"
+import { SystemConfigDialog } from "../system-config/system-config-dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 
 const PingChart = lazy(() => import("../charts/ping-chart"))
+const DnsChart = lazy(() => import("../charts/dns-chart"))
 
 // Helper function to get default tick count for chart time periods
 function getDefaultTickCount(chartTime: ChartTimes): number {
@@ -51,6 +54,7 @@ export default function SystemDetail({ name }: { name: string }) {
 	const [grid, setGrid] = useLocalStorage("grid", true)
 	const [system, setSystem] = useState({} as SystemRecord)
 	const [pingStats, setPingStats] = useState([] as PingStatsRecord[])
+	const [dnsStats, setDnsStats] = useState([] as DnsStatsRecord[])
 	const [chartLoading, setChartLoading] = useState(true)
 
 	useEffect(() => {
@@ -101,6 +105,26 @@ export default function SystemDetail({ name }: { name: string }) {
 		}).catch((error) => {
 			console.error("Error fetching ping stats:", error)
 			setChartLoading(false)
+		})
+	}, [system.id, chartTime])
+
+	// Fetch DNS stats
+	useEffect(() => {
+		if (!system.id || !chartTime) {
+			return
+		}
+		
+		pb.collection<DnsStatsRecord>("dns_stats").getFullList({
+			filter: pb.filter("system={:id} && created > {:created}", {
+				id: system.id,
+				created: getPbTimestamp(chartTime, undefined),
+			}),
+			fields: "domain,server,type,status,lookup_time,error_code,created",
+			sort: "created",
+		}).then((records) => {
+			setDnsStats(records)
+		}).catch((error) => {
+			console.error("Failed to fetch DNS stats:", error)
 		})
 	}, [system.id, chartTime])
 
@@ -168,6 +192,82 @@ export default function SystemDetail({ name }: { name: string }) {
 			prevTimestamp = timestamp
 		})
 
+		// Process DNS data
+		const dnsData: any[] = []
+		if (dnsStats.length > 0) {
+			// Get all unique DNS targets
+			const allDnsTargets = new Set<string>()
+			dnsStats.forEach(record => {
+				// Handle empty type field - if type is empty, don't include it in the key
+				const typePart = record.type && record.type.trim() ? record.type : ''
+				const key = `${record.domain}@${record.server}#${typePart}`
+				allDnsTargets.add(key)
+			})
+			
+			// Sort DNS records by timestamp
+			const sortedDnsRecords = [...dnsStats].sort((a, b) => 
+				new Date(a.created).getTime() - new Date(b.created).getTime()
+			)
+			
+			// Group DNS records by timestamp
+			let prevDnsTimestamp = 0
+			
+			// Get the user-defined DNS interval from the system configuration
+			let dnsExpectedInterval = 5 * 60 * 1000 // Default fallback: 5 minutes
+			if (system.dns_config?.interval) {
+				if (typeof system.dns_config.interval === 'string') {
+					const userInterval = parseCronInterval(system.dns_config.interval)
+					if (userInterval) {
+						dnsExpectedInterval = userInterval
+					}
+				} else if (typeof system.dns_config.interval === 'number') {
+					// Handle legacy format where interval was stored as seconds
+					dnsExpectedInterval = system.dns_config.interval * 1000
+				}
+			}
+			
+
+			
+			sortedDnsRecords.forEach(record => {
+				const timestamp = new Date(record.created).getTime()
+				// Handle empty type field - if type is empty, don't include it in the key
+				const typePart = record.type && record.type.trim() ? record.type : ''
+				const key = `${record.domain}@${record.server}#${typePart}`
+				
+				// Add gap if interval is too large
+				const timeDiff = timestamp - prevDnsTimestamp
+				if (prevDnsTimestamp && timeDiff > dnsExpectedInterval * 2) {
+					const gapDataPoint: any = { created: null }
+					allDnsTargets.forEach(targetKey => {
+						gapDataPoint[targetKey] = null
+					})
+					dnsData.push(gapDataPoint)
+				}
+				
+				// Find or create data point for this timestamp
+				let dataPoint = dnsData.find(dp => dp.created === timestamp)
+				if (!dataPoint) {
+					dataPoint = { created: timestamp }
+					allDnsTargets.forEach(targetKey => {
+						dataPoint[targetKey] = null
+					})
+					dnsData.push(dataPoint)
+				}
+				
+				// Add the actual DNS data for this target
+				dataPoint[key] = {
+					domain: record.domain,
+					server: record.server,
+					type: record.type,
+					status: record.status,
+					lookup_time: record.lookup_time,
+					error_code: record.error_code,
+				}
+				
+				prevDnsTimestamp = timestamp
+			})
+		}
+
 		// Calculate time domain and ticks
 		const now = new Date()
 		const startTime = chartTimeData[chartTime].getOffset(now)
@@ -181,6 +281,7 @@ export default function SystemDetail({ name }: { name: string }) {
 
 		const result: ChartData = {
 			pingData,
+			dnsData,
 			systemStats: [],
 			containerData: [],
 			orientation: "left" as const,
@@ -190,8 +291,14 @@ export default function SystemDetail({ name }: { name: string }) {
 			agentVersion: { major: 0, minor: 0, patch: 0 },
 		}
 		
+		// Debug: Check if gap data points are in the final DNS data
+		const gapPoints = dnsData.filter(dp => dp.created === null)
+		if (gapPoints.length > 0) {
+			console.log('🔍 Debug DNS Gaps - Final data contains', gapPoints.length, 'gap points')
+		}
+		
 		return result
-	}, [pingStats, chartTime])
+	}, [pingStats, dnsStats, chartTime])
 
 	// Get unique hosts with friendly names from ping stats and config
 	const pingHosts = useMemo(() => {
@@ -213,6 +320,77 @@ export default function SystemDetail({ name }: { name: string }) {
 			friendlyName: hostToFriendlyName.get(host) || host
 		}))
 	}, [pingStats, system.ping_config])
+
+	// Get unique DNS targets from DNS stats with friendly names
+	const dnsTargets = useMemo(() => {
+		// Start with DNS config targets to ensure we have friendly names
+		const configTargets = new Map<string, string>()
+		if (system.dns_config?.targets) {
+			system.dns_config.targets.forEach(target => {
+				// Handle empty type field - if type is empty, don't include it in the key
+				const typePart = target.type && target.type.trim() ? target.type : ''
+				const protocol = target.protocol || 'udp'
+				const key = `${target.domain}@${target.server}#${typePart}`
+				const friendlyName = target.friendly_name && target.friendly_name.trim() ? 
+					target.friendly_name.trim() : 
+					`${target.domain} @ ${target.server} (${typePart})`
+				configTargets.set(key, friendlyName)
+			})
+		}
+		
+		// Add any additional targets from DNS stats that aren't in config
+		const targets = new Set<string>()
+		dnsStats.forEach(record => {
+			// Handle empty type field - if type is empty, don't include it in the key
+			const typePart = record.type && record.type.trim() ? record.type : ''
+			const key = `${record.domain}@${record.server}#${typePart}`
+			targets.add(key)
+		})
+		
+		return Array.from(targets).map(key => {
+			// Try exact match first
+			let friendlyName = configTargets.get(key)
+			
+			// If no exact match, try matching without type (for cases where stats have empty type)
+			if (!friendlyName) {
+				const [domainPart, rest] = key.split('@')
+				const [server, type] = rest.split('#')
+				
+				// Try matching with different type variations
+				const variations = [
+					`${domainPart}@${server}#A`,  // Try with A type
+					`${domainPart}@${server}#`,   // Try with empty type
+					`${domainPart}@${server}#AAAA`, // Try with AAAA type
+					`${domainPart}@${server}#CNAME`, // Try with CNAME type
+				]
+				
+				for (const variation of variations) {
+					friendlyName = configTargets.get(variation)
+					if (friendlyName) {
+						break
+					}
+				}
+			}
+			
+			if (friendlyName) {
+				return {
+					key,
+					friendlyName: friendlyName
+				}
+			} else {
+				// Parse the key to extract domain, server, and type for fallback
+				const [domainPart, rest] = key.split('@')
+				const [server, type] = rest.split('#')
+				const fallbackName = type && type.trim() ? 
+					`${domainPart} @ ${server} (${type})` : 
+					`${domainPart} @ ${server}`
+				return {
+					key,
+					friendlyName: fallbackName
+				}
+			}
+		})
+	}, [dnsStats, system.dns_config])
 
 	// values for system info bar
 	const systemInfo = useMemo(() => {
@@ -360,6 +538,7 @@ export default function SystemDetail({ name }: { name: string }) {
 						</div>
 					</div>
 					<div className="xl:ms-auto flex items-center gap-2 max-sm:-mb-1">
+						<SystemConfigDialog system={system} />
 						<ChartTimeSelect className="w-full xl:w-40" />
 						<TooltipProvider delayDuration={100}>
 							<Tooltip>
@@ -385,26 +564,102 @@ export default function SystemDetail({ name }: { name: string }) {
 				</div>
 			</Card>
 
-			{/* Ping Charts */}
-			{pingHosts.length > 0 ? (
-				<div className="grid xl:grid-cols-2 gap-4">
-					{pingHosts.map(({ host, friendlyName }) => (
-						<ChartCard
-							key={host}
-							grid={grid}
-							empty={chartLoading || pingStats.length === 0}
-							title={`${t`Ping`} ${friendlyName}`}
-							description={t`Response time to ${host}`}
-						>
-							<PingChart chartData={chartData} host={host} />
-						</ChartCard>
-					))}
-				</div>
+			{/* Charts with Tabs */}
+			{(pingHosts.length > 0 || dnsTargets.length > 0) ? (
+				<Tabs defaultValue="ping" className="w-full">
+					<TabsList className="grid w-full grid-cols-2">
+						<TabsTrigger value="ping" disabled={pingHosts.length === 0}>
+							{t`Ping`}
+						</TabsTrigger>
+						<TabsTrigger value="dns" disabled={dnsTargets.length === 0}>
+							{t`DNS`}
+						</TabsTrigger>
+					</TabsList>
+					
+					<TabsContent value="ping" className="mt-6">
+						{pingHosts.length > 0 ? (
+							<div className="grid xl:grid-cols-2 gap-4">
+								{pingHosts.map(({ host, friendlyName }) => (
+									<ChartCard
+										key={host}
+										grid={grid}
+										empty={chartLoading || pingStats.length === 0}
+										title={`${friendlyName}`}
+										description={t`Response time to ${host}`}
+									>
+										<PingChart chartData={chartData} host={host} />
+									</ChartCard>
+								))}
+							</div>
+						) : (
+							<Card>
+								<CardHeader>
+									<CardTitle>{t`Ping Monitoring`}</CardTitle>
+									<CardDescription>{t`No ping targets configured for this system`}</CardDescription>
+								</CardHeader>
+							</Card>
+						)}
+					</TabsContent>
+					
+					<TabsContent value="dns" className="mt-6">
+						{dnsTargets.length > 0 ? (
+							<div className="grid xl:grid-cols-2 gap-4">
+								{dnsTargets.map(({ key, friendlyName }) => {
+									// Parse the key to extract domain and server for description
+									const [domainPart, rest] = key.split('@')
+									const [server] = rest.split('#')
+									
+									// Get protocol from DNS config for this target
+									let protocol = 'UDP'
+									if (system.dns_config?.targets) {
+										// Try to find the target by matching domain, server, and type
+										const target = system.dns_config.targets.find(t => {
+											const configTypePart = t.type && t.type.trim() ? t.type : ''
+											const configKey = `${t.domain}@${t.server}#${configTypePart}`
+											return configKey === key
+										})
+										
+										if (target?.protocol) {
+											protocol = target.protocol.toUpperCase()
+										} else {
+											// Fallback: try to find by domain and server only
+											const fallbackTarget = system.dns_config.targets.find(t => 
+												t.domain === domainPart && t.server === server
+											)
+											if (fallbackTarget?.protocol) {
+												protocol = fallbackTarget.protocol.toUpperCase()
+											}
+										}
+									}
+									
+									return (
+										<ChartCard
+											key={key}
+											grid={grid}
+											empty={chartLoading || dnsStats.length === 0}
+											title={friendlyName}
+											description={t`DNS lookup performance for ${domainPart} @ ${server} (${protocol})`}
+										>
+											<DnsChart chartData={chartData} targetKey={key} />
+										</ChartCard>
+									)
+								})}
+							</div>
+						) : (
+							<Card>
+								<CardHeader>
+									<CardTitle>{t`DNS Monitoring`}</CardTitle>
+									<CardDescription>{t`No DNS targets configured for this system`}</CardDescription>
+								</CardHeader>
+							</Card>
+						)}
+					</TabsContent>
+				</Tabs>
 			) : !chartLoading && (
 				<Card>
 					<CardHeader>
-						<CardTitle>{t`Ping Monitoring`}</CardTitle>
-						<CardDescription>{t`No ping targets configured for this system`}</CardDescription>
+						<CardTitle>{t`Monitoring`}</CardTitle>
+						<CardDescription>{t`No monitoring targets configured for this system`}</CardDescription>
 					</CardHeader>
 				</Card>
 			)}

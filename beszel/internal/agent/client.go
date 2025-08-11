@@ -234,6 +234,8 @@ func (client *WebSocketClient) handleHubRequest(msg *common.HubRequest[cbor.RawM
 		return client.handleAuthChallenge(msg)
 	case common.UpdatePingConfig:
 		return client.handlePingConfigUpdate(msg)
+	case common.UpdateDnsConfig:
+		return client.handleDnsConfigUpdate(msg)
 	}
 	return nil
 }
@@ -260,6 +262,25 @@ func (client *WebSocketClient) handlePingConfigUpdate(msg *common.HubRequest[cbo
 	// Use cron expression directly
 	slog.Debug("Received ping config update", "targets", len(config.Targets))
 	client.agent.UpdatePingConfig(config.Targets, config.Interval)
+	return nil
+}
+
+// DnsConfigUpdate represents the DNS configuration update from hub
+type DnsConfigUpdate struct {
+	Targets  []system.DnsTarget `json:"targets"`
+	Interval string             `json:"interval"` // Cron expression (e.g., "*/30 * * * * *" for every 30 seconds)
+}
+
+// handleDnsConfigUpdate processes DNS configuration updates from the hub.
+func (client *WebSocketClient) handleDnsConfigUpdate(msg *common.HubRequest[cbor.RawMessage]) error {
+	var config DnsConfigUpdate
+	if err := cbor.Unmarshal(msg.Data, &config); err != nil {
+		return err
+	}
+
+	// Use cron expression directly
+	slog.Debug("Received DNS config update", "targets", len(config.Targets))
+	client.agent.UpdateDnsConfig(config.Targets, config.Interval)
 	return nil
 }
 

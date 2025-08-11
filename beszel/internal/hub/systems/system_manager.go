@@ -50,6 +50,8 @@ type hubLike interface {
 	GetSSHKey(dataDir string) (ssh.Signer, error)
 	HandleSystemAlerts(systemRecord *core.Record, data *system.CombinedData) error
 	HandleStatusAlerts(status string, systemRecord *core.Record) error
+	SendPingConfigToAgent(systemRecord *core.Record) error
+	SendDnsConfigToAgent(systemRecord *core.Record) error
 }
 
 // NewSystemManager creates a new SystemManager instance with the provided hub.
@@ -313,6 +315,23 @@ func (sm *SystemManager) AddWebSocketSystem(systemId string, agentVersion semver
 			}
 		} else {
 			sm.hub.Logger().Debug("Hub interface cast failed - ping config not available", "system", systemId)
+		}
+	}()
+
+	// Send DNS configuration to the newly connected agent (startup only)
+	go func() {
+		sm.hub.Logger().Debug("Sending DNS config to newly connected agent at startup", "system", systemId)
+		sm.hub.Logger().Debug("System record dns_config field", "system", systemId, "dns_config", systemRecord.Get("dns_config"))
+
+		if hubWithDns, ok := sm.hub.(interface{ SendDnsConfigToAgent(*core.Record) error }); ok {
+			sm.hub.Logger().Debug("Hub interface cast successful, sending DNS config", "system", systemId)
+			if err := hubWithDns.SendDnsConfigToAgent(systemRecord); err != nil {
+				sm.hub.Logger().Error("Failed to send DNS config to newly connected agent", "system", systemId, "err", err)
+			} else {
+				sm.hub.Logger().Debug("Successfully sent DNS config to newly connected agent", "system", systemId)
+			}
+		} else {
+			sm.hub.Logger().Debug("Hub interface cast failed - DNS config not available", "system", systemId)
 		}
 	}()
 

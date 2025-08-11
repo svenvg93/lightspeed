@@ -140,29 +140,66 @@ func (a *Agent) getSystemStats() system.Stats {
 		pingResults := a.pingManager.GetResults()
 		if pingResults != nil {
 			systemStats.PingResults = pingResults
+			slog.Debug("Ping results collected", "count", len(systemStats.PingResults))
 
-			// Calculate average ping across all ping results
+			// Calculate average ping across all successful ping results
 			var totalPing float64
-			var pingCount int
+			var successfulPings int
 			for _, result := range systemStats.PingResults {
 				if result.AvgRtt > 0 {
 					totalPing += result.AvgRtt
-					pingCount++
+					successfulPings++
 				}
 			}
 
-			if pingCount > 0 {
-				a.systemInfo.AvgPing = totalPing / float64(pingCount)
+			if successfulPings > 0 {
+				a.systemInfo.AvgPing = totalPing / float64(successfulPings)
+				slog.Debug("Average ping calculated", "ap", a.systemInfo.AvgPing, "successful_pings", successfulPings)
 			} else {
-				a.systemInfo.AvgPing = 0 // Reset to 0 if no ping results
+				a.systemInfo.AvgPing = 0 // Reset to 0 if no successful pings
 			}
 		} else {
-
+			slog.Debug("No ping results available - no tests have run recently")
 			a.systemInfo.AvgPing = 0 // Reset to 0 if no ping results
 		}
 	} else {
-
+		slog.Debug("No ping manager available")
 		a.systemInfo.AvgPing = 0 // Reset to 0 if no ping manager
+	}
+
+	// get DNS results if DNS manager is available
+	if a.dnsManager != nil {
+		dnsResults := a.dnsManager.GetResults()
+		if dnsResults != nil {
+			systemStats.DnsResults = dnsResults
+			slog.Debug("DNS results collected", "count", len(systemStats.DnsResults))
+			for key, result := range systemStats.DnsResults {
+				slog.Debug("DNS result", "key", key, "domain", result.Domain, "server", result.Server, "status", result.Status, "lookup_time", result.LookupTime)
+			}
+
+			// Calculate average DNS lookup time across all successful DNS results
+			var totalDns float64
+			var successfulDns int
+			for _, result := range systemStats.DnsResults {
+				if result.Status == "success" && result.LookupTime > 0 {
+					totalDns += result.LookupTime
+					successfulDns++
+				}
+			}
+
+			if successfulDns > 0 {
+				a.systemInfo.AvgDns = totalDns / float64(successfulDns)
+				slog.Debug("Average DNS lookup time calculated", "ad", a.systemInfo.AvgDns, "successful_dns", successfulDns)
+			} else {
+				a.systemInfo.AvgDns = 0 // Reset to 0 if no successful DNS lookups
+			}
+		} else {
+			slog.Debug("No DNS results available - no lookups have run recently")
+			a.systemInfo.AvgDns = 0 // Reset to 0 if no DNS results
+		}
+	} else {
+		slog.Debug("No DNS manager available")
+		a.systemInfo.AvgDns = 0 // Reset to 0 if no DNS manager
 	}
 
 	slog.Debug("sysinfo", "data", a.systemInfo)

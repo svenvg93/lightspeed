@@ -12,6 +12,8 @@ const (
 	CheckFingerprint
 	// Send ping configuration to agent
 	UpdatePingConfig
+	// Send DNS configuration to agent
+	UpdateDnsConfig
 )
 
 // HubRequest defines the structure for requests sent from hub to agent.

@@ -101,9 +101,23 @@ func (h *Hub) sendPingConfigToSystem(systemId string, config PingConfig) error {
 	return nil
 }
 
-// onSystemRecordUpdate handles system record updates to detect ping config changes
-// Note: We only send ping config at startup, not on every update
+// onSystemRecordUpdate handles system record updates to detect ping and DNS config changes
 func (h *Hub) onSystemRecordUpdate(e *core.RecordEvent) error {
+	h.Logger().Debug("System record update detected", "system", e.Record.Id)
+	
+	// Send ping configuration update
+	if err := h.SendPingConfigToAgent(e.Record); err != nil {
+		h.Logger().Error("Failed to send ping config update", "system", e.Record.Id, "err", err)
+	} else {
+		h.Logger().Debug("Successfully sent ping config update", "system", e.Record.Id)
+	}
+
+	// Send DNS configuration update
+	if err := h.SendDnsConfigToAgent(e.Record); err != nil {
+		h.Logger().Error("Failed to send DNS config update", "system", e.Record.Id, "err", err)
+	} else {
+		h.Logger().Debug("Successfully sent DNS config update", "system", e.Record.Id)
+	}
 
 	return e.Next()
 }

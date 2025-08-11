@@ -48,7 +48,7 @@ import { Input } from "../ui/input"
 import { getPagePath } from "@nanostores/router"
 import SystemsTableColumns, { ActionsButton, IndicatorDot } from "./systems-table-columns"
 import AlertButton from "../alerts/alert-button"
-import PingConfigButton from "../ping-config/ping-config-dialog"
+import { SystemConfigDialog } from "../system-config/system-config-dialog"
 
 type ViewMode = "table" | "grid"
 
@@ -347,7 +347,7 @@ const SystemCard = memo(
 							</CardTitle>
 							{table.getColumn("actions")?.getIsVisible() && (
 								<div className="flex gap-1 flex-shrink-0 relative z-10">
-									<PingConfigButton system={system} />
+									<SystemConfigDialog system={system} />
 									<AlertButton system={system} />
 									<ActionsButton system={system} />
 								</div>

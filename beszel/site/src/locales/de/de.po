@@ -33,28 +33,28 @@ msgstr "{0} von {1} Zeile(n) ausgewählt."
 #~ msgstr "{hours, plural, one {# Stunde} other {# Stunden}}"
 
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "• Count: Number of ping packets to send per test"
-msgstr ""
+#~ msgid "• Count: Number of ping packets to send per test"
+#~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "• Cron Expression: Schedule for ping tests"
-msgstr ""
+#~ msgid "• Cron Expression: Schedule for ping tests"
+#~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
 #~ msgid "• Cron Expression: Schedule for ping tests (6 fields: second minute hour day month weekday)"
 #~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "• Host: Domain name or IP address to ping"
-msgstr ""
+#~ msgid "• Host: Domain name or IP address to ping"
+#~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
 #~ msgid "• Interval: Seconds between ping tests"
 #~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "• Timeout: Maximum seconds to wait for response"
-msgstr ""
+#~ msgid "• Timeout: Maximum seconds to wait for response"
+#~ msgstr ""
 
 #: src/lib/utils.ts
 msgid "1 hour"
@@ -91,6 +91,10 @@ msgstr "30 Tage"
 #~ msgid "5 min"
 #~ msgstr "5 Min"
 
+#: src/components/ping-config/ping-config-dialog.tsx
+#~ msgid "5-field cron expression for ping scheduling (minute hour day month weekday)"
+#~ msgstr ""
+
 #. Table column
 #: src/components/systems-table/systems-table-columns.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
@@ -110,21 +114,30 @@ msgstr "Aktive Warnungen"
 msgid "Add <0>System</0>"
 msgstr "<0>System</0> hinzufügen"
 
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Add DNS lookup targets to monitor domain resolution performance."
+msgstr ""
+
 #: src/components/add-system.tsx
 msgid "Add New System"
 msgstr "Neues System hinzufügen"
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Add ping targets to monitor network connectivity."
+msgstr ""
 
 #: src/components/add-system.tsx
 msgid "Add system"
 msgstr "System hinzufügen"
 
-#: src/components/ping-config/ping-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
 msgid "Add Target"
 msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "Add targets to monitor network connectivity."
-msgstr ""
+#~ msgid "Add targets to monitor network connectivity."
+#~ msgstr ""
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Add URL"
@@ -189,8 +202,8 @@ msgid "Average exceeds <0>{value}{0}</0>"
 msgstr "Durchschnitt überschreitet <0>{value}{0}</0>"
 
 #: src/components/routes/system.tsx
-msgid "Average latency over time"
-msgstr ""
+#~ msgid "Average latency over time"
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "Average Ping"
@@ -276,6 +289,11 @@ msgstr "Diagrammoptionen"
 msgid "Check {email} for a reset link."
 msgstr "Überprüfe {email} auf einen Link zum Zurücksetzen."
 
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Check Interval"
+msgstr ""
+
 #: src/components/routes/settings/layout.tsx
 msgid "Check logs for more details."
 msgstr "Überprüfe die Protokolle für weitere Details."
@@ -293,18 +311,34 @@ msgstr "Zum Kopieren klicken"
 msgid "Command line instructions"
 msgstr "Befehlszeilenanweisungen"
 
+#: src/components/dns-config/dns-config-dialog.tsx
+#~ msgid "Configure DNS"
+#~ msgstr ""
+
+#: src/components/dns-config/dns-config-dialog.tsx
+#~ msgid "Configure DNS lookup targets and monitoring intervals for {0}."
+#~ msgstr ""
+
 #: src/components/routes/settings/notifications.tsx
 msgid "Configure how you receive alert notifications."
 msgstr "Konfiguriere, wie du Warnbenachrichtigungen erhältst."
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Configure Monitoring"
+msgstr ""
+
+#. placeholder {0}: system.name
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Configure monitoring targets and intervals for {0}."
+msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
 #~ msgid "Configure ping monitoring targets for {0}."
 #~ msgstr ""
 
-#. placeholder {0}: system.name
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "Configure ping monitoring targets for {0}. Agent need to be restarted for changes to take effect."
-msgstr ""
+#~ msgid "Configure ping monitoring targets for {0}. Agent need to be restarted for changes to take effect."
+#~ msgstr ""
 
 #: src/components/login/auth-form.tsx
 #: src/components/login/auth-form.tsx
@@ -370,7 +404,7 @@ msgstr "Kopieren Sie den<0>docker-compose.yml</0> Inhalt für den Agent unten od
 msgid "Copy YAML"
 msgstr "YAML kopieren"
 
-#: src/components/ping-config/ping-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
 msgid "Count"
 msgstr ""
 
@@ -396,12 +430,20 @@ msgstr "Erstellt"
 #~ msgstr "Kritisch (%)"
 
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "Cron Expression"
+#~ msgid "Cron Expression"
+#~ msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Cron expression (e.g., \"*/3 * * * *\" for every 3 minutes)"
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Cron expression (e.g., \"*/5 * * * *\" for every 5 minutes)"
 msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "Cron expression for ping scheduling"
-msgstr ""
+#~ msgid "Cron expression for ping scheduling"
+#~ msgstr ""
 
 #. Dark theme
 #: src/components/mode-toggle.tsx
@@ -446,6 +488,47 @@ msgstr "Festplattennutzung"
 #~ msgid "Disk usage of {extraFsName}"
 #~ msgstr "Festplattennutzung von {extraFsName}"
 
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/routes/system.tsx
+msgid "DNS"
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "DNS Configuration Saved"
+msgstr ""
+
+#: src/components/routes/system.tsx
+#~ msgid "DNS lookup performance"
+#~ msgstr ""
+
+#: src/components/routes/system.tsx
+#~ msgid "DNS lookup performance @ {displayName}"
+#~ msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "DNS lookup performance @ {friendlyName}"
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "DNS Lookup Targets"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "DNS Monitoring"
+msgstr ""
+
+#: src/components/dns-config/dns-config-dialog.tsx
+#~ msgid "DNS Monitoring Configuration"
+#~ msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "DNS monitoring configuration has been updated successfully."
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "DNS Server"
+msgstr ""
+
 #: src/components/routes/system.tsx
 #~ msgid "Docker CPU Usage"
 #~ msgstr "Docker-CPU-Auslastung"
@@ -461,6 +544,10 @@ msgstr "Festplattennutzung"
 #: src/components/command-palette.tsx
 msgid "Documentation"
 msgstr "Dokumentation"
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Domain"
+msgstr ""
 
 #. Context: System is down
 #: src/lib/utils.ts
@@ -479,6 +566,14 @@ msgstr "Dauer"
 msgid "Edit"
 msgstr "Bearbeiten"
 
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Edit Config"
+#~ msgstr ""
+
+#: src/components/dns-config/dns-config-dialog.tsx
+#~ msgid "Edit DNS Config"
+#~ msgstr ""
+
 #: src/components/login/forgot-pass-form.tsx
 #: src/components/login/auth-form.tsx
 msgid "Email"
@@ -496,6 +591,8 @@ msgstr "E-Mail-Adresse eingeben, um das Passwort zurückzusetzen"
 msgid "Enter email address..."
 msgstr "E-Mail-Adresse eingeben..."
 
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/settings/notifications.tsx
 #: src/components/routes/settings/config-yaml.tsx
@@ -503,6 +600,11 @@ msgstr "E-Mail-Adresse eingeben..."
 #: src/components/login/auth-form.tsx
 msgid "Error"
 msgstr "Fehler"
+
+#: src/components/charts/dns-chart.tsx
+#: src/components/charts/dns-chart.tsx
+msgid "Error Code"
+msgstr ""
 
 #. placeholder {0}: alert.value
 #. placeholder {1}: info.unit
@@ -535,8 +637,16 @@ msgstr "Exportiere die aktuelle Systemkonfiguration."
 msgid "Failed to authenticate"
 msgstr "Authentifizierung fehlgeschlagen"
 
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Failed to save DNS configuration. Please try again."
+msgstr ""
+
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "Failed to save ping configuration"
+#~ msgid "Failed to save ping configuration"
+#~ msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Failed to save ping configuration. Please try again."
 msgstr ""
 
 #: src/components/routes/settings/notifications.tsx
@@ -569,7 +679,11 @@ msgstr "Für <0>{min}</0> {min, plural, one {Minute} other {Minuten}}"
 msgid "Forgot password?"
 msgstr "Passwort vergessen?"
 
-#: src/components/ping-config/ping-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Friendly Name"
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
 msgid "Friendly Name (Optional)"
 msgstr ""
 
@@ -593,7 +707,7 @@ msgctxt "Button to copy install command"
 msgid "Homebrew command"
 msgstr "Homebrew-Befehl"
 
-#: src/components/ping-config/ping-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
 msgid "Host"
 msgstr ""
 
@@ -612,6 +726,11 @@ msgstr "Wenn du das Passwort für dein Administratorkonto verloren hast, kannst 
 #: src/components/ping-config/ping-config-dialog.tsx
 #~ msgid "Interval (s)"
 #~ msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Invalid Cron Expression"
+msgstr ""
 
 #: src/components/login/auth-form.tsx
 msgid "Invalid email address."
@@ -682,6 +801,10 @@ msgstr "Protokolle"
 msgid "Looking instead for where to create alerts? Click the bell <0/> icons in the systems table."
 msgstr "Du möchtest neue Warnungen erstellen? Klicke dafür auf die Glocken-<0/>-Symbole in der Systemtabelle."
 
+#: src/components/charts/dns-chart.tsx
+msgid "Lookup Time"
+msgstr ""
+
 #: src/components/routes/settings/layout.tsx
 msgid "Manage display and notification preferences."
 msgstr "Anzeige- und Benachrichtigungseinstellungen verwalten."
@@ -715,6 +838,10 @@ msgstr "Arbeitsspeichernutzung"
 msgid "Min RTT"
 msgstr ""
 
+#: src/components/routes/system.tsx
+msgid "Monitoring"
+msgstr ""
+
 #: src/components/alerts-history-columns.tsx
 #: src/components/add-system.tsx
 msgid "Name"
@@ -745,8 +872,32 @@ msgstr ""
 #~ msgid "Network unit"
 #~ msgstr "Netzwerkeinheit"
 
+#: src/components/charts/dns-chart.tsx
+#~ msgid "No DNS data available for {key}"
+#~ msgstr ""
+
+#: src/components/charts/dns-chart.tsx
+msgid "No DNS data available for {targetKey}"
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "No DNS targets configured"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "No DNS targets configured for this system"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "No monitoring targets configured for this system"
+msgstr ""
+
 #: src/components/charts/ping-chart.tsx
 msgid "No ping data available for {host}"
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "No ping targets configured"
 msgstr ""
 
 #: src/components/routes/system.tsx
@@ -754,8 +905,8 @@ msgid "No ping targets configured for this system"
 msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "No ping targets configured."
-msgstr ""
+#~ msgid "No ping targets configured."
+#~ msgstr ""
 
 #: src/components/command-palette.tsx
 msgid "No results found."
@@ -769,6 +920,11 @@ msgstr "Keine Ergebnisse."
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
 msgstr "Keine Systeme gefunden."
+
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
+msgid "No Valid Targets"
+msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -793,6 +949,10 @@ msgstr "Menü öffnen"
 #: src/components/login/auth-form.tsx
 msgid "Or continue with"
 msgstr "Oder fortfahren mit"
+
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Overall average latency across all ping targets"
+msgstr ""
 
 #: src/components/alerts/alert-button.tsx
 msgid "Overwrite existing alerts"
@@ -842,33 +1002,52 @@ msgstr "Pause"
 msgid "Paused"
 msgstr "Pausiert"
 
+#: src/components/system-config/system-config-dialog.tsx
 #: src/components/routes/system.tsx
 msgid "Ping"
 msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "Ping Configuration"
-msgstr ""
+#~ msgid "Ping Configuration"
+#~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "Ping configuration saved"
+#~ msgid "Ping configuration saved"
+#~ msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Ping Configuration Saved"
 msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "Ping Monitoring"
 msgstr ""
 
-#. placeholder {0}: system.name
-#: src/components/ping-config/ping-config-dialog.tsx
-msgid "Ping targets have been updated for {0}."
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Ping monitoring configuration has been updated successfully."
 msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Ping Targets"
+msgstr ""
+
+#: src/components/ping-config/ping-config-dialog.tsx
+#~ msgid "Ping targets have been updated for {0}."
+#~ msgstr ""
 
 #: src/components/routes/settings/notifications.tsx
 msgid "Please <0>configure an SMTP server</0> to ensure alerts are delivered."
 msgstr "Bitte <0>konfiguriere einen SMTP-Server</0>, um sicherzustellen, dass Warnungen zugestellt werden."
 
-#: src/components/ping-config/ping-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Please add at least one valid DNS target."
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Please add at least one valid ping target."
+msgstr ""
+
 #: src/components/alerts/alerts-system.tsx
 msgid "Please check logs for more details."
 msgstr "Bitte überprüfe die Protokolle für weitere Details."
@@ -930,6 +1109,15 @@ msgstr "Schlüssel"
 #~ msgid "Received"
 #~ msgstr "Empfangen"
 
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Record Type"
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Reset"
+msgstr ""
+
 #: src/components/login/forgot-pass-form.tsx
 msgid "Reset Password"
 msgstr "Passwort zurücksetzen"
@@ -961,7 +1149,15 @@ msgid "Save address using enter key or comma. Leave blank to disable email notif
 msgstr "Adresse mit der Enter-Taste oder Komma speichern. Leer lassen, um E-Mail-Benachrichtigungen zu deaktivieren."
 
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "Save Configuration"
+#~ msgid "Save Configuration"
+#~ msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Save DNS Configuration"
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Save Ping Configuration"
 msgstr ""
 
 #: src/components/routes/settings/notifications.tsx
@@ -973,7 +1169,8 @@ msgstr "Einstellungen speichern"
 msgid "Save system"
 msgstr "System sichern"
 
-#: src/components/ping-config/ping-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
 msgid "Saving..."
 msgstr ""
 
@@ -1054,6 +1251,10 @@ msgstr "System"
 #~ msgid "System load averages over time"
 #~ msgstr "Systemlastdurchschnitt im Zeitverlauf"
 
+#: src/components/system-config/system-config-dialog.tsx
+msgid "System Monitoring Configuration"
+msgstr ""
+
 #: src/components/navbar.tsx
 msgid "Systems"
 msgstr "Systeme"
@@ -1065,6 +1266,12 @@ msgstr "Systeme können in einer <0>config.yml</0>-Datei im Datenverzeichnis ver
 #: src/components/systems-table/systems-table.tsx
 msgid "Table"
 msgstr "Tabelle"
+
+#. placeholder {0}: index + 1
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Target {0}"
+msgstr ""
 
 #. Temperature label in systems table
 #: src/components/systems-table/systems-table-columns.tsx
@@ -1112,7 +1319,12 @@ msgstr "Dadurch werden alle ausgewählten Datensätze dauerhaft aus der Datenban
 #~ msgstr "Durchsatz des Root-Dateisystems"
 
 #: src/components/ping-config/ping-config-dialog.tsx
-msgid "Timeout (s)"
+#~ msgid "Timeout (s)"
+#~ msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Timeout (seconds)"
 msgstr ""
 
 #: src/components/routes/settings/notifications.tsx

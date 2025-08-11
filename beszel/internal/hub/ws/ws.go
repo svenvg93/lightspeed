@@ -149,6 +149,14 @@ func (ws *WsConn) SendPingConfig(config interface{}) error {
 	})
 }
 
+// SendDnsConfig sends DNS configuration to the agent.
+func (ws *WsConn) SendDnsConfig(config interface{}) error {
+	return ws.sendMessage(common.HubRequest[any]{
+		Action: common.UpdateDnsConfig,
+		Data:   config,
+	})
+}
+
 // GetFingerprint authenticates with the agent using SSH signature and returns the agent's fingerprint.
 func (ws *WsConn) GetFingerprint(token string, signer ssh.Signer, needSysInfo bool) (common.FingerprintResponse, error) {
 	var clientFingerprint common.FingerprintResponse

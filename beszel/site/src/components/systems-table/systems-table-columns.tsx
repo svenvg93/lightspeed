@@ -37,7 +37,7 @@ import {
 	DropdownMenuTrigger,
 } from "../ui/dropdown-menu"
 import AlertButton from "../alerts/alert-button"
-import PingConfigButton from "../ping-config/ping-config-dialog"
+import { SystemConfigDialog } from "../system-config/system-config-dialog"
 import { Dialog } from "../ui/dialog"
 import { SystemDialog } from "../add-system"
 import { AlertDialog } from "../ui/alert-dialog"
@@ -141,6 +141,36 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			},
 		},
 		{
+			accessorFn: ({ info }) => info.ad,
+			id: "ad",
+			name: () => t`DNS`,
+			size: 50,
+			Icon: ServerIcon,
+			header: (context) => (
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							{sortableHeader(context)}
+						</TooltipTrigger>
+						<TooltipContent>
+							{t`Overall average lookup time across all DNS targets`}
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
+			),
+			cell({ getValue }) {
+				const ad = getValue() as number
+				if (!ad || ad === 0) {
+					return null
+				}
+				return (
+					<span className="tabular-nums">
+						{ad.toFixed(1)} ms
+					</span>
+				)
+			},
+		},
+		{
 			accessorFn: ({ info }) => info.v,
 			id: "agent",
 			name: () => t`Agent`,
@@ -177,7 +207,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			size: 50,
 			cell: ({ row }) => (
 				<div className="flex justify-end items-center gap-1 -ms-3">
-					<PingConfigButton system={row.original} />
+											<SystemConfigDialog system={row.original} />
 					<AlertButton system={row.original} />
 					<ActionsButton system={row.original} />
 				</div>

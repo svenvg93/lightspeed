@@ -33,6 +33,7 @@ type System struct {
 	agentVersion semver.Version       // Agent version
 	updateTicker *time.Ticker         // Ticker for updating the system
 	lastPingTime time.Time            // Track when ping records were last created
+	lastDnsTime  time.Time            // Track when DNS records were last created
 }
 
 func (sm *SystemManager) NewSystem(systemId string) *System {
@@ -172,6 +173,49 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 			for _, result := range data.Stats.PingResults {
 				if result.LastChecked.After(sys.lastPingTime) {
 					sys.lastPingTime = result.LastChecked
+				}
+			}
+		}
+	}
+
+	// Create dns_stats records if we have DNS data and it's new
+	if data.Stats.DnsResults != nil && len(data.Stats.DnsResults) > 0 {
+		// Check if we have new DNS data by comparing LastChecked times
+		var hasNewData bool
+		for _, result := range data.Stats.DnsResults {
+			if result.LastChecked.After(sys.lastDnsTime) {
+				hasNewData = true
+				break
+			}
+		}
+
+		if hasNewData {
+			sys.manager.hub.Logger().Debug("Creating DNS records", "count", len(data.Stats.DnsResults))
+			dnsStatsCollection, err := hub.FindCollectionByNameOrId("dns_stats")
+			if err != nil {
+				return nil, err
+			}
+
+			// Create a separate record for each DNS result
+			for _, result := range data.Stats.DnsResults {
+				dnsStatsRecord := core.NewRecord(dnsStatsCollection)
+				dnsStatsRecord.Set("system", systemRecord.Id)
+				dnsStatsRecord.Set("domain", result.Domain)
+				dnsStatsRecord.Set("server", result.Server)
+				dnsStatsRecord.Set("type", result.Type)
+				dnsStatsRecord.Set("status", result.Status)
+				dnsStatsRecord.Set("lookup_time", result.LookupTime)
+				dnsStatsRecord.Set("error_code", result.ErrorCode)
+
+				if err := hub.Save(dnsStatsRecord); err != nil {
+					return nil, err
+				}
+			}
+
+			// Update the last DNS time to the most recent LastChecked time
+			for _, result := range data.Stats.DnsResults {
+				if result.LastChecked.After(sys.lastDnsTime) {
+					sys.lastDnsTime = result.LastChecked
 				}
 			}
 		}

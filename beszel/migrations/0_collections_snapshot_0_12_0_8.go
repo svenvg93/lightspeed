@@ -523,6 +523,16 @@ func init() {
 			},
 			{
 				"hidden": false,
+				"id": "dns_config",
+				"maxSize": 2000000,
+				"name": "dns_config",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "json"
+			},
+			{
+				"hidden": false,
 				"id": "autodate2990389176",
 				"name": "created",
 				"onCreate": true,
@@ -627,6 +637,126 @@ func init() {
 				"required": false,
 				"system": false,
 				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "created_date_id",
+				"name": "created",
+				"onCreate": true,
+				"onUpdate": false,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			},
+			{
+				"hidden": false,
+				"id": "updated_date_id",
+				"name": "updated",
+				"onCreate": true,
+				"onUpdate": true,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			}
+		],
+		"indexes": [],
+		"system": false
+	},
+	{
+		"id": "dns_stats_collection_id",
+		"listRule": "@request.auth.id != \"\" && system.users.id ?= @request.auth.id",
+		"viewRule": "@request.auth.id != \"\" && system.users.id ?= @request.auth.id",
+		"createRule": null,
+		"updateRule": null,
+		"deleteRule": null,
+		"name": "dns_stats",
+		"type": "base",
+		"fields": [
+			{
+				"autogeneratePattern": "[a-z0-9]{15}",
+				"hidden": false,
+				"id": "text3208210256",
+				"max": 15,
+				"min": 15,
+				"name": "id",
+				"pattern": "^[a-z0-9]+$",
+				"presentable": false,
+				"primaryKey": true,
+				"required": true,
+				"system": true,
+				"type": "text"
+			},
+			{
+				"cascadeDelete": true,
+				"collectionId": "2hz5ncl8tizk5nx",
+				"hidden": false,
+				"id": "system_relation_id",
+				"maxSelect": 1,
+				"minSelect": 1,
+				"name": "system",
+				"presentable": false,
+				"required": true,
+				"system": false,
+				"type": "relation"
+			},
+			{
+				"hidden": false,
+				"id": "domain_text_id",
+				"maxLength": 255,
+				"name": "domain",
+				"presentable": false,
+				"required": true,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "server_text_id",
+				"maxLength": 255,
+				"name": "server",
+				"presentable": false,
+				"required": true,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "type_text_id",
+				"maxLength": 10,
+				"name": "type",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "status_text_id",
+				"maxLength": 20,
+				"name": "status",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "lookup_time_number_id",
+				"name": "lookup_time",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "error_code_text_id",
+				"maxLength": 100,
+				"name": "error_code",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
 			},
 			{
 				"hidden": false,

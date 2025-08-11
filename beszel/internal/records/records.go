@@ -2,9 +2,7 @@
 package records
 
 import (
-	"beszel/internal/entities/container"
 	"beszel/internal/entities/system"
-	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -40,11 +38,9 @@ type StatsRecord struct {
 
 // global variables for reusing allocations
 var statsRecord StatsRecord
-var containerStats []container.Stats
 var sumStats system.Stats
 var tempStats system.Stats
 var queryParams = make(dbx.Params, 1)
-var containerSums = make(map[string]*container.Stats)
 
 // Create longer records by averaging shorter records
 func (rm *RecordManager) CreateLongerRecords() {
@@ -146,9 +142,6 @@ func (rm *RecordManager) CreateLongerRecords() {
 					switch collection.Name {
 					case "system_stats":
 						longerRecord.Set("stats", rm.AverageSystemStats(db, recordIds))
-					case "container_stats":
-
-						longerRecord.Set("stats", rm.AverageContainerStats(db, recordIds))
 					}
 					if err := txApp.SaveNoValidate(longerRecord); err != nil {
 						log.Println("failed to save longer record", "err", err)
@@ -178,52 +171,6 @@ func (rm *RecordManager) AverageSystemStats(db dbx.Builder, records RecordIds) *
 	// No averaging needed since we only collect ping results (which are kept as latest values)
 
 	return sum
-}
-
-// Calculate the average stats of a list of container_stats records
-func (rm *RecordManager) AverageContainerStats(db dbx.Builder, records RecordIds) []container.Stats {
-	// Clear global map for reuse
-	for k := range containerSums {
-		delete(containerSums, k)
-	}
-	sums := containerSums
-	count := float64(len(records))
-
-	for i := range records {
-		id := records[i].Id
-		// clear global statsRecord and containerStats for reuse
-		statsRecord.Stats = statsRecord.Stats[:0]
-		containerStats = containerStats[:0]
-
-		queryParams["id"] = id
-		db.NewQuery("SELECT stats FROM container_stats WHERE id = {:id}").Bind(queryParams).One(&statsRecord)
-
-		if err := json.Unmarshal(statsRecord.Stats, &containerStats); err != nil {
-			return []container.Stats{}
-		}
-		for i := range containerStats {
-			stat := containerStats[i]
-			if _, ok := sums[stat.Name]; !ok {
-				sums[stat.Name] = &container.Stats{Name: stat.Name}
-			}
-			sums[stat.Name].Cpu += stat.Cpu
-			sums[stat.Name].Mem += stat.Mem
-			sums[stat.Name].NetworkSent += stat.NetworkSent
-			sums[stat.Name].NetworkRecv += stat.NetworkRecv
-		}
-	}
-
-	result := make([]container.Stats, 0, len(sums))
-	for _, value := range sums {
-		result = append(result, container.Stats{
-			Name:        value.Name,
-			Cpu:         twoDecimals(value.Cpu / count),
-			Mem:         twoDecimals(value.Mem / count),
-			NetworkSent: twoDecimals(value.NetworkSent / count),
-			NetworkRecv: twoDecimals(value.NetworkRecv / count),
-		})
-	}
-	return result
 }
 
 // Delete old records

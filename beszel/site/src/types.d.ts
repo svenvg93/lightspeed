@@ -29,6 +29,8 @@ export interface SystemRecord extends RecordModel {
 	port: string
 	info: SystemInfo
 	v: string
+	
+	// Legacy separate configs (for backward compatibility)
 	ping_config?: {
 		targets: {
 			host: string
@@ -37,6 +39,67 @@ export interface SystemRecord extends RecordModel {
 			timeout: number
 		}[]
 		interval: string | number // Cron expression or seconds for all ping tests
+	}
+	dns_config?: {
+		targets: {
+			domain: string
+			server: string
+			type: string
+			timeout: number
+			friendly_name?: string
+			protocol?: "udp" | "tcp" | "doh" | "dot" // DNS protocol to use
+		}[]
+		interval: string | number // Cron expression or seconds for all DNS tests
+	}
+	
+	// New unified monitoring configuration
+	monitoring_config?: {
+		enabled: {
+			ping: boolean
+			dns: boolean
+			http?: boolean
+			speedtest?: boolean
+		}
+		global_interval?: string | number // Default interval for all monitoring types
+		ping?: {
+			targets: {
+				host: string
+				friendly_name?: string
+				count: number
+				timeout: number
+			}[]
+			interval?: string | number // Override global interval
+		}
+		dns?: {
+			targets: {
+				domain: string
+				server: string
+				type: string
+				timeout: number
+				friendly_name?: string
+				protocol?: "udp" | "tcp" | "doh" | "dot"
+			}[]
+			interval?: string | number // Override global interval
+		}
+		http?: {
+			targets: {
+				url: string
+				friendly_name?: string
+				method?: "GET" | "POST" | "PUT" | "DELETE" | "HEAD"
+				timeout: number
+				expected_status?: number[]
+				headers?: Record<string, string>
+			}[]
+			interval?: string | number // Override global interval
+		}
+		speedtest?: {
+			targets: {
+				server_url: string
+				friendly_name?: string
+				timeout: number
+			}[]
+			interval?: string | number // Override global interval
+		}
 	}
 }
 
@@ -55,6 +118,8 @@ export interface SystemInfo {
 	asn?: string
 	/** average ping across all targets (ms) */
 	ap?: number
+	/** average DNS lookup time across all targets (ms) */
+	ad?: number
 }
 
 
@@ -129,6 +194,17 @@ export interface PingStatsRecord extends RecordModel {
 	created: string | number
 }
 
+export interface DnsStatsRecord extends RecordModel {
+	system: string
+	domain: string
+	server: string
+	type: string
+	status: string
+	lookup_time: number
+	error_code: string
+	created: string | number
+}
+
 type ChartDataPing = {
 	created: number | null
 } & {
@@ -141,11 +217,25 @@ type ChartDataPing = {
 	} | null // Allow null for gap data points
 }
 
+type ChartDataDns = {
+	created: number | null
+} & {
+	[key: string]: key extends "created" ? never : {
+		domain: string
+		server: string
+		type: string
+		status: string
+		lookup_time: number
+		error_code: string
+	} | null // Allow null for gap data points
+}
+
 export interface ChartData {
 	agentVersion: SemVer
 	systemStats: SystemStatsRecord[]
 	containerData: ChartDataContainer[]
 	pingData?: ChartDataPing[] // Made optional since it's only used for ping charts
+	dnsData?: ChartDataDns[] // Made optional since it's only used for DNS charts
 	orientation: "right" | "left"
 	ticks: number[]
 	domain: number[]

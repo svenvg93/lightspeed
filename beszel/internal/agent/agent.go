@@ -23,6 +23,7 @@ type Agent struct {
 	debug      bool // true if LOG_LEVEL is set to debug
 
 	pingManager *PingManager // Manages ping tests
+	dnsManager  *DnsManager  // Manages DNS lookups
 	systemInfo  system.Info  // Host system info
 
 	cache             *SessionCache      // Cache for system stats based on primary session ID
@@ -72,6 +73,13 @@ func NewAgent(dataDir ...string) (agent *Agent, err error) {
 		slog.Debug("Ping manager", "err", err)
 	} else {
 		agent.pingManager = pm
+	}
+
+	// initialize DNS manager
+	if dm, err := NewDnsManager(); err != nil {
+		slog.Debug("DNS manager", "err", err)
+	} else {
+		agent.dnsManager = dm
 	}
 
 	// if debugging, print stats
@@ -154,5 +162,12 @@ func (a *Agent) getFingerprint() string {
 func (a *Agent) UpdatePingConfig(targets []system.PingTarget, cronExpression string) {
 	if a.pingManager != nil {
 		a.pingManager.UpdateConfig(targets, cronExpression)
+	}
+}
+
+// UpdateDnsConfig updates the DNS monitoring configuration
+func (a *Agent) UpdateDnsConfig(targets []system.DnsTarget, cronExpression string) {
+	if a.dnsManager != nil {
+		a.dnsManager.UpdateConfig(targets, cronExpression)
 	}
 }
