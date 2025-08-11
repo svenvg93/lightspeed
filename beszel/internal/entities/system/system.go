@@ -52,11 +52,8 @@ type HttpResult struct {
 }
 
 type HttpTarget struct {
-	URL            string            `json:"url"`
-	Method         string            `json:"method,omitempty"` // "GET", "POST", "PUT", "DELETE", "HEAD"
-	Timeout        time.Duration     `json:"timeout"`
-	ExpectedStatus []int             `json:"expected_status,omitempty"`
-	Headers        map[string]string `json:"headers,omitempty"`
+	URL     string `json:"url"`
+	Timeout int    `json:"timeout"` // Timeout in seconds
 }
 
 type SpeedtestResult struct {
@@ -67,11 +64,35 @@ type SpeedtestResult struct {
 	Latency       float64   `json:"latency" cbor:"4,keyasint"`        // Milliseconds
 	ErrorCode     string    `json:"error_code,omitempty" cbor:"5,keyasint,omitempty"`
 	LastChecked   time.Time `json:"last_checked" cbor:"6,keyasint"`
+	// Additional detailed information
+	PingJitter            float64 `json:"ping_jitter,omitempty" cbor:"7,keyasint,omitempty"`
+	PingLow               float64 `json:"ping_low,omitempty" cbor:"8,keyasint,omitempty"`
+	PingHigh              float64 `json:"ping_high,omitempty" cbor:"9,keyasint,omitempty"`
+	DownloadBytes         int64   `json:"download_bytes,omitempty" cbor:"10,keyasint,omitempty"`
+	DownloadElapsed       int64   `json:"download_elapsed,omitempty" cbor:"11,keyasint,omitempty"`
+	DownloadLatencyIQM    float64 `json:"download_latency_iqm,omitempty" cbor:"12,keyasint,omitempty"`
+	DownloadLatencyLow    float64 `json:"download_latency_low,omitempty" cbor:"13,keyasint,omitempty"`
+	DownloadLatencyHigh   float64 `json:"download_latency_high,omitempty" cbor:"14,keyasint,omitempty"`
+	DownloadLatencyJitter float64 `json:"download_latency_jitter,omitempty" cbor:"15,keyasint,omitempty"`
+	UploadBytes           int64   `json:"upload_bytes,omitempty" cbor:"16,keyasint,omitempty"`
+	UploadElapsed         int64   `json:"upload_elapsed,omitempty" cbor:"17,keyasint,omitempty"`
+	UploadLatencyIQM      float64 `json:"upload_latency_iqm,omitempty" cbor:"18,keyasint,omitempty"`
+	UploadLatencyLow      float64 `json:"upload_latency_low,omitempty" cbor:"19,keyasint,omitempty"`
+	UploadLatencyHigh     float64 `json:"upload_latency_high,omitempty" cbor:"20,keyasint,omitempty"`
+	UploadLatencyJitter   float64 `json:"upload_latency_jitter,omitempty" cbor:"21,keyasint,omitempty"`
+	PacketLoss            int     `json:"packet_loss,omitempty" cbor:"22,keyasint,omitempty"`
+	ISP                   string  `json:"isp,omitempty" cbor:"23,keyasint,omitempty"`
+	InterfaceExternalIP   string  `json:"interface_external_ip,omitempty" cbor:"24,keyasint,omitempty"`
+	ServerName            string  `json:"server_name,omitempty" cbor:"25,keyasint,omitempty"`
+	ServerLocation        string  `json:"server_location,omitempty" cbor:"26,keyasint,omitempty"`
+	ServerCountry         string  `json:"server_country,omitempty" cbor:"27,keyasint,omitempty"`
+	ServerHost            string  `json:"server_host,omitempty" cbor:"28,keyasint,omitempty"`
+	ServerIP              string  `json:"server_ip,omitempty" cbor:"29,keyasint,omitempty"`
 }
 
 type SpeedtestTarget struct {
-	ServerURL string        `json:"server_url"`
-	Timeout   time.Duration `json:"timeout"`
+	ServerID string        `json:"server_id"`
+	Timeout  time.Duration `json:"timeout"`
 }
 
 // Unified monitoring configuration
@@ -104,14 +125,15 @@ type MonitoringConfig struct {
 type Info struct {
 	Hostname     string  `json:"h" cbor:"0,keyasint"`
 	AgentVersion string  `json:"v" cbor:"10,keyasint"`
-	NetworkSpeed uint64  `json:"ns" cbor:"11,keyasint"`           // Network interface speed in Mbps
-	PublicIP     string  `json:"ip" cbor:"12,keyasint"`           // Public IP address
-	ISP          string  `json:"isp" cbor:"13,keyasint"`          // Internet Service Provider
-	ASN          string  `json:"asn" cbor:"14,keyasint"`          // Autonomous System Number
-	AvgPing      float64 `json:"ap" cbor:"15,keyasint,omitempty"` // Average ping across all targets (ms)
-	AvgDns       float64 `json:"ad" cbor:"16,keyasint,omitempty"` // Average DNS lookup time across all targets (ms)
-	AvgHttp      float64 `json:"ah" cbor:"17,keyasint,omitempty"` // Average HTTP response time across all targets (ms)
-	AvgSpeedtest float64 `json:"as" cbor:"18,keyasint,omitempty"` // Average speedtest download speed across all targets (Mbps)
+	NetworkSpeed uint64  `json:"ns" cbor:"11,keyasint"`            // Network interface speed in Mbps
+	PublicIP     string  `json:"ip" cbor:"12,keyasint"`            // Public IP address
+	ISP          string  `json:"isp" cbor:"13,keyasint"`           // Internet Service Provider
+	ASN          string  `json:"asn" cbor:"14,keyasint"`           // Autonomous System Number
+	AvgPing      float64 `json:"ap" cbor:"15,keyasint,omitempty"`  // Average ping across all targets (ms)
+	AvgDns       float64 `json:"ad" cbor:"16,keyasint,omitempty"`  // Average DNS lookup time across all targets (ms)
+	AvgHttp      float64 `json:"ah" cbor:"17,keyasint,omitempty"`  // Average HTTP response time across all targets (ms)
+	AvgDownload  float64 `json:"adl" cbor:"18,keyasint,omitempty"` // Average download speed across all speedtest targets (Mbps)
+	AvgUpload    float64 `json:"aul" cbor:"19,keyasint,omitempty"` // Average upload speed across all speedtest targets (Mbps)
 }
 
 // Final data structure to return to the hub

@@ -7,52 +7,57 @@ import (
 	"log/slog"
 
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/pocketbase/pocketbase/tools/types"
 )
 
 // SendMonitoringConfigToAgent sends unified monitoring configuration to an agent via WebSocket
 func (h *Hub) SendMonitoringConfigToAgent(systemRecord *core.Record) error {
-	// Get monitoring config from system record
-	monitoringConfigData := systemRecord.Get("monitoring_config")
+	// Get monitoring config from the monitoring_config collection
+	monitoringConfigRecord, err := h.FindFirstRecordByFilter("monitoring_config", "system = {:system}", map[string]any{"system": systemRecord.Id})
 
-	if monitoringConfigData == nil {
+	if err != nil {
+		h.Logger().Debug("No monitoring config found for system, sending empty configuration", "system", systemRecord.Id, "err", err)
 		// No monitoring config, send empty configuration
 		return h.sendMonitoringConfigToSystem(systemRecord.Id, system.MonitoringConfig{})
 	}
 
-	var monitoringConfig system.MonitoringConfig
+	// Build the monitoring configuration from the record fields
+	monitoringConfig := system.MonitoringConfig{
+		Enabled: struct {
+			Ping      bool `json:"ping"`
+			Dns       bool `json:"dns"`
+			Http      bool `json:"http,omitempty"`
+			Speedtest bool `json:"speedtest,omitempty"`
+		}{
+			Ping:      monitoringConfigRecord.Get("ping") != nil,
+			Dns:       monitoringConfigRecord.Get("dns") != nil,
+			Http:      monitoringConfigRecord.Get("http") != nil,
+			Speedtest: monitoringConfigRecord.Get("speedtest") != nil,
+		},
+	}
 
-	// Handle different data types that PocketBase might return
-	switch v := monitoringConfigData.(type) {
-	case types.JSONRaw:
-		if err := json.Unmarshal([]byte(v), &monitoringConfig); err != nil {
-			slog.Error("Failed to unmarshal monitoring config from JSONRaw", "system", systemRecord.Id, "err", err)
-			return err
+	// Parse individual monitoring configurations
+	if pingData := monitoringConfigRecord.Get("ping"); pingData != nil {
+		if err := json.Unmarshal([]byte(fmt.Sprintf("%v", pingData)), &monitoringConfig.Ping); err != nil {
+			h.Logger().Error("Failed to parse ping config", "system", systemRecord.Id, "err", err)
 		}
-	case []byte:
-		if err := json.Unmarshal(v, &monitoringConfig); err != nil {
-			slog.Error("Failed to unmarshal monitoring config from []byte", "system", systemRecord.Id, "err", err)
-			return err
+	}
+
+	if dnsData := monitoringConfigRecord.Get("dns"); dnsData != nil {
+		if err := json.Unmarshal([]byte(fmt.Sprintf("%v", dnsData)), &monitoringConfig.Dns); err != nil {
+			h.Logger().Error("Failed to parse DNS config", "system", systemRecord.Id, "err", err)
 		}
-	case string:
-		if err := json.Unmarshal([]byte(v), &monitoringConfig); err != nil {
-			slog.Error("Failed to unmarshal monitoring config from string", "system", systemRecord.Id, "err", err)
-			return err
+	}
+
+	if httpData := monitoringConfigRecord.Get("http"); httpData != nil {
+		if err := json.Unmarshal([]byte(fmt.Sprintf("%v", httpData)), &monitoringConfig.Http); err != nil {
+			h.Logger().Error("Failed to parse HTTP config", "system", systemRecord.Id, "err", err)
 		}
-	case map[string]interface{}:
-		// Re-marshal and unmarshal to convert to proper struct
-		configBytes, err := json.Marshal(v)
-		if err != nil {
-			slog.Error("Failed to marshal monitoring config map", "system", systemRecord.Id, "err", err)
-			return err
+	}
+
+	if speedtestData := monitoringConfigRecord.Get("speedtest"); speedtestData != nil {
+		if err := json.Unmarshal([]byte(fmt.Sprintf("%v", speedtestData)), &monitoringConfig.Speedtest); err != nil {
+			h.Logger().Error("Failed to parse speedtest config", "system", systemRecord.Id, "err", err)
 		}
-		if err := json.Unmarshal(configBytes, &monitoringConfig); err != nil {
-			slog.Error("Failed to unmarshal monitoring config from map", "system", systemRecord.Id, "err", err)
-			return err
-		}
-	default:
-		slog.Error("Invalid monitoring config type", "system", systemRecord.Id, "type", fmt.Sprintf("%T", v), "value", v)
-		return nil
 	}
 
 	return h.sendMonitoringConfigToSystem(systemRecord.Id, monitoringConfig)
@@ -91,12 +96,20 @@ func (h *Hub) sendMonitoringConfigToSystem(systemId string, config system.Monito
 func (h *Hub) onSystemRecordUpdate(e *core.RecordEvent) error {
 	h.Logger().Debug("System record update detected", "system", e.Record.Id)
 
-	// Send monitoring configuration update
-	if err := h.SendMonitoringConfigToAgent(e.Record); err != nil {
-		h.Logger().Error("Failed to send monitoring config update", "system", e.Record.Id, "err", err)
+	// Only send configuration on startup (first time)
+	if !h.sm.HasConfigBeenSent(e.Record.Id) {
+		h.Logger().Debug("Sending monitoring config on startup", "system", e.Record.Id)
+
+		if err := h.SendMonitoringConfigToAgent(e.Record); err != nil {
+			h.Logger().Error("Failed to send monitoring config on startup", "system", e.Record.Id, "err", err)
+		} else {
+			h.Logger().Debug("Successfully sent monitoring config on startup", "system", e.Record.Id)
+			// Mark that we've sent the configuration to this system
+			h.sm.MarkConfigAsSent(e.Record.Id)
+		}
 	} else {
-		h.Logger().Debug("Successfully sent monitoring config update", "system", e.Record.Id)
+		h.Logger().Debug("Monitoring config already sent, skipping (agent restart required for changes)", "system", e.Record.Id)
 	}
 
-	return nil
+	return e.Next()
 }

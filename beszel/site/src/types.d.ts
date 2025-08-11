@@ -100,8 +100,10 @@ export interface SystemInfo {
 	ad?: number
 	/** average HTTP response time across all targets (ms) */
 	ah?: number
-	/** average speedtest download speed across all targets (Mbps) */
-	as?: number
+	/** average download speed across all speedtest targets (Mbps) */
+	adl?: number
+	/** average upload speed across all speedtest targets (Mbps) */
+	aul?: number
 }
 
 
@@ -199,11 +201,15 @@ export interface HttpStatsRecord extends RecordModel {
 
 export interface SpeedtestStatsRecord extends RecordModel {
 	system: string
-	server_url: string
+	server_id: string
+	server_name: string
+	server_location: string
+	server_country: string
 	status: string
 	download_speed: number
 	upload_speed: number
 	latency: number
+	packet_loss: number
 	error_code: string
 	created: string | number
 }
@@ -249,11 +255,12 @@ type ChartDataSpeedtest = {
 	created: number | null
 } & {
 	[key: string]: key extends "created" ? never : {
-		server_url: string
+		server_id: string
 		status: string
 		download_speed: number
 		upload_speed: number
 		latency: number
+		packet_loss: number
 		error_code: string
 	} | null // Allow null for gap data points
 }

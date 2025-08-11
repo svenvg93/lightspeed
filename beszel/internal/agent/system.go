@@ -202,6 +202,79 @@ func (a *Agent) getSystemStats() system.Stats {
 		a.systemInfo.AvgDns = 0 // Reset to 0 if no DNS manager
 	}
 
+	// get HTTP results if HTTP manager is available
+	if a.httpManager != nil {
+		httpResults := a.httpManager.GetResults()
+		if httpResults != nil {
+			systemStats.HttpResults = httpResults
+			slog.Debug("HTTP results collected", "count", len(systemStats.HttpResults))
+
+			// Calculate average HTTP response time across all successful HTTP results
+			var totalHttp float64
+			var successfulHttp int
+			for _, result := range systemStats.HttpResults {
+				if result.Status == "success" && result.ResponseTime > 0 {
+					totalHttp += result.ResponseTime
+					successfulHttp++
+				}
+			}
+
+			if successfulHttp > 0 {
+				a.systemInfo.AvgHttp = totalHttp / float64(successfulHttp)
+				slog.Debug("Average HTTP response time calculated", "ah", a.systemInfo.AvgHttp, "successful_http", successfulHttp)
+			} else {
+				a.systemInfo.AvgHttp = 0 // Reset to 0 if no successful HTTP requests
+			}
+		} else {
+			slog.Debug("No HTTP results available - no checks have run recently")
+			a.systemInfo.AvgHttp = 0 // Reset to 0 if no HTTP results
+		}
+	} else {
+		slog.Debug("No HTTP manager available")
+		a.systemInfo.AvgHttp = 0 // Reset to 0 if no HTTP manager
+	}
+
+	// get speedtest results if speedtest manager is available
+	if a.speedtestManager != nil {
+		speedtestResults := a.speedtestManager.GetResults()
+		if speedtestResults != nil {
+			systemStats.SpeedtestResults = speedtestResults
+			slog.Debug("Speedtest results collected", "count", len(systemStats.SpeedtestResults))
+
+			// Calculate average download and upload speeds across all successful speedtest results
+			var totalDownload float64
+			var totalUpload float64
+			var successfulSpeedtest int
+			for _, result := range systemStats.SpeedtestResults {
+				if result.Status == "success" && result.DownloadSpeed > 0 && result.UploadSpeed > 0 {
+					totalDownload += result.DownloadSpeed
+					totalUpload += result.UploadSpeed
+					successfulSpeedtest++
+				}
+			}
+
+			if successfulSpeedtest > 0 {
+				a.systemInfo.AvgDownload = totalDownload / float64(successfulSpeedtest)
+				a.systemInfo.AvgUpload = totalUpload / float64(successfulSpeedtest)
+				slog.Debug("Average speedtest speeds calculated",
+					"avg_download", a.systemInfo.AvgDownload,
+					"avg_upload", a.systemInfo.AvgUpload,
+					"successful_speedtest", successfulSpeedtest)
+			} else {
+				a.systemInfo.AvgDownload = 0 // Reset to 0 if no successful speedtests
+				a.systemInfo.AvgUpload = 0   // Reset to 0 if no successful speedtests
+			}
+		} else {
+			slog.Debug("No speedtest results available - no tests have run recently")
+			a.systemInfo.AvgDownload = 0 // Reset to 0 if no speedtest results
+			a.systemInfo.AvgUpload = 0   // Reset to 0 if no speedtest results
+		}
+	} else {
+		slog.Debug("No speedtest manager available")
+		a.systemInfo.AvgDownload = 0 // Reset to 0 if no speedtest manager
+		a.systemInfo.AvgUpload = 0   // Reset to 0 if no speedtest manager
+	}
+
 	slog.Debug("sysinfo", "data", a.systemInfo)
 
 	return systemStats

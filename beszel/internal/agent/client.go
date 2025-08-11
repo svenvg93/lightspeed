@@ -38,6 +38,7 @@ type WebSocketClient struct {
 	hubRequest         *common.HubRequest[cbor.RawMessage] // Reusable request structure for message parsing
 	lastConnectAttempt time.Time                           // Timestamp of last connection attempt
 	hubVerified        bool                                // Whether the hub has been cryptographically verified
+
 }
 
 // newWebSocketClient creates a new WebSocket client for the given agent.
@@ -251,20 +252,21 @@ func (client *WebSocketClient) handleMonitoringConfigUpdate(msg *common.HubReque
 		return err
 	}
 
-	slog.Debug("Received unified monitoring config update",
+	slog.Debug("Received monitoring config update",
 		"ping_enabled", config.Enabled.Ping,
 		"dns_enabled", config.Enabled.Dns,
+		"http_enabled", config.Enabled.Http,
+		"speedtest_enabled", config.Enabled.Speedtest,
 		"ping_targets", len(config.Ping.Targets),
-		"dns_targets", len(config.Dns.Targets))
+		"dns_targets", len(config.Dns.Targets),
+		"http_targets", len(config.Http.Targets),
+		"speedtest_targets", len(config.Speedtest.Targets))
 
 	// Update ping configuration if enabled
 	if config.Enabled.Ping && len(config.Ping.Targets) > 0 {
 		interval := config.Ping.Interval
 		if interval == "" {
 			interval = config.GlobalInterval
-		}
-		if interval == "" {
-			interval = "*/3 * * * *" // Default fallback
 		}
 		client.agent.UpdatePingConfig(config.Ping.Targets, interval)
 	} else {
@@ -278,13 +280,34 @@ func (client *WebSocketClient) handleMonitoringConfigUpdate(msg *common.HubReque
 		if interval == "" {
 			interval = config.GlobalInterval
 		}
-		if interval == "" {
-			interval = "*/5 * * * *" // Default fallback
-		}
 		client.agent.UpdateDnsConfig(config.Dns.Targets, interval)
 	} else {
 		// Disable DNS if not enabled or no targets
 		client.agent.UpdateDnsConfig([]system.DnsTarget{}, "")
+	}
+
+	// Update HTTP configuration if enabled
+	if config.Enabled.Http && len(config.Http.Targets) > 0 {
+		interval := config.Http.Interval
+		if interval == "" {
+			interval = config.GlobalInterval
+		}
+		client.agent.UpdateHttpConfig(config.Http.Targets, interval)
+	} else {
+		// Disable HTTP if not enabled or no targets
+		client.agent.UpdateHttpConfig([]system.HttpTarget{}, "")
+	}
+
+	// Update speedtest configuration if enabled
+	if config.Enabled.Speedtest && len(config.Speedtest.Targets) > 0 {
+		interval := config.Speedtest.Interval
+		if interval == "" {
+			interval = config.GlobalInterval
+		}
+		client.agent.UpdateSpeedtestConfig(config.Speedtest.Targets, interval)
+	} else {
+		// Disable speedtest if not enabled or no targets
+		client.agent.UpdateSpeedtestConfig([]system.SpeedtestTarget{}, "")
 	}
 
 	return nil

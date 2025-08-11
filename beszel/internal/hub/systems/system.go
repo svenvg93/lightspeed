@@ -20,20 +20,22 @@ import (
 )
 
 type System struct {
-	Id           string               `db:"id"`
-	Host         string               `db:"host"`
-	Port         string               `db:"port"`
-	Status       string               `db:"status"`
-	manager      *SystemManager       // Manager that this system belongs to
-	client       *ssh.Client          // SSH client for fetching data
-	data         *system.CombinedData // system data from agent
-	ctx          context.Context      // Context for stopping the updater
-	cancel       context.CancelFunc   // Stops and removes system from updater
-	WsConn       *ws.WsConn           // Handler for agent WebSocket connection
-	agentVersion semver.Version       // Agent version
-	updateTicker *time.Ticker         // Ticker for updating the system
-	lastPingTime time.Time            // Track when ping records were last created
-	lastDnsTime  time.Time            // Track when DNS records were last created
+	Id                string               `db:"id"`
+	Host              string               `db:"host"`
+	Port              string               `db:"port"`
+	Status            string               `db:"status"`
+	manager           *SystemManager       // Manager that this system belongs to
+	client            *ssh.Client          // SSH client for fetching data
+	data              *system.CombinedData // system data from agent
+	ctx               context.Context      // Context for stopping the updater
+	cancel            context.CancelFunc   // Stops and removes system from updater
+	WsConn            *ws.WsConn           // Handler for agent WebSocket connection
+	agentVersion      semver.Version       // Agent version
+	updateTicker      *time.Ticker         // Ticker for updating the system
+	lastPingTime      time.Time            // Track when ping records were last created
+	lastDnsTime       time.Time            // Track when DNS records were last created
+	lastHttpTime      time.Time            // Track when HTTP records were last created
+	lastSpeedtestTime time.Time            // Track when speedtest records were last created
 }
 
 func (sm *SystemManager) NewSystem(systemId string) *System {
@@ -216,6 +218,119 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 			for _, result := range data.Stats.DnsResults {
 				if result.LastChecked.After(sys.lastDnsTime) {
 					sys.lastDnsTime = result.LastChecked
+				}
+			}
+		}
+	}
+
+	// Create http_stats records if we have HTTP data and it's new
+	if data.Stats.HttpResults != nil && len(data.Stats.HttpResults) > 0 {
+		// Check if we have new HTTP data by comparing LastChecked times
+		var hasNewData bool
+		for _, result := range data.Stats.HttpResults {
+			if result.LastChecked.After(sys.lastHttpTime) {
+				hasNewData = true
+				break
+			}
+		}
+
+		if hasNewData {
+			sys.manager.hub.Logger().Debug("Creating HTTP records", "count", len(data.Stats.HttpResults))
+			httpStatsCollection, err := hub.FindCollectionByNameOrId("http_stats")
+			if err != nil {
+				return nil, err
+			}
+
+			// Create a separate record for each HTTP result
+			for url, result := range data.Stats.HttpResults {
+				httpStatsRecord := core.NewRecord(httpStatsCollection)
+				httpStatsRecord.Set("system", systemRecord.Id)
+				httpStatsRecord.Set("url", url)
+				httpStatsRecord.Set("status", result.Status)
+				httpStatsRecord.Set("response_time", result.ResponseTime)
+				httpStatsRecord.Set("status_code", result.StatusCode)
+				httpStatsRecord.Set("error_code", result.ErrorCode)
+
+				if err := hub.Save(httpStatsRecord); err != nil {
+					return nil, err
+				}
+			}
+
+			// Update the last HTTP time to the most recent LastChecked time
+			for _, result := range data.Stats.HttpResults {
+				if result.LastChecked.After(sys.lastHttpTime) {
+					sys.lastHttpTime = result.LastChecked
+				}
+			}
+		}
+	}
+
+	// Create speedtest_stats records if we have speedtest data and it's new
+	if data.Stats.SpeedtestResults != nil && len(data.Stats.SpeedtestResults) > 0 {
+		// Check if we have new speedtest data by comparing LastChecked times
+		var hasNewData bool
+		for _, result := range data.Stats.SpeedtestResults {
+			if result.LastChecked.After(sys.lastSpeedtestTime) {
+				hasNewData = true
+				break
+			}
+		}
+
+		if hasNewData {
+			// Use all speedtest results without validation - agent restart handles config changes
+			validResults := data.Stats.SpeedtestResults
+
+			if len(validResults) > 0 {
+				sys.manager.hub.Logger().Debug("Creating speedtest records", "count", len(validResults))
+				speedtestStatsCollection, err := hub.FindCollectionByNameOrId("speedtest_stats")
+				if err != nil {
+					return nil, err
+				}
+
+				// Create a separate record for each speedtest result
+				for serverID, result := range validResults {
+					speedtestStatsRecord := core.NewRecord(speedtestStatsCollection)
+					speedtestStatsRecord.Set("system", systemRecord.Id)
+					speedtestStatsRecord.Set("server_id", serverID)
+					speedtestStatsRecord.Set("status", result.Status)
+					speedtestStatsRecord.Set("download_speed", result.DownloadSpeed)
+					speedtestStatsRecord.Set("upload_speed", result.UploadSpeed)
+					speedtestStatsRecord.Set("latency", result.Latency)
+					speedtestStatsRecord.Set("error_code", result.ErrorCode)
+					speedtestStatsRecord.Set("ping_jitter", result.PingJitter)
+					speedtestStatsRecord.Set("ping_low", result.PingLow)
+					speedtestStatsRecord.Set("ping_high", result.PingHigh)
+					speedtestStatsRecord.Set("download_bytes", result.DownloadBytes)
+					speedtestStatsRecord.Set("download_elapsed", result.DownloadElapsed)
+					speedtestStatsRecord.Set("download_latency_iqm", result.DownloadLatencyIQM)
+					speedtestStatsRecord.Set("download_latency_low", result.DownloadLatencyLow)
+					speedtestStatsRecord.Set("download_latency_high", result.DownloadLatencyHigh)
+					speedtestStatsRecord.Set("download_latency_jitter", result.DownloadLatencyJitter)
+					speedtestStatsRecord.Set("upload_bytes", result.UploadBytes)
+					speedtestStatsRecord.Set("upload_elapsed", result.UploadElapsed)
+					speedtestStatsRecord.Set("upload_latency_iqm", result.UploadLatencyIQM)
+					speedtestStatsRecord.Set("upload_latency_low", result.UploadLatencyLow)
+					speedtestStatsRecord.Set("upload_latency_high", result.UploadLatencyHigh)
+					speedtestStatsRecord.Set("upload_latency_jitter", result.UploadLatencyJitter)
+					speedtestStatsRecord.Set("packet_loss", result.PacketLoss)
+					speedtestStatsRecord.Set("isp", result.ISP)
+					speedtestStatsRecord.Set("interface_external_ip", result.InterfaceExternalIP)
+					speedtestStatsRecord.Set("server_name", result.ServerName)
+					speedtestStatsRecord.Set("server_location", result.ServerLocation)
+					speedtestStatsRecord.Set("server_country", result.ServerCountry)
+					speedtestStatsRecord.Set("server_host", result.ServerHost)
+					speedtestStatsRecord.Set("server_ip", result.ServerIP)
+
+					if err := hub.Save(speedtestStatsRecord); err != nil {
+						return nil, err
+					}
+				}
+
+				// Update the last speedtest time to the most recent LastChecked time
+				for _, result := range validResults {
+					if result.LastChecked.After(sys.lastSpeedtestTime) {
+						sys.lastSpeedtestTime = result.LastChecked
+					}
 				}
 			}
 		}

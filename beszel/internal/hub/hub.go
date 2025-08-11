@@ -95,7 +95,7 @@ func (h *Hub) StartHub() error {
 	h.App.OnRecordCreate("users").BindFunc(h.um.InitializeUserRole)
 	h.App.OnRecordCreate("user_settings").BindFunc(h.um.InitializeUserSettings)
 
-	// handle ping config updates
+	// handle system record updates (for initial config sending on startup)
 	h.App.OnRecordAfterUpdateSuccess("systems").BindFunc(h.onSystemRecordUpdate)
 
 	if pb, ok := h.App.(*pocketbase.PocketBase); ok {

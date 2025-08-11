@@ -38,9 +38,10 @@ var (
 // SystemManager manages a collection of monitored systems and their connections.
 // It handles system lifecycle, status updates, and maintains both SSH and WebSocket connections.
 type SystemManager struct {
-	hub       hubLike                       // Hub interface for database and alert operations
-	systems   *store.Store[string, *System] // Thread-safe store of active systems
-	sshConfig *ssh.ClientConfig             // SSH client configuration for system connections
+	hub        hubLike                       // Hub interface for database and alert operations
+	systems    *store.Store[string, *System] // Thread-safe store of active systems
+	sshConfig  *ssh.ClientConfig             // SSH client configuration for system connections
+	configSent map[string]bool               // Track which systems have received monitoring config
 }
 
 // hubLike defines the interface requirements for the hub dependency.
@@ -54,12 +55,14 @@ type hubLike interface {
 }
 
 // NewSystemManager creates a new SystemManager instance with the provided hub.
-// The hub must implement the hubLike interface to provide database and alert functionality.
 func NewSystemManager(hub hubLike) *SystemManager {
-	return &SystemManager{
-		systems: store.New(map[string]*System{}),
-		hub:     hub,
+	sm := &SystemManager{
+		hub:        hub,
+		systems:    store.New(map[string]*System{}),
+		configSent: make(map[string]bool),
 	}
+	sm.bindEventHooks()
+	return sm
 }
 
 // Initialize sets up the system manager by binding event hooks and starting existing systems.
@@ -257,6 +260,7 @@ func (sm *SystemManager) RemoveSystem(systemID string) error {
 	system.closeSSHConnection()
 	system.closeWebSocketConnection()
 	sm.systems.Remove(systemID)
+	sm.ClearConfigSent(systemID)
 	return nil
 }
 
@@ -303,7 +307,6 @@ func (sm *SystemManager) AddWebSocketSystem(systemId string, agentVersion semver
 	// Send unified monitoring configuration to the newly connected agent (startup only)
 	go func() {
 		sm.hub.Logger().Debug("Sending monitoring config to newly connected agent at startup", "system", systemId)
-		sm.hub.Logger().Debug("System record monitoring_config field", "system", systemId, "monitoring_config", systemRecord.Get("monitoring_config"))
 
 		if hubWithMonitoring, ok := sm.hub.(interface{ SendMonitoringConfigToAgent(*core.Record) error }); ok {
 			sm.hub.Logger().Debug("Hub interface cast successful, sending monitoring config", "system", systemId)
@@ -311,6 +314,8 @@ func (sm *SystemManager) AddWebSocketSystem(systemId string, agentVersion semver
 				sm.hub.Logger().Error("Failed to send monitoring config to newly connected agent", "system", systemId, "err", err)
 			} else {
 				sm.hub.Logger().Debug("Successfully sent monitoring config to newly connected agent", "system", systemId)
+				// Mark that we've sent the configuration to this system
+				sm.MarkConfigAsSent(systemId)
 			}
 		} else {
 			sm.hub.Logger().Debug("Hub interface cast failed - monitoring config not available", "system", systemId)
@@ -323,6 +328,21 @@ func (sm *SystemManager) AddWebSocketSystem(systemId string, agentVersion semver
 // GetSystem returns a system by ID from the store
 func (sm *SystemManager) GetSystem(systemID string) (*System, bool) {
 	return sm.systems.GetOk(systemID)
+}
+
+// HasConfigBeenSent checks if monitoring config has been sent to a system
+func (sm *SystemManager) HasConfigBeenSent(systemID string) bool {
+	return sm.configSent[systemID]
+}
+
+// MarkConfigAsSent marks that monitoring config has been sent to a system
+func (sm *SystemManager) MarkConfigAsSent(systemID string) {
+	sm.configSent[systemID] = true
+}
+
+// ClearConfigSent clears the config sent status for a system
+func (sm *SystemManager) ClearConfigSent(systemID string) {
+	delete(sm.configSent, systemID)
 }
 
 // createSSHClientConfig initializes the SSH client configuration for connecting to an agent's server

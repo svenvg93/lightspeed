@@ -515,31 +515,52 @@ export function getMeterState(value: number): MeterState {
 }
 
 // Parses a cron expression and returns the interval in milliseconds
-// Supports common patterns like "*/30 * * * * *" (every 30 seconds)
+// Supports common patterns like "*/30 * * * * *" (every 30 seconds) and "*/3 * * * *" (every 3 minutes)
 // Returns null if the expression cannot be parsed or is not a simple interval
 export function parseCronInterval(cronExpression: string): number | null {
 	if (!cronExpression || typeof cronExpression !== 'string') {
 		return null
 	}
 
-	// Handle simple patterns like "*/30 * * * * *" (every 30 seconds)
+	// Handle 6-part patterns like "*/30 * * * * *" (every 30 seconds)
 	const simpleIntervalMatch = cronExpression.match(/^\*?\/(\d+)\s+\*\s+\*\s+\*\s+\*\s+\*$/)
 	if (simpleIntervalMatch) {
 		const seconds = parseInt(simpleIntervalMatch[1])
 		return seconds * 1000
 	}
 
-	// Handle patterns like "0 */3 * * * *" (every 3 minutes)
+	// Handle 6-part patterns like "0 */3 * * * *" (every 3 minutes)
 	const minuteIntervalMatch = cronExpression.match(/^0\s+\*?\/(\d+)\s+\*\s+\*\s+\*\s+\*$/)
 	if (minuteIntervalMatch) {
 		const minutes = parseInt(minuteIntervalMatch[1])
 		return minutes * 60 * 1000
 	}
 
-	// Handle patterns like "0 0 */1 * * *" (every hour)
+	// Handle 6-part patterns like "0 0 */1 * * *" (every hour)
 	const hourIntervalMatch = cronExpression.match(/^0\s+0\s+\*?\/(\d+)\s+\*\s+\*\s+\*$/)
 	if (hourIntervalMatch) {
 		const hours = parseInt(hourIntervalMatch[1])
+		return hours * 60 * 60 * 1000
+	}
+
+	// Handle 5-part patterns like "*/3 * * * *" (every 3 minutes)
+	const fivePartMinuteIntervalMatch = cronExpression.match(/^\*?\/(\d+)\s+\*\s+\*\s+\*\s+\*$/)
+	if (fivePartMinuteIntervalMatch) {
+		const minutes = parseInt(fivePartMinuteIntervalMatch[1])
+		return minutes * 60 * 1000
+	}
+
+	// Handle 5-part patterns like "0 */2 * * *" (every 2 minutes)
+	const fivePartMinuteIntervalMatch2 = cronExpression.match(/^0\s+\*?\/(\d+)\s+\*\s+\*\s+\*$/)
+	if (fivePartMinuteIntervalMatch2) {
+		const minutes = parseInt(fivePartMinuteIntervalMatch2[1])
+		return minutes * 60 * 1000
+	}
+
+	// Handle 5-part patterns like "0 0 */1 * *" (every hour)
+	const fivePartHourIntervalMatch = cronExpression.match(/^0\s+0\s+\*?\/(\d+)\s+\*\s+\*$/)
+	if (fivePartHourIntervalMatch) {
+		const hours = parseInt(fivePartHourIntervalMatch[1])
 		return hours * 60 * 60 * 1000
 	}
 

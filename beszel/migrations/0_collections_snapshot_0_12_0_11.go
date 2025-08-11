@@ -511,16 +511,7 @@ func init() {
 				"system": false,
 				"type": "relation"
 			},
-			{
-				"hidden": false,
-				"id": "monitoring_config",
-				"maxSize": 2000000,
-				"name": "monitoring_config",
-				"presentable": false,
-				"required": false,
-				"system": false,
-				"type": "json"
-			},
+
 			{
 				"hidden": false,
 				"id": "autodate2990389176",
@@ -773,6 +764,449 @@ func init() {
 		"system": false
 	},
 	{
+		"id": "http_stats_collection_id",
+		"listRule": "@request.auth.id != \"\" && system.users.id ?= @request.auth.id",
+		"viewRule": "@request.auth.id != \"\" && system.users.id ?= @request.auth.id",
+		"createRule": null,
+		"updateRule": null,
+		"deleteRule": null,
+		"name": "http_stats",
+		"type": "base",
+		"fields": [
+			{
+				"autogeneratePattern": "[a-z0-9]{15}",
+				"hidden": false,
+				"id": "text3208210256",
+				"max": 15,
+				"min": 15,
+				"name": "id",
+				"pattern": "^[a-z0-9]+$",
+				"presentable": false,
+				"primaryKey": true,
+				"required": true,
+				"system": true,
+				"type": "text"
+			},
+			{
+				"cascadeDelete": true,
+				"collectionId": "2hz5ncl8tizk5nx",
+				"hidden": false,
+				"id": "system_relation_id",
+				"maxSelect": 1,
+				"minSelect": 1,
+				"name": "system",
+				"presentable": false,
+				"required": true,
+				"system": false,
+				"type": "relation"
+			},
+			{
+				"hidden": false,
+				"id": "url_text_id",
+				"maxLength": 500,
+				"name": "url",
+				"presentable": false,
+				"required": true,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "status_text_id",
+				"maxLength": 20,
+				"name": "status",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "response_time_number_id",
+				"name": "response_time",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "status_code_number_id",
+				"name": "status_code",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "error_code_text_id",
+				"maxLength": 100,
+				"name": "error_code",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "created_date_id",
+				"name": "created",
+				"onCreate": true,
+				"onUpdate": false,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			},
+			{
+				"hidden": false,
+				"id": "updated_date_id",
+				"name": "updated",
+				"onCreate": true,
+				"onUpdate": true,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			}
+		],
+		"indexes": [],
+		"system": false
+	},
+	{
+		"id": "speedtest_stats_collection_id",
+		"listRule": "@request.auth.id != \"\" && system.users.id ?= @request.auth.id",
+		"viewRule": "@request.auth.id != \"\" && system.users.id ?= @request.auth.id",
+		"createRule": null,
+		"updateRule": null,
+		"deleteRule": null,
+		"name": "speedtest_stats",
+		"type": "base",
+		"fields": [
+			{
+				"autogeneratePattern": "[a-z0-9]{15}",
+				"hidden": false,
+				"id": "text3208210256",
+				"max": 15,
+				"min": 15,
+				"name": "id",
+				"pattern": "^[a-z0-9]+$",
+				"presentable": false,
+				"primaryKey": true,
+				"required": true,
+				"system": true,
+				"type": "text"
+			},
+			{
+				"cascadeDelete": true,
+				"collectionId": "2hz5ncl8tizk5nx",
+				"hidden": false,
+				"id": "system_relation_id",
+				"maxSelect": 1,
+				"minSelect": 1,
+				"name": "system",
+				"presentable": false,
+				"required": true,
+				"system": false,
+				"type": "relation"
+			},
+			{
+				"hidden": false,
+				"id": "server_id_text_id",
+				"maxLength": 100,
+				"name": "server_id",
+				"presentable": false,
+				"required": true,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "status_text_id",
+				"maxLength": 20,
+				"name": "status",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "download_speed_number_id",
+				"name": "download_speed",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "upload_speed_number_id",
+				"name": "upload_speed",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "latency_number_id",
+				"name": "latency",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "error_code_text_id",
+				"maxLength": 100,
+				"name": "error_code",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "ping_jitter_number_id",
+				"name": "ping_jitter",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "ping_low_number_id",
+				"name": "ping_low",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "ping_high_number_id",
+				"name": "ping_high",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "download_bytes_number_id",
+				"name": "download_bytes",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "download_elapsed_number_id",
+				"name": "download_elapsed",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "download_latency_iqm_number_id",
+				"name": "download_latency_iqm",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "download_latency_low_number_id",
+				"name": "download_latency_low",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "download_latency_high_number_id",
+				"name": "download_latency_high",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "download_latency_jitter_number_id",
+				"name": "download_latency_jitter",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "upload_bytes_number_id",
+				"name": "upload_bytes",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "upload_elapsed_number_id",
+				"name": "upload_elapsed",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "upload_latency_iqm_number_id",
+				"name": "upload_latency_iqm",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "upload_latency_low_number_id",
+				"name": "upload_latency_low",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "upload_latency_high_number_id",
+				"name": "upload_latency_high",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "upload_latency_jitter_number_id",
+				"name": "upload_latency_jitter",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "packet_loss_number_id",
+				"name": "packet_loss",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "isp_text_id",
+				"maxLength": 200,
+				"name": "isp",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "interface_external_ip_text_id",
+				"maxLength": 50,
+				"name": "interface_external_ip",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "server_name_text_id",
+				"maxLength": 200,
+				"name": "server_name",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "server_location_text_id",
+				"maxLength": 200,
+				"name": "server_location",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "server_country_text_id",
+				"maxLength": 100,
+				"name": "server_country",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+			{
+				"hidden": false,
+				"id": "server_host_text_id",
+				"maxLength": 200,
+				"name": "server_host",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+
+			{
+				"hidden": false,
+				"id": "server_ip_text_id",
+				"maxLength": 50,
+				"name": "server_ip",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "text"
+			},
+
+			{
+				"hidden": false,
+				"id": "created_date_id",
+				"name": "created",
+				"onCreate": true,
+				"onUpdate": false,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			},
+			{
+				"hidden": false,
+				"id": "updated_date_id",
+				"name": "updated",
+				"onCreate": true,
+				"onUpdate": true,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			}
+		],
+		"indexes": [],
+		"system": false
+	},
+	{
 		"id": "_pb_users_auth_",
 		"listRule": "id = @request.auth.id",
 		"viewRule": "id = @request.auth.id",
@@ -910,6 +1344,108 @@ func init() {
 		"system": false,
 		"authRule": "verified=true",
 		"manageRule": null
+	},
+	{
+		"id": "monitoring_config_collection",
+		"listRule": "@request.auth.id != \"\" && system.users.id ?= @request.auth.id",
+		"viewRule": "@request.auth.id != \"\" && system.users.id ?= @request.auth.id",
+		"createRule": "@request.auth.id != \"\" && @request.auth.role != \"readonly\"",
+		"updateRule": "@request.auth.id != \"\" && @request.auth.role != \"readonly\"",
+		"deleteRule": "@request.auth.id != \"\" && @request.auth.role != \"readonly\"",
+		"name": "monitoring_config",
+		"type": "base",
+		"fields": [
+			{
+				"autogeneratePattern": "[a-z0-9]{15}",
+				"hidden": false,
+				"id": "text3208210256",
+				"max": 15,
+				"min": 15,
+				"name": "id",
+				"pattern": "^[a-z0-9]+$",
+				"presentable": false,
+				"primaryKey": true,
+				"required": true,
+				"system": true,
+				"type": "text"
+			},
+			{
+				"cascadeDelete": true,
+				"collectionId": "2hz5ncl8tizk5nx",
+				"hidden": false,
+				"id": "system_relation",
+				"maxSelect": 1,
+				"minSelect": 1,
+				"name": "system",
+				"presentable": false,
+				"required": true,
+				"system": false,
+				"type": "relation",
+				"unique": true
+			},
+			{
+				"hidden": false,
+				"id": "ping",
+				"maxSize": 2000000,
+				"name": "ping",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "json"
+			},
+			{
+				"hidden": false,
+				"id": "dns",
+				"maxSize": 2000000,
+				"name": "dns",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "json"
+			},
+			{
+				"hidden": false,
+				"id": "http",
+				"maxSize": 2000000,
+				"name": "http",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "json"
+			},
+			{
+				"hidden": false,
+				"id": "speedtest",
+				"maxSize": 2000000,
+				"name": "speedtest",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "json"
+			},
+			{
+				"hidden": false,
+				"id": "autodate2990389176",
+				"name": "created",
+				"onCreate": true,
+				"onUpdate": false,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			},
+			{
+				"hidden": false,
+				"id": "autodate3332085495",
+				"name": "updated",
+				"onCreate": true,
+				"onUpdate": true,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			}
+		],
+		"indexes": [],
+		"system": false
 	}
 ]`
 

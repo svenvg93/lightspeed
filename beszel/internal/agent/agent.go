@@ -22,9 +22,11 @@ type Agent struct {
 	sync.Mutex      // Used to lock agent while collecting data
 	debug      bool // true if LOG_LEVEL is set to debug
 
-	pingManager *PingManager // Manages ping tests
-	dnsManager  *DnsManager  // Manages DNS lookups
-	systemInfo  system.Info  // Host system info
+	pingManager      *PingManager      // Manages ping tests
+	dnsManager       *DnsManager       // Manages DNS lookups
+	httpManager      *HttpManager      // Manages HTTP checks
+	speedtestManager *SpeedtestManager // Manages speedtest checks
+	systemInfo       system.Info       // Host system info
 
 	cache             *SessionCache      // Cache for system stats based on primary session ID
 	connectionManager *ConnectionManager // Channel to signal connection events
@@ -80,6 +82,20 @@ func NewAgent(dataDir ...string) (agent *Agent, err error) {
 		slog.Debug("DNS manager", "err", err)
 	} else {
 		agent.dnsManager = dm
+	}
+
+	// initialize HTTP manager
+	if hm, err := NewHttpManager(); err != nil {
+		slog.Debug("HTTP manager", "err", err)
+	} else {
+		agent.httpManager = hm
+	}
+
+	// initialize speedtest manager
+	if sm, err := NewSpeedtestManager(); err != nil {
+		slog.Debug("Speedtest manager", "err", err)
+	} else {
+		agent.speedtestManager = sm
 	}
 
 	// if debugging, print stats
@@ -169,5 +185,18 @@ func (a *Agent) UpdatePingConfig(targets []system.PingTarget, cronExpression str
 func (a *Agent) UpdateDnsConfig(targets []system.DnsTarget, cronExpression string) {
 	if a.dnsManager != nil {
 		a.dnsManager.UpdateConfig(targets, cronExpression)
+	}
+}
+
+// UpdateHttpConfig updates the HTTP monitoring configuration
+func (a *Agent) UpdateHttpConfig(targets []system.HttpTarget, cronExpression string) {
+	if a.httpManager != nil {
+		a.httpManager.UpdateConfig(targets, cronExpression)
+	}
+}
+
+func (a *Agent) UpdateSpeedtestConfig(targets []system.SpeedtestTarget, cronExpression string) {
+	if a.speedtestManager != nil {
+		a.speedtestManager.UpdateConfig(targets, cronExpression)
 	}
 }

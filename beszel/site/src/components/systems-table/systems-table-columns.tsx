@@ -1,17 +1,21 @@
 import { SystemRecord } from "@/types"
-import { CellContext, ColumnDef, HeaderContext } from "@tanstack/react-table"
+import { ColumnDef, HeaderContext } from "@tanstack/react-table"
 import { ClassValue } from "clsx"
 import {
 	ArrowUpDownIcon,
 	CopyIcon,
 	ClockArrowUp,
+	GlobeIcon,
+	GitPullRequestIcon,
 	MoreHorizontalIcon,
 	PauseCircleIcon,
+	MapPinHouseIcon,
 	PenBoxIcon,
 	PlayCircleIcon,
 	ServerIcon,
 	Trash2Icon,
-	WifiIcon,
+	DownloadIcon,
+	UploadIcon,
 } from "lucide-react"
 import { Button } from "../ui/button"
 import {
@@ -112,7 +116,66 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			),
 			header: sortableHeader,
 		},
-
+		{
+			accessorFn: ({ info }) => info.adl,
+			id: "adl",
+			name: () => t`Download`,
+			size: 70,
+			Icon: DownloadIcon,
+			header: (context) => (
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							{sortableHeader(context)}
+						</TooltipTrigger>
+						<TooltipContent>
+							{t`Average download speed across all speedtest targets`}
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
+			),
+			cell({ getValue }) {
+				const adl = getValue() as number
+				if (!adl || adl === 0) {
+					return null
+				}
+				return (
+					<span className="tabular-nums">
+						{adl.toFixed(1)} Mbps
+					</span>
+				)
+			},
+		},
+		{
+			accessorFn: ({ info }) => info.aul,
+			id: "aul",
+			name: () => t`Upload`,
+			size: 70,
+			Icon: UploadIcon,
+			header: (context) => (
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							{sortableHeader(context)}
+						</TooltipTrigger>
+						<TooltipContent>
+							{t`Average upload speed across all speedtest targets`}
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
+			),
+			cell({ getValue }) {
+				const aul = getValue() as number
+				if (!aul || aul === 0) {
+					return null
+				}
+				return (
+					<span className="tabular-nums">
+						{aul.toFixed(1)} Mbps
+					</span>
+				)
+			},
+		},
 		{
 			accessorFn: ({ info }) => info.ap,
 			id: "ap",
@@ -133,6 +196,9 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			),
 			cell({ getValue }) {
 				const ap = getValue() as number
+				if (!ap || ap === 0) {
+					return null
+				}
 				return (
 					<span className="tabular-nums">
 						{ap.toFixed(1)} ms
@@ -145,7 +211,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			id: "ad",
 			name: () => t`DNS`,
 			size: 50,
-			Icon: ServerIcon,
+			Icon: MapPinHouseIcon,
 			header: (context) => (
 				<TooltipProvider>
 					<Tooltip>
@@ -171,12 +237,42 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			},
 		},
 		{
+			accessorFn: ({ info }) => info.ah,
+			id: "ah",
+			name: () => t`HTTP`,
+			size: 50,
+			Icon: GlobeIcon,
+			header: (context) => (
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							{sortableHeader(context)}
+						</TooltipTrigger>
+						<TooltipContent>
+							{t`Overall average response time across all HTTP targets`}
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
+			),
+			cell({ getValue }) {
+				const ah = getValue() as number
+				if (!ah || ah === 0) {
+					return null
+				}
+				return (
+					<span className="tabular-nums">
+						{ah.toFixed(1)} ms
+					</span>
+				)
+			},
+		},
+		{
 			accessorFn: ({ info }) => info.v,
 			id: "agent",
 			name: () => t`Agent`,
 			// invertSorting: true,
 			size: 50,
-			Icon: WifiIcon,
+			Icon: 	GitPullRequestIcon,				
 			hideSort: true,
 			header: sortableHeader,
 			cell(info) {
