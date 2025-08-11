@@ -303,7 +303,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			size: 50,
 			cell: ({ row }) => (
 				<div className="flex justify-end items-center gap-1 -ms-3">
-											<SystemConfigDialog system={row.original} />
+					<SystemConfigDialog system={row.original} />
 					<AlertButton system={row.original} />
 					<ActionsButton system={row.original} />
 				</div>

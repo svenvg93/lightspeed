@@ -32,6 +32,7 @@ import { Button } from "../ui/button"
 import { SystemConfigDialog } from "../system-config/system-config-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs"
 
+
 const PingChart = lazy(() => import("../charts/ping-chart"))
 const DnsChart = lazy(() => import("../charts/dns-chart"))
 const HttpChart = lazy(() => import("../charts/http-chart"))
@@ -51,6 +52,8 @@ function getDefaultTickCount(chartTime: ChartTimes): number {
 			return 6 // Default fallback
 	}
 }
+
+
 
 export default function SystemDetail({ name }: { name: string }) {
 	const { t } = useLingui()
@@ -864,7 +867,6 @@ export default function SystemDetail({ name }: { name: string }) {
 						</div>
 					</div>
 					<div className="xl:ms-auto flex items-center gap-2 max-sm:-mb-1">
-						<SystemConfigDialog system={system} />
 						<ChartTimeSelect className="w-full xl:w-40" />
 						<TooltipProvider delayDuration={100}>
 							<Tooltip>
