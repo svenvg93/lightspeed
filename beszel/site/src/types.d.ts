@@ -35,6 +35,7 @@ export interface SystemRecord extends RecordModel {
 		adl?: number  // Average download
 		aul?: number  // Average upload
 	}
+	tags?: string[]  // Array of tags for filtering and organization
 	v: string
 	
 	// Unified monitoring configuration

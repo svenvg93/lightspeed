@@ -9,7 +9,7 @@ import { SystemRecord, PingStatsRecord, DnsStatsRecord, HttpStatsRecord, Speedte
 import React, { lazy, useEffect, useMemo, useState } from "react"
 import { Card, CardHeader, CardTitle, CardDescription } from "../ui/card"
 import { useStore } from "@nanostores/react"
-import { GlobeIcon, MonitorIcon, EthernetPortIcon, LayoutGridIcon, Building2Icon, RouteIcon } from "lucide-react"
+import { GlobeIcon, MonitorIcon, EthernetPortIcon, LayoutGridIcon, Building2Icon, RouteIcon, TagsIcon } from "lucide-react"
 import { Rows } from "../ui/icons"
 import {
 	cn,
@@ -616,14 +616,14 @@ export default function SystemDetail({ name }: { name: string }) {
 				}
 			}
 		})
-	}, [dnsStats, monitoringConfig])
+			}, [dnsStats, monitoringConfig])
 
 	// Get unique HTTP targets from HTTP stats with friendly names
 	const httpTargets = useMemo(() => {
 		// Start with HTTP config targets to ensure we have friendly names
 		const configTargets = new Map<string, string>()
-		if (system.monitoring_config?.http?.targets) {
-			system.monitoring_config.http.targets.forEach(target => {
+		if (monitoringConfig?.http?.targets) {
+			monitoringConfig.http.targets.forEach((target: any) => {
 				const key = target.url
 				const friendlyName = target.friendly_name && target.friendly_name.trim() ? 
 					target.friendly_name.trim() : 
@@ -760,6 +760,12 @@ export default function SystemDetail({ name }: { name: string }) {
 				label: t`ASN`,
 				hide: !system.info.asn,
 			},
+			{
+				value: system.tags && system.tags.length > 0 ? system.tags.join(", ") : undefined,
+				Icon: TagsIcon,
+				label: t`Tags`,
+				hide: !system.tags || system.tags.length === 0,
+			},
 		] as {
 			value: string | number | undefined
 			label?: string
@@ -843,6 +849,38 @@ export default function SystemDetail({ name }: { name: string }) {
 								if (hide || !value) {
 									return null
 								}
+								
+								// Special handling for tags
+								if (label === t`Tags` && system.tags) {
+									const content = (
+										<div className="flex gap-1.5 items-center">
+											<Icon className="h-4 w-4" />
+											<div className="flex gap-1">
+												{system.tags.map((tag, index) => (
+													<span
+														key={index}
+														className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+													>
+														{tag}
+													</span>
+												))}
+											</div>
+										</div>
+									)
+									return (
+										<div key={i} className="contents">
+											<Separator orientation="vertical" className="h-4 bg-primary/30" />
+											<TooltipProvider>
+												<Tooltip delayDuration={150}>
+													<TooltipTrigger asChild>{content}</TooltipTrigger>
+													<TooltipContent>{label}</TooltipContent>
+												</Tooltip>
+											</TooltipProvider>
+										</div>
+									)
+								}
+								
+								// Default handling for other items
 								const content = (
 									<div className="flex gap-1.5 items-center">
 										<Icon className="h-4 w-4" /> {value}

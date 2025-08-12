@@ -521,6 +521,16 @@ func init() {
 				"system": false,
 				"type": "json"
 			},
+			{
+				"hidden": false,
+				"id": "tags_field",
+				"maxSize": 2000000,
+				"name": "tags",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "json"
+			},
 
 			{
 				"hidden": false,

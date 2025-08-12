@@ -18,6 +18,7 @@ import {
 	Trash2Icon,
 	DownloadIcon,
 	UploadIcon,
+	TagsIcon,
 } from "lucide-react"
 import { Button } from "../ui/button"
 import {
@@ -90,9 +91,9 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					paused: t`Paused`.toLowerCase(),
 				} as const
 
-				// match filter value against name or translated status
+				// match filter value against name, tags, or translated status
 				return (row: any, _: any, newFilterInput: any) => {
-					const { name, status } = row.original
+					const { name, status, tags } = row.original
 					if (newFilterInput !== filterInput) {
 						filterInput = newFilterInput
 						filterInputLower = newFilterInput.toLowerCase()
@@ -104,6 +105,14 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					}
 					if (nameLower && nameLower.includes(filterInputLower)) {
 						return true
+					}
+					// Check tags
+					if (tags && Array.isArray(tags)) {
+						for (const tag of tags) {
+							if (tag.toLowerCase().includes(filterInputLower)) {
+								return true
+							}
+						}
 					}
 					const statusLower = statusTranslations[status as keyof typeof statusTranslations]
 					return statusLower?.includes(filterInputLower) || false
@@ -119,6 +128,48 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 				</span>
 			),
 			header: sortableHeader,
+		},
+		{
+			accessorFn: ({ tags }: { tags?: string[] }) => tags || [],
+			id: "tags",
+			name: () => t`Tags`,
+			size: 120,
+			Icon: TagsIcon,
+			header: (context: any) => (
+				<TooltipProvider>
+					<Tooltip>
+						<TooltipTrigger asChild>
+							{sortableHeader(context)}
+						</TooltipTrigger>
+						<TooltipContent>
+							{t`Tags for filtering and organization`}
+						</TooltipContent>
+					</Tooltip>
+				</TooltipProvider>
+			),
+			cell({ getValue }: { getValue: () => any }) {
+				const tags = getValue() as string[]
+				if (!tags || tags.length === 0) {
+					return null
+				}
+				
+				// Show only first tag, with +X more indicator
+				const firstTag = tags[0]
+				const remainingCount = tags.length - 1
+				
+				return (
+					<div className="flex items-center gap-1">
+						<span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
+							{firstTag}
+						</span>
+						{remainingCount > 0 && (
+							<span className="text-xs text-muted-foreground">
+								+{remainingCount}
+							</span>
+						)}
+					</div>
+				)
+			},
 		},
 		{
 			accessorFn: ({ averages }: { averages?: any }) => averages?.adl || 0,
@@ -329,6 +380,7 @@ function sortableHeader(context: HeaderContext<SystemRecord, unknown>) {
 			case "ap": return t`ICMP`
 			case "ad": return t`DNS`
 			case "ah": return t`HTTP`
+			case "tags": return t`Tags`
 			case "agent": return t`Agent`
 			default: return id
 		}

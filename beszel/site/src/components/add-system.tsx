@@ -22,6 +22,7 @@ import { $router, basePath, Link, navigate } from "./router"
 import { SystemRecord } from "@/types"
 import { AppleIcon, DockerIcon, TuxIcon, WindowsIcon } from "./ui/icons"
 import { InputCopy } from "./ui/input-copy"
+import { XIcon } from "lucide-react"
 import { getPagePath } from "@nanostores/router"
 import {
 	copyDockerCompose,
@@ -77,6 +78,31 @@ export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => 
 	const isUnixSocket = hostValue.startsWith("/")
 	const [tab, setTab] = useLocalStorage("as-tab", "docker")
 	const [token, setToken] = useState(system?.token ?? "")
+	const [tags, setTags] = useState<string[]>(system?.tags || [])
+	const [tagInput, setTagInput] = useState("")
+
+	// Tag management functions
+	const addTag = (tag: string) => {
+		const trimmedTag = tag.trim()
+		if (trimmedTag && !tags.includes(trimmedTag)) {
+			setTags([...tags, trimmedTag])
+			setTagInput("")
+		}
+	}
+	
+	const removeTag = (tagToRemove: string) => {
+		setTags(tags.filter(tag => tag !== tagToRemove))
+	}
+	
+	const handleTagKeyPress = (e: React.KeyboardEvent) => {
+		if (e.key === 'Tab' || e.key === ',') {
+			e.preventDefault()
+			addTag(tagInput)
+		} else if (e.key === 'Backspace' && tagInput === '' && tags.length > 0) {
+			e.preventDefault()
+			removeTag(tags[tags.length - 1])
+		}
+	}
 
 	useEffect(() => {
 		;(async () => {
@@ -102,6 +128,7 @@ export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => 
 		const formData = new FormData(e.target as HTMLFormElement)
 		const data = Object.fromEntries(formData) as Record<string, any>
 		data.users = pb.authStore.record!.id
+		data.tags = tags
 		try {
 			setOpen(false)
 			if (system) {
@@ -214,6 +241,36 @@ export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => 
 							<Trans>Token</Trans>
 						</Label>
 						<InputCopy value={token} id="tkn" name="tkn" />
+						<Label htmlFor="tags" className="xs:text-end whitespace-pre">
+							<Trans>Tags</Trans>
+						</Label>
+						<div className="relative">
+							<div className="flex flex-wrap items-center gap-1 p-2 border border-input rounded-md bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 min-h-[40px] max-h-32 overflow-y-auto">
+								{tags.map((tag, index) => (
+									<span
+										key={index}
+										className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200"
+									>
+										{tag}
+										<button
+											type="button"
+											onClick={() => removeTag(tag)}
+											className="ml-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded-full p-0.5"
+										>
+											<XIcon className="h-3 w-3" />
+										</button>
+									</span>
+								))}
+								<input
+									type="text"
+									value={tagInput}
+									onChange={(e) => setTagInput(e.target.value)}
+									onKeyDown={handleTagKeyPress}
+									placeholder={tags.length === 0 ? t`Type tag and press Tab or comma` : ""}
+									className="flex-1 min-w-0 bg-transparent border-none outline-none placeholder:text-muted-foreground"
+								/>
+							</div>
+						</div>
 					</div>
 					<DialogFooter className="flex justify-end gap-x-2 gap-y-3 flex-col mt-5">
 						{/* Docker */}
