@@ -103,7 +103,7 @@ const hourWithMinutesFormatter = new Intl.DateTimeFormat(undefined, {
 	hour: "numeric",
 	minute: "numeric",
 })
-export const hourWithMinutes = (timestamp: string) => {
+export const hourWithMinutes = (timestamp: string | number) => {
 	return hourWithMinutesFormatter.format(new Date(timestamp))
 }
 
@@ -113,7 +113,7 @@ const shortDateFormatter = new Intl.DateTimeFormat(undefined, {
 	hour: "numeric",
 	minute: "numeric",
 })
-export const formatShortDate = (timestamp: string) => {
+export const formatShortDate = (timestamp: string | number) => {
 	return shortDateFormatter.format(new Date(timestamp))
 }
 
@@ -121,7 +121,7 @@ const dayFormatter = new Intl.DateTimeFormat(undefined, {
 	day: "numeric",
 	month: "short",
 })
-export const formatDay = (timestamp: string) => {
+export const formatDay = (timestamp: string | number) => {
 	return dayFormatter.format(new Date(timestamp))
 }
 
@@ -176,7 +176,7 @@ export const chartTimeData: ChartTimeData = {
 		expectedInterval: 60_000,
 		label: () => t`1 hour`,
 		// ticks: 12,
-		format: (timestamp: string) => hourWithMinutes(timestamp),
+		format: (timestamp: string | number) => hourWithMinutes(timestamp),
 		getOffset: (endTime: Date) => timeHour.offset(endTime, -1),
 	},
 	"12h": {
@@ -184,14 +184,14 @@ export const chartTimeData: ChartTimeData = {
 		expectedInterval: 60_000 * 10,
 		label: () => t`12 hours`,
 		ticks: 12,
-		format: (timestamp: string) => hourWithMinutes(timestamp),
+		format: (timestamp: string | number) => hourWithMinutes(timestamp),
 		getOffset: (endTime: Date) => timeHour.offset(endTime, -12),
 	},
 	"24h": {
 		type: "20m",
 		expectedInterval: 60_000 * 20,
 		label: () => t`24 hours`,
-		format: (timestamp: string) => hourWithMinutes(timestamp),
+		format: (timestamp: string | number) => hourWithMinutes(timestamp),
 		getOffset: (endTime: Date) => timeHour.offset(endTime, -24),
 	},
 	"1w": {
@@ -199,7 +199,7 @@ export const chartTimeData: ChartTimeData = {
 		expectedInterval: 60_000 * 120,
 		label: () => t`1 week`,
 		ticks: 7,
-		format: (timestamp: string) => formatDay(timestamp),
+		format: (timestamp: string | number) => formatDay(timestamp),
 		getOffset: (endTime: Date) => timeDay.offset(endTime, -7),
 	},
 	"30d": {
@@ -207,7 +207,7 @@ export const chartTimeData: ChartTimeData = {
 		expectedInterval: 60_000 * 480,
 		label: () => t`30 days`,
 		ticks: 30,
-		format: (timestamp: string) => formatDay(timestamp),
+		format: (timestamp: string | number) => formatDay(timestamp),
 		getOffset: (endTime: Date) => timeDay.offset(endTime, -30),
 	},
 }
@@ -457,6 +457,19 @@ export const getHubURL = () => BESZEL?.HUB_URL || window.location.origin
 
 /** Map of system IDs to their corresponding tokens (used to avoid fetching in add-system dialog) */
 export const tokenMap = new Map<SystemRecord["id"], FingerprintRecord["token"]>()
+
+/** Format milliseconds into human-readable time string */
+export function formatTime(ms: number): string {
+	if (ms < 1000) {
+		return `${Math.round(ms)}ms`
+	} else if (ms < 60000) {
+		return `${(ms / 1000).toFixed(1)}s`
+	} else {
+		const minutes = Math.floor(ms / 60000)
+		const seconds = ((ms % 60000) / 1000).toFixed(0)
+		return `${minutes}m ${seconds}s`
+	}
+}
 
 /** Calculate duration between two dates and format as human-readable string */
 export function formatDuration(

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button"
 import { ActivityIcon } from "lucide-react"
 import { SystemRecord } from "@/types"
 import { Separator } from "@/components/ui/separator"
-import { toast } from "@/components/ui/use-toast"
+import { toast } from "sonner"
 import { pb } from "@/lib/stores"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { 
@@ -214,17 +214,10 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 				setMonitoringConfigId(newRecord.id)
 			}
 
-			toast({
-				title: t`Configuration Saved`,
-				description: t`All monitoring configurations have been updated successfully. Remember to restart the agent for changes to take effect.`,
-			})
+			toast.success(t`Configuration saved successfully. Remember to restart the agent for changes to take effect.`)
 		} catch (error) {
 			console.error("Failed to save configs:", error)
-			toast({
-				title: t`Error`,
-				description: t`Failed to save configuration. Please try again.`,
-				variant: "destructive",
-			})
+			toast.error(t`Failed to save configuration. Please try again.`)
 		} finally {
 			setIsLoading(false)
 		}

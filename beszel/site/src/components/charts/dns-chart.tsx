@@ -1,6 +1,6 @@
 import { Area, CartesianGrid, YAxis, Line, ComposedChart } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, xAxis } from "@/components/ui/chart"
-import { useYAxisWidth, cn, formatShortDate, chartMargin, toFixedFloat, decimalString } from "@/lib/utils"
+import { useYAxisWidth, cn, formatShortDate, chartMargin, toFixedFloat, decimalString, formatTime } from "@/lib/utils"
 import { ChartData } from "@/types"
 import { useMemo } from "react"
 import { t } from "@lingui/core/macro"
@@ -41,7 +41,7 @@ export default function DnsChart({ chartData, targetKey }: DnsChartProps) {
 							orientation="left"
 							className="tracking-tighter"
 							width={yAxisWidth}
-							tickFormatter={(value) => updateYAxisWidth(toFixedFloat(value, 1) + "ms")}
+							tickFormatter={(value) => updateYAxisWidth(formatTime(value))}
 							tickLine={false}
 							axisLine={false}
 						/>
@@ -66,7 +66,7 @@ export default function DnsChart({ chartData, targetKey }: DnsChartProps) {
 										if (name === t`Error Code`) {
 											return value.toString()
 										}
-										return decimalString(value, 1) + "ms"
+										return formatTime(value)
 									}}
 								/>
 							}

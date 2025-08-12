@@ -148,7 +148,7 @@ export interface ChartTimeData {
 		expectedInterval: number
 		label: () => string
 		ticks?: number
-		format: (timestamp: string) => string
+		format: (timestamp: string | number) => string
 		getOffset: (endTime: Date) => Date
 	}
 }

@@ -1,6 +1,6 @@
 import { Area, CartesianGrid, YAxis, Line, ComposedChart } from "recharts"
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, xAxis } from "@/components/ui/chart"
-import { useYAxisWidth, cn, formatShortDate, chartMargin, toFixedFloat, decimalString } from "@/lib/utils"
+import { useYAxisWidth, cn, formatShortDate, chartMargin, toFixedFloat, decimalString, formatTime } from "@/lib/utils"
 import { ChartData } from "@/types"
 import { useMemo } from "react"
 import { t } from "@lingui/core/macro"
@@ -41,7 +41,7 @@ export default function HttpChart({ chartData, targetKey }: HttpChartProps) {
 							orientation="left"
 							className="tracking-tighter"
 							width={yAxisWidth}
-							tickFormatter={(value) => updateYAxisWidth(toFixedFloat(value, 1) + "ms")}
+							tickFormatter={(value) => updateYAxisWidth(formatTime(value))}
 							tickLine={false}
 							axisLine={false}
 						/>
@@ -54,7 +54,7 @@ export default function HttpChart({ chartData, targetKey }: HttpChartProps) {
 								<ChartTooltipContent
 									labelFormatter={(_, data) => formatShortDate(data[0].payload.created)}
 																contentFormatter={({ value }) => {
-								return decimalString(value, 1) + "ms"
+								return formatTime(value)
 							}}
 								/>
 							}
