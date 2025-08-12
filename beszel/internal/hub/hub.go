@@ -218,10 +218,8 @@ func (h *Hub) startServer(se *core.ServeEvent) error {
 
 // registerCronJobs sets up scheduled tasks
 func (h *Hub) registerCronJobs(_ *core.ServeEvent) error {
-	// delete old system_stats and alerts_history records once every hour
+	// delete old records based on retention policy once every hour
 	h.Cron().MustAdd("delete old records", "8 * * * *", h.rm.DeleteOldRecords)
-	// create longer records every 10 minutes
-	h.Cron().MustAdd("create longer records", "*/10 * * * *", h.rm.CreateLongerRecords)
 	// calculate system averages every 5 minutes
 	h.Cron().MustAdd("calculate system averages", "*/5 * * * *", func() {
 		if err := h.calculateSystemAverages(); err != nil {

@@ -720,16 +720,7 @@ func init() {
 				"system": false,
 				"type": "text"
 			},
-			{
-				"hidden": false,
-				"id": "type_text_id",
-				"maxLength": 10,
-				"name": "type",
-				"presentable": false,
-				"required": false,
-				"system": false,
-				"type": "text"
-			},
+
 			{
 				"hidden": false,
 				"id": "status_text_id",

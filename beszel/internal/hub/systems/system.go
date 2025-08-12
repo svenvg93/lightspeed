@@ -165,6 +165,7 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 				pingStatsRecord.Set("min_rtt", result.MinRtt)
 				pingStatsRecord.Set("max_rtt", result.MaxRtt)
 				pingStatsRecord.Set("avg_rtt", result.AvgRtt)
+				// No type field needed - we're storing all raw data
 
 				if err := hub.Save(pingStatsRecord); err != nil {
 					return nil, err
@@ -205,6 +206,7 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 				dnsStatsRecord.Set("domain", result.Domain)
 				dnsStatsRecord.Set("server", result.Server)
 				dnsStatsRecord.Set("type", result.Type)
+				// No period_type field needed - we're storing all raw data
 				dnsStatsRecord.Set("status", result.Status)
 				dnsStatsRecord.Set("lookup_time", result.LookupTime)
 				dnsStatsRecord.Set("error_code", result.ErrorCode)
@@ -250,6 +252,7 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 				httpStatsRecord.Set("response_time", result.ResponseTime)
 				httpStatsRecord.Set("status_code", result.StatusCode)
 				httpStatsRecord.Set("error_code", result.ErrorCode)
+				// No type field needed - we're storing all raw data
 
 				if err := hub.Save(httpStatsRecord); err != nil {
 					return nil, err
@@ -298,6 +301,7 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 					speedtestStatsRecord.Set("latency", result.Latency)
 					speedtestStatsRecord.Set("error_code", result.ErrorCode)
 					speedtestStatsRecord.Set("ping_jitter", result.PingJitter)
+					speedtestStatsRecord.Set("type", "raw") // Raw data type for initial records
 					speedtestStatsRecord.Set("ping_low", result.PingLow)
 					speedtestStatsRecord.Set("ping_high", result.PingHigh)
 					speedtestStatsRecord.Set("download_bytes", result.DownloadBytes)
