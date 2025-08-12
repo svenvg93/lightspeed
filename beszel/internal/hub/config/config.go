@@ -21,11 +21,11 @@ type config struct {
 }
 
 type systemConfig struct {
-	Name  string   `yaml:"name"`
-	Host  string   `yaml:"host"`
-	Port  uint16   `yaml:"port,omitempty"`
-	Token string   `yaml:"token,omitempty"`
-	Users []string `yaml:"users"`
+	Name  string `yaml:"name"`
+	Host  string `yaml:"host"`
+	Port  uint16 `yaml:"port,omitempty"`
+	Token string `yaml:"token,omitempty"`
+	// Removed Users field - using role-based access control instead
 }
 
 // Syncs systems with the config.yml file
@@ -48,44 +48,6 @@ func SyncSystems(e *core.ServeEvent) error {
 		return nil
 	}
 
-	var firstUser *core.Record
-
-	// Create a map of email to user ID
-	userEmailToID := make(map[string]string)
-	users, err := h.FindAllRecords("users", dbx.NewExp("id != ''"))
-	if err != nil {
-		return err
-	}
-	if len(users) > 0 {
-		firstUser = users[0]
-		for _, user := range users {
-			userEmailToID[user.GetString("email")] = user.Id
-		}
-	}
-
-	// add default settings for systems if not defined in config
-	for i := range config.Systems {
-		system := &config.Systems[i]
-		if system.Port == 0 {
-			system.Port = 45876
-		}
-		if len(users) > 0 && len(system.Users) == 0 {
-			// default to first user if none are defined
-			system.Users = []string{firstUser.Id}
-		} else {
-			// Convert email addresses to user IDs
-			userIDs := make([]string, 0, len(system.Users))
-			for _, email := range system.Users {
-				if id, ok := userEmailToID[email]; ok {
-					userIDs = append(userIDs, id)
-				} else {
-					log.Printf("User %s not found", email)
-				}
-			}
-			system.Users = userIDs
-		}
-	}
-
 	// Get existing systems
 	existingSystems, err := h.FindAllRecords("systems", dbx.NewExp("id != ''"))
 	if err != nil {
@@ -105,7 +67,6 @@ func SyncSystems(e *core.ServeEvent) error {
 		if existingSystem, ok := existingSystemsMap[key]; ok {
 			// Update existing system
 			existingSystem.Set("name", sysConfig.Name)
-			existingSystem.Set("users", sysConfig.Users)
 			existingSystem.Set("port", sysConfig.Port)
 			if err := h.Save(existingSystem); err != nil {
 				return err
@@ -129,7 +90,6 @@ func SyncSystems(e *core.ServeEvent) error {
 			newSystem.Set("name", sysConfig.Name)
 			newSystem.Set("host", sysConfig.Host)
 			newSystem.Set("port", sysConfig.Port)
-			newSystem.Set("users", sysConfig.Users)
 			newSystem.Set("info", system.Info{})
 			newSystem.Set("status", "pending")
 			if err := h.Save(newSystem); err != nil {
@@ -215,7 +175,6 @@ func generateYAML(h core.App) (string, error) {
 			Name:  system.GetString("name"),
 			Host:  system.GetString("host"),
 			Port:  cast.ToUint16(system.Get("port")),
-			Users: userEmails,
 			Token: systemTokenMap[system.Id],
 		}
 		config.Systems = append(config.Systems, sysConfig)

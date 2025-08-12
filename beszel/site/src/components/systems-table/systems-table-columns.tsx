@@ -30,7 +30,10 @@ import {
 import {
 	cn,
 	copyToClipboard,
-	isReadOnlyUser,
+	generateToken,
+	getHubURL,
+	isAdmin,
+	tokenMap,
 } from "@/lib/utils"
 import { pb } from "@/lib/stores"
 import { Trans, useLingui } from "@lingui/react/macro"
@@ -357,8 +360,8 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			size: 50,
 			cell: ({ row }: { row: any }) => (
 				<div className="flex justify-end items-center gap-1 -ms-3">
-					<SystemConfigDialog system={row.original} />
-					<AlertButton system={row.original} />
+					{isAdmin() && <SystemConfigDialog system={row.original} />}
+					{isAdmin() && <AlertButton system={row.original} />}
 					<ActionsButton system={row.original} />
 				</div>
 			),
@@ -429,7 +432,7 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 						</Button>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent align="end">
-						{!isReadOnlyUser() && (
+						{isAdmin() && (
 							<DropdownMenuItem
 								onSelect={() => {
 									editOpened.current = true
@@ -440,26 +443,27 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 								<Trans>Edit</Trans>
 							</DropdownMenuItem>
 						)}
-						<DropdownMenuItem
-							className={cn(isReadOnlyUser() && "hidden")}
-							onClick={() => {
-								pb.collection("systems").update(id, {
-									status: status === "paused" ? "pending" : "paused",
-								})
-							}}
-						>
-							{status === "paused" ? (
-								<>
-									<PlayCircleIcon className="me-2.5 size-4" />
-									<Trans>Resume</Trans>
-								</>
-							) : (
-								<>
-									<PauseCircleIcon className="me-2.5 size-4" />
-									<Trans>Pause</Trans>
-								</>
-							)}
-						</DropdownMenuItem>
+						{isAdmin() && (
+							<DropdownMenuItem
+								onClick={() => {
+									pb.collection("systems").update(id, {
+										status: status === "paused" ? "pending" : "paused",
+									})
+								}}
+							>
+								{status === "paused" ? (
+									<>
+										<PlayCircleIcon className="me-2.5 size-4" />
+										<Trans>Resume</Trans>
+									</>
+								) : (
+									<>
+										<PauseCircleIcon className="me-2.5 size-4" />
+										<Trans>Pause</Trans>
+									</>
+								)}
+							</DropdownMenuItem>
+						)}
 						<DropdownMenuItem onClick={() => copyToClipboard(name)}>
 							<CopyIcon className="me-2.5 size-4" />
 							<Trans>Copy name</Trans>
@@ -468,11 +472,15 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 							<CopyIcon className="me-2.5 size-4" />
 							<Trans>Copy host</Trans>
 						</DropdownMenuItem>
-						<DropdownMenuSeparator className={cn(isReadOnlyUser() && "hidden")} />
-						<DropdownMenuItem className={cn(isReadOnlyUser() && "hidden")} onSelect={() => setDeleteOpen(true)}>
-							<Trash2Icon className="me-2.5 size-4" />
-							<Trans>Delete</Trans>
-						</DropdownMenuItem>
+						{isAdmin() && (
+							<>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem onSelect={() => setDeleteOpen(true)}>
+									<Trash2Icon className="me-2.5 size-4" />
+									<Trans>Delete</Trans>
+								</DropdownMenuItem>
+							</>
+						)}
 					</DropdownMenuContent>
 				</DropdownMenu>
 				{/* edit dialog */}

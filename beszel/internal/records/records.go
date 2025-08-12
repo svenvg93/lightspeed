@@ -79,15 +79,17 @@ func (rm *RecordManager) DeleteOldRecords() {
 // Delete old alerts history records
 func deleteOldAlertsHistory(app core.App, countToKeep, countBeforeDeletion int) error {
 	db := app.DB()
-	var users []struct {
-		Id string `db:"user"`
-	}
-	err := db.NewQuery("SELECT user, COUNT(*) as count FROM alerts_history GROUP BY user HAVING count > {:countBeforeDeletion}").Bind(dbx.Params{"countBeforeDeletion": countBeforeDeletion}).All(&users)
+
+	// Count total records
+	var totalCount int
+	err := db.NewQuery("SELECT COUNT(*) FROM alerts_history").One(&totalCount)
 	if err != nil {
 		return err
 	}
-	for _, user := range users {
-		_, err = db.NewQuery("DELETE FROM alerts_history WHERE user = {:user} AND id NOT IN (SELECT id FROM alerts_history WHERE user = {:user} ORDER BY created DESC LIMIT {:countToKeep})").Bind(dbx.Params{"user": user.Id, "countToKeep": countToKeep}).Execute()
+
+	// If we have more records than the threshold, delete old ones
+	if totalCount > countBeforeDeletion {
+		_, err = db.NewQuery("DELETE FROM alerts_history WHERE id NOT IN (SELECT id FROM alerts_history ORDER BY created DESC LIMIT {:countToKeep})").Bind(dbx.Params{"countToKeep": countToKeep}).Execute()
 		if err != nil {
 			return err
 		}

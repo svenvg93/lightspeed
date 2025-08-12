@@ -107,31 +107,35 @@ export default memo(function CommandPalette({ open, setOpen }: { open: boolean; 
 							</span>
 							{SettingsShortcut}
 						</CommandItem>
-						<CommandItem
-							keywords={["alerts"]}
-							onSelect={() => {
-								navigate(getPagePath($router, "settings", { name: "notifications" }))
-								setOpen(false)
-							}}
-						>
-							<MailIcon className="me-2 size-4" />
-							<span>
-								<Trans>Notifications</Trans>
-							</span>
-							{SettingsShortcut}
-						</CommandItem>
-						<CommandItem
-							onSelect={() => {
-								navigate(getPagePath($router, "settings", { name: "tokens" }))
-								setOpen(false)
-							}}
-						>
-							<FingerprintIcon className="me-2 size-4" />
-							<span>
-								<Trans>Tokens & Fingerprints</Trans>
-							</span>
-							{SettingsShortcut}
-						</CommandItem>
+						{isAdmin() && (
+							<CommandItem
+								keywords={["alerts"]}
+								onSelect={() => {
+									navigate(getPagePath($router, "settings", { name: "notifications" }))
+									setOpen(false)
+								}}
+							>
+								<MailIcon className="me-2 size-4" />
+								<span>
+									<Trans>Notifications</Trans>
+								</span>
+								{SettingsShortcut}
+							</CommandItem>
+						)}
+						{isAdmin() && (
+							<CommandItem
+								onSelect={() => {
+									navigate(getPagePath($router, "settings", { name: "tokens" }))
+									setOpen(false)
+								}}
+							>
+								<FingerprintIcon className="me-2 size-4" />
+								<span>
+									<Trans>Tokens & Fingerprints</Trans>
+								</span>
+								{SettingsShortcut}
+							</CommandItem>
+						)}
 						<CommandItem
 							onSelect={() => {
 								navigate(getPagePath($router, "settings", { name: "alert-history" }))

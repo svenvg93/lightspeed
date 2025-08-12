@@ -14,7 +14,7 @@ import {
 	Trash2Icon,
 } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
-import { cn, copyToClipboard, generateToken, getHubURL, isReadOnlyUser, tokenMap } from "@/lib/utils"
+import { cn, copyToClipboard, generateToken, getHubURL, tokenMap } from "@/lib/utils"
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -36,6 +36,7 @@ import {
 import { AppleIcon, DockerIcon, TuxIcon, WindowsIcon } from "@/components/ui/icons"
 import { redirectPage } from "@nanostores/router"
 import { $router } from "@/components/router"
+import { isAdmin } from "@/lib/utils"
 
 const pbFingerprintOptions = {
 	expand: "system",
@@ -47,7 +48,7 @@ function sortFingerprints(fingerprints: FingerprintRecord[]) {
 }
 
 const SettingsFingerprintsPage = memo(() => {
-	if (isReadOnlyUser()) {
+	if (!isAdmin()) {
 		redirectPage($router, "settings", { name: "general" })
 	}
 	const [fingerprints, setFingerprints] = useState<FingerprintRecord[]>([])
@@ -245,7 +246,6 @@ const ActionsButtonUniversalToken = memo(({ token, checked }: { token: string; c
 
 const SectionTable = memo(({ fingerprints = [] }: { fingerprints: FingerprintRecord[] }) => {
 	const { t } = useLingui()
-	const isReadOnly = isReadOnlyUser()
 
 	const headerCols = useMemo(
 		() => [
@@ -280,13 +280,11 @@ const SectionTable = memo(({ fingerprints = [] }: { fingerprints: FingerprintRec
 								</span>
 							</TableHead>
 						))}
-						{!isReadOnly && (
-							<TableHead className="w-0">
-								<span className="sr-only">
-									<Trans>Actions</Trans>
-								</span>
-							</TableHead>
-						)}
+						<TableHead className="w-0">
+							<span className="sr-only">
+								<Trans>Actions</Trans>
+							</span>
+						</TableHead>
 					</TableRow>
 				</TableHeader>
 				<TableBody className="whitespace-pre">
@@ -295,11 +293,9 @@ const SectionTable = memo(({ fingerprints = [] }: { fingerprints: FingerprintRec
 							<TableCell className="font-medium ps-5 py-2.5">{fingerprint.expand.system.name}</TableCell>
 							<TableCell className="font-mono text-[0.95em] py-2.5">{fingerprint.token}</TableCell>
 							<TableCell className="font-mono text-[0.95em] py-2.5">{fingerprint.fingerprint}</TableCell>
-							{!isReadOnly && (
-								<TableCell className="py-2.5 px-4 xl:px-2">
-									<ActionsButtonTable fingerprint={fingerprint} />
-								</TableCell>
-							)}
+							<TableCell className="py-2.5 px-4 xl:px-2">
+								<ActionsButtonTable fingerprint={fingerprint} />
+							</TableCell>
 						</TableRow>
 					))}
 				</TableBody>

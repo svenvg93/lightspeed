@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { $publicKey, pb } from "@/lib/stores"
-import { cn, generateToken, isReadOnlyUser, tokenMap, useLocalStorage } from "@/lib/utils"
+import { cn, generateToken, tokenMap, useLocalStorage } from "@/lib/utils"
 import { useStore } from "@nanostores/react"
 import { ChevronDownIcon, ExternalLinkIcon, PlusIcon } from "lucide-react"
 import { memo, useEffect, useRef, useState } from "react"
@@ -33,6 +33,7 @@ import {
 	InstallDropdown,
 } from "./install-dropdowns"
 import { DropdownMenu, DropdownMenuTrigger } from "./ui/dropdown-menu"
+import { isAdmin } from "@/lib/utils"
 
 export function AddSystemButton({ className }: { className?: string }) {
 	const [open, setOpen] = useState(false)
@@ -46,7 +47,7 @@ export function AddSystemButton({ className }: { className?: string }) {
 			<DialogTrigger asChild>
 				<Button
 					variant="outline"
-					className={cn("flex gap-1 max-xs:h-[2.4rem]", className, isReadOnlyUser() && "hidden")}
+					className={cn("flex gap-1 max-xs:h-[2.4rem]", className, !isAdmin() && "hidden")}
 				>
 					<PlusIcon className="h-4 w-4 -ms-1" />
 					<Trans>
@@ -127,7 +128,6 @@ export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => 
 		e.preventDefault()
 		const formData = new FormData(e.target as HTMLFormElement)
 		const data = Object.fromEntries(formData) as Record<string, any>
-		data.users = pb.authStore.record!.id
 		data.tags = tags
 		try {
 			setOpen(false)

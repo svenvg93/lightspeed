@@ -95,8 +95,6 @@ msgstr "۳۰ روز"
 #~ msgid "5-field cron expression for ping scheduling (minute hour day month weekday)"
 #~ msgstr ""
 
-#. Table column
-#: src/components/systems-table/systems-table-columns.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgid "Actions"
 msgstr "عملیات"
@@ -115,16 +113,16 @@ msgid "Add <0>System</0>"
 msgstr "افزودن <0>سیستم</0>"
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Add DNS lookup targets to monitor domain resolution performance."
-msgstr ""
+#~ msgid "Add DNS lookup targets to monitor domain resolution performance."
+#~ msgstr ""
 
 #: src/components/add-system.tsx
 msgid "Add New System"
 msgstr "افزودن سیستم جدید"
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Add ping targets to monitor network connectivity."
-msgstr ""
+#~ msgid "Add ping targets to monitor network connectivity."
+#~ msgstr ""
 
 #: src/components/add-system.tsx
 msgid "Add system"
@@ -132,8 +130,8 @@ msgstr "افزودن سیستم"
 
 #: src/components/system-config/system-config-dialog.tsx
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Add Target"
-msgstr ""
+#~ msgid "Add Target"
+#~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
 #~ msgid "Add targets to monitor network connectivity."
@@ -152,6 +150,7 @@ msgstr "تنظیم گزینه‌های نمایش برای نمودارها."
 msgid "Admin"
 msgstr "مدیر"
 
+#: src/components/systems-table/systems-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "Agent"
 msgstr "عامل"
@@ -196,6 +195,10 @@ msgstr "کپی خودکار نیاز به یک زمینه امن دارد."
 #~ msgid "Average CPU utilization of containers"
 #~ msgstr "میانگین استفاده از CPU کانتینرها"
 
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Average download speed across all speedtest targets"
+msgstr ""
+
 #. placeholder {0}: data.alert.unit
 #: src/components/alerts/alerts-system.tsx
 msgid "Average exceeds <0>{value}{0}</0>"
@@ -220,6 +223,10 @@ msgstr ""
 #: src/components/routes/system.tsx
 #~ msgid "Average system-wide CPU utilization"
 #~ msgstr "میانگین استفاده از CPU در کل سیستم"
+
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Average upload speed across all speedtest targets"
+msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "Average utilization of {0}"
@@ -250,6 +257,10 @@ msgstr "دودویی"
 #: src/components/routes/settings/general.tsx
 #~ msgid "Bits (Kbps, Mbps, Gbps)"
 #~ msgstr "بیت (کیلوبیت بر ثانیه، مگابیت بر ثانیه، گیگابیت بر ثانیه)"
+
+#: src/components/routes/settings/layout.tsx
+msgid "Bulk Systems"
+msgstr ""
 
 #: src/components/routes/settings/general.tsx
 #: src/components/routes/settings/general.tsx
@@ -291,8 +302,8 @@ msgstr "ایمیل {email} خود را برای لینک بازنشانی برر
 
 #: src/components/system-config/system-config-dialog.tsx
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Check Interval"
-msgstr ""
+#~ msgid "Check Interval"
+#~ msgstr ""
 
 #: src/components/routes/settings/layout.tsx
 msgid "Check logs for more details."
@@ -311,6 +322,10 @@ msgstr "برای کپی کردن کلیک کنید"
 msgid "Command line instructions"
 msgstr "دستورالعمل‌های خط فرمان"
 
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Configuration saved successfully. Remember to restart the agent for changes to take effect."
+msgstr ""
+
 #: src/components/dns-config/dns-config-dialog.tsx
 #~ msgid "Configure DNS"
 #~ msgstr ""
@@ -327,9 +342,13 @@ msgstr "نحوه دریافت هشدارهای اطلاع‌رسانی را پی
 msgid "Configure Monitoring"
 msgstr ""
 
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Configure monitoring targets and intervals for {0}."
+#~ msgstr ""
+
 #. placeholder {0}: system.name
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Configure monitoring targets and intervals for {0}."
+msgid "Configure monitoring targets and intervals for {0}. Note: The agent will need to be restarted for configuration changes to take effect."
 msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
@@ -405,8 +424,8 @@ msgid "Copy YAML"
 msgstr "کپی YAML"
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Count"
-msgstr ""
+#~ msgid "Count"
+#~ msgstr ""
 
 #: src/components/systems-table/systems-table-columns.tsx
 #~ msgid "CPU"
@@ -434,12 +453,12 @@ msgstr "ایجاد شده"
 #~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Cron expression (e.g., \"*/3 * * * *\" for every 3 minutes)"
-msgstr ""
+#~ msgid "Cron expression (e.g., \"*/3 * * * *\" for every 3 minutes)"
+#~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Cron expression (e.g., \"*/5 * * * *\" for every 5 minutes)"
-msgstr ""
+#~ msgid "Cron expression (e.g., \"*/5 * * * *\" for every 5 minutes)"
+#~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
 #~ msgid "Cron expression for ping scheduling"
@@ -488,14 +507,16 @@ msgstr "میزان استفاده از دیسک"
 #~ msgid "Disk usage of {extraFsName}"
 #~ msgstr "میزان استفاده از دیسک {extraFsName}"
 
+#: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table-columns.tsx
 #: src/components/system-config/system-config-dialog.tsx
 #: src/components/routes/system.tsx
 msgid "DNS"
 msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "DNS Configuration Saved"
-msgstr ""
+#~ msgid "DNS Configuration Saved"
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "DNS lookup performance"
@@ -506,12 +527,16 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/routes/system.tsx
-msgid "DNS lookup performance @ {friendlyName}"
+#~ msgid "DNS lookup performance @ {friendlyName}"
+#~ msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "DNS lookup performance for {domainPart} @ {server} ({protocol})"
 msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "DNS Lookup Targets"
-msgstr ""
+#~ msgid "DNS Lookup Targets"
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "DNS Monitoring"
@@ -522,12 +547,12 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "DNS monitoring configuration has been updated successfully."
-msgstr ""
+#~ msgid "DNS monitoring configuration has been updated successfully."
+#~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "DNS Server"
-msgstr ""
+#~ msgid "DNS Server"
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "Docker CPU Usage"
@@ -546,8 +571,8 @@ msgid "Documentation"
 msgstr "مستندات"
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Domain"
-msgstr ""
+#~ msgid "Domain"
+#~ msgstr ""
 
 #. Context: System is down
 #: src/lib/utils.ts
@@ -556,6 +581,16 @@ msgstr ""
 #: src/components/routes/system.tsx
 msgid "Down"
 msgstr "قطع"
+
+#: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table-columns.tsx
+#: src/components/routes/system.tsx
+msgid "Download"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "Download speeds for all servers"
+msgstr ""
 
 #: src/components/alerts-history-columns.tsx
 msgid "Duration"
@@ -591,8 +626,6 @@ msgstr "آدرس ایمیل را برای بازنشانی رمز عبور وا�
 msgid "Enter email address..."
 msgstr "آدرس ایمیل را وارد کنید..."
 
-#: src/components/system-config/system-config-dialog.tsx
-#: src/components/system-config/system-config-dialog.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 #: src/components/routes/settings/notifications.tsx
 #: src/components/routes/settings/config-yaml.tsx
@@ -638,16 +671,20 @@ msgid "Failed to authenticate"
 msgstr "احراز هویت ناموفق بود"
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Failed to save DNS configuration. Please try again."
+msgid "Failed to save configuration. Please try again."
 msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Failed to save DNS configuration. Please try again."
+#~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
 #~ msgid "Failed to save ping configuration"
 #~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Failed to save ping configuration. Please try again."
-msgstr ""
+#~ msgid "Failed to save ping configuration. Please try again."
+#~ msgstr ""
 
 #: src/components/routes/settings/notifications.tsx
 #: src/components/routes/settings/layout.tsx
@@ -680,12 +717,12 @@ msgid "Forgot password?"
 msgstr "رمز عبور را فراموش کرده‌اید؟"
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Friendly Name"
-msgstr ""
+#~ msgid "Friendly Name"
+#~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Friendly Name (Optional)"
-msgstr ""
+#~ msgid "Friendly Name (Optional)"
+#~ msgstr ""
 
 #. Context: General settings
 #: src/components/routes/settings/layout.tsx
@@ -708,13 +745,29 @@ msgid "Homebrew command"
 msgstr "دستور Homebrew"
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Host"
-msgstr ""
+#~ msgid "Host"
+#~ msgstr ""
 
 #: src/components/add-system.tsx
 msgid "Host / IP"
 msgstr "میزبان / IP"
 
+#: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table-columns.tsx
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/routes/system.tsx
+msgid "HTTP"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "HTTP Monitoring"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "HTTP response time for {key}"
+msgstr ""
+
+#: src/components/systems-table/systems-table-columns.tsx
 #: src/components/systems-table/systems-table-columns.tsx
 msgid "ICMP"
 msgstr ""
@@ -728,8 +781,16 @@ msgstr "اگر رمز عبور حساب مدیر خود را گم کرده‌ا�
 #~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
+msgid "Invalid Configuration"
+msgstr ""
+
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Invalid Cron Expression"
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Invalid Cron Expression"
+#~ msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Invalid cron expression. Must have 5 parts: minute hour day month weekday"
 msgstr ""
 
 #: src/components/login/auth-form.tsx
@@ -748,6 +809,14 @@ msgstr ""
 #: src/components/routes/settings/general.tsx
 msgid "Language"
 msgstr "زبان"
+
+#: src/components/routes/system.tsx
+msgid "Latency"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "Latency for all servers"
+msgstr ""
 
 #: src/components/systems-table/systems-table.tsx
 msgid "Layout"
@@ -778,6 +847,10 @@ msgstr "میانگین بار ۵ دقیقه"
 #: src/components/systems-table/systems-table-columns.tsx
 #~ msgid "Load Avg"
 #~ msgstr "میانگین بار"
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Loading..."
+msgstr ""
 
 #: src/components/navbar.tsx
 msgid "Log Out"
@@ -881,11 +954,19 @@ msgid "No DNS data available for {targetKey}"
 msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "No DNS targets configured"
-msgstr ""
+#~ msgid "No DNS targets configured"
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "No DNS targets configured for this system"
+msgstr ""
+
+#: src/components/charts/http-chart.tsx
+msgid "No HTTP data available for {targetKey}"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "No HTTP targets configured for this system"
 msgstr ""
 
 #: src/components/routes/system.tsx
@@ -897,8 +978,8 @@ msgid "No ping data available for {host}"
 msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "No ping targets configured"
-msgstr ""
+#~ msgid "No ping targets configured"
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "No ping targets configured for this system"
@@ -916,6 +997,17 @@ msgstr "هیچ نتیجه‌ای یافت نشد."
 msgid "No results."
 msgstr "نتیجه‌ای یافت نشد."
 
+#: src/components/charts/speedtest-upload-chart.tsx
+#: src/components/charts/speedtest-packet-loss-chart.tsx
+#: src/components/charts/speedtest-latency-chart.tsx
+#: src/components/charts/speedtest-download-chart.tsx
+msgid "No speedtest data available"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "No speedtest targets configured for this system"
+msgstr ""
+
 #: src/components/systems-table/systems-table.tsx
 #: src/components/systems-table/systems-table.tsx
 msgid "No systems found."
@@ -923,8 +1015,8 @@ msgstr "هیچ سیستمی یافت نشد."
 
 #: src/components/system-config/system-config-dialog.tsx
 #: src/components/system-config/system-config-dialog.tsx
-msgid "No Valid Targets"
-msgstr ""
+#~ msgid "No Valid Targets"
+#~ msgstr ""
 
 #: src/components/command-palette.tsx
 #: src/components/routes/settings/notifications.tsx
@@ -954,13 +1046,26 @@ msgstr "یا ادامه با"
 msgid "Overall average latency across all ping targets"
 msgstr ""
 
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Overall average lookup time across all DNS targets"
+msgstr ""
+
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Overall average response time across all HTTP targets"
+msgstr ""
+
 #: src/components/alerts/alert-button.tsx
 msgid "Overwrite existing alerts"
 msgstr "بازنویسی هشدارهای موجود"
 
+#: src/components/routes/system.tsx
 #: src/components/charts/ping-chart.tsx
 #: src/components/charts/ping-chart.tsx
 msgid "Packet Loss"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "Packet loss for all servers"
 msgstr ""
 
 #: src/components/command-palette.tsx
@@ -1017,20 +1122,20 @@ msgstr ""
 #~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Ping Configuration Saved"
-msgstr ""
+#~ msgid "Ping Configuration Saved"
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "Ping Monitoring"
 msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Ping monitoring configuration has been updated successfully."
-msgstr ""
+#~ msgid "Ping monitoring configuration has been updated successfully."
+#~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Ping Targets"
-msgstr ""
+#~ msgid "Ping Targets"
+#~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
 #~ msgid "Ping targets have been updated for {0}."
@@ -1041,12 +1146,12 @@ msgid "Please <0>configure an SMTP server</0> to ensure alerts are delivered."
 msgstr "لطفاً برای اطمینان از تحویل هشدارها، یک <0>سرور SMTP پیکربندی کنید</0>."
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Please add at least one valid DNS target."
-msgstr ""
+#~ msgid "Please add at least one valid DNS target."
+#~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Please add at least one valid ping target."
-msgstr ""
+#~ msgid "Please add at least one valid ping target."
+#~ msgstr ""
 
 #: src/components/alerts/alerts-system.tsx
 msgid "Please check logs for more details."
@@ -1110,13 +1215,13 @@ msgstr "کلید عمومی"
 #~ msgstr "دریافت شد"
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Record Type"
-msgstr ""
+#~ msgid "Record Type"
+#~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Reset"
-msgstr ""
+#~ msgid "Reset"
+#~ msgstr ""
 
 #: src/components/login/forgot-pass-form.tsx
 msgid "Reset Password"
@@ -1127,6 +1232,10 @@ msgstr "بازنشانی رمز عبور"
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "Resolved"
 msgstr "حل شده"
+
+#: src/components/charts/http-chart.tsx
+msgid "Response Time"
+msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "Response time to {host}"
@@ -1148,17 +1257,17 @@ msgstr "ردیف در هر صفحه"
 msgid "Save address using enter key or comma. Leave blank to disable email notifications."
 msgstr "آدرس را با استفاده از کلید Enter یا کاما ذخیره کنید. برای غیرفعال کردن اعلان‌های ایمیلی، خالی بگذارید."
 
-#: src/components/ping-config/ping-config-dialog.tsx
-#~ msgid "Save Configuration"
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Save Configuration"
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Save DNS Configuration"
 #~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Save DNS Configuration"
-msgstr ""
-
-#: src/components/system-config/system-config-dialog.tsx
-msgid "Save Ping Configuration"
-msgstr ""
+#~ msgid "Save Ping Configuration"
+#~ msgstr ""
 
 #: src/components/routes/settings/notifications.tsx
 #: src/components/routes/settings/general.tsx
@@ -1169,7 +1278,6 @@ msgstr "ذخیره تنظیمات"
 msgid "Save system"
 msgstr "ذخیره سیستم"
 
-#: src/components/system-config/system-config-dialog.tsx
 #: src/components/system-config/system-config-dialog.tsx
 msgid "Saving..."
 msgstr ""
@@ -1221,6 +1329,15 @@ msgstr "تنظیمات SMTP"
 msgid "Sort By"
 msgstr "مرتب‌سازی بر اساس"
 
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/routes/system.tsx
+msgid "Speedtest"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "Speedtest Monitoring"
+msgstr ""
+
 #. Context: alert state (active or resolved)
 #: src/components/alerts-history-columns.tsx
 msgid "State"
@@ -1267,11 +1384,22 @@ msgstr "سیستم‌ها ممکن است در یک فایل <0>config.yml</0> �
 msgid "Table"
 msgstr "جدول"
 
-#. placeholder {0}: index + 1
-#: src/components/system-config/system-config-dialog.tsx
-#: src/components/system-config/system-config-dialog.tsx
-msgid "Target {0}"
+#: src/components/add-system.tsx
+#: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table-columns.tsx
+#: src/components/routes/system.tsx
+#: src/components/routes/system.tsx
+msgid "Tags"
 msgstr ""
+
+#: src/components/systems-table/systems-table-columns.tsx
+msgid "Tags for filtering and organization"
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Target {0}"
+#~ msgstr ""
 
 #. Temperature label in systems table
 #: src/components/systems-table/systems-table-columns.tsx
@@ -1324,8 +1452,8 @@ msgstr "این کار تمام رکوردهای انتخاب شده را برا�
 
 #: src/components/system-config/system-config-dialog.tsx
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Timeout (seconds)"
-msgstr ""
+#~ msgid "Timeout (seconds)"
+#~ msgstr ""
 
 #: src/components/routes/settings/notifications.tsx
 msgid "To email(s)"
@@ -1395,6 +1523,10 @@ msgstr "هنگامی که وضعیت بین بالا و پایین تغییر م
 msgid "Triggers when usage of any disk exceeds a threshold"
 msgstr "هنگامی که استفاده از هر دیسکی از یک آستانه فراتر رود، فعال می‌شود"
 
+#: src/components/add-system.tsx
+msgid "Type tag and press Tab or comma"
+msgstr ""
+
 #. Temperature / network units
 #: src/components/routes/settings/general.tsx
 #~ msgid "Unit preferences"
@@ -1413,6 +1545,16 @@ msgstr "فعال"
 #: src/components/systems-table/systems-table.tsx
 msgid "Updated in real time. Click on a system to view information."
 msgstr "به صورت لحظه‌ای به‌روزرسانی می‌شود. برای مشاهده اطلاعات، روی یک سیستم کلیک کنید."
+
+#: src/components/systems-table/systems-table-columns.tsx
+#: src/components/systems-table/systems-table-columns.tsx
+#: src/components/routes/system.tsx
+msgid "Upload"
+msgstr ""
+
+#: src/components/routes/system.tsx
+msgid "Upload speeds for all servers"
+msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "Uptime"

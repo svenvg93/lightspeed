@@ -150,18 +150,59 @@ func (h *Hub) initialize(e *core.ServeEvent) error {
 	if err != nil {
 		return err
 	}
-	shareAllSystems, _ := GetEnv("SHARE_ALL_SYSTEMS")
+	// Role-based access control: admins can add/modify, users can view
 	systemsReadRule := "@request.auth.id != \"\""
-	if shareAllSystems != "true" {
-		// default is to only show systems that the user id is assigned to
-		systemsReadRule += " && users.id ?= @request.auth.id"
-	}
-	updateDeleteRule := systemsReadRule + " && @request.auth.role != \"readonly\""
+	// Only admins can create, update, and delete systems
+	systemsCreateRule := "@request.auth.id != \"\" && @request.auth.role = \"admin\""
+	systemsUpdateRule := "@request.auth.id != \"\" && @request.auth.role = \"admin\""
+	systemsDeleteRule := "@request.auth.id != \"\" && @request.auth.role = \"admin\""
+
 	systemsCollection.ListRule = &systemsReadRule
 	systemsCollection.ViewRule = &systemsReadRule
-	systemsCollection.UpdateRule = &updateDeleteRule
-	systemsCollection.DeleteRule = &updateDeleteRule
+	systemsCollection.CreateRule = &systemsCreateRule
+	systemsCollection.UpdateRule = &systemsUpdateRule
+	systemsCollection.DeleteRule = &systemsDeleteRule
 	if err := e.App.Save(systemsCollection); err != nil {
+		return err
+	}
+
+	// Set alerts collection access rules - role-based access control
+	alertsCollection, err := e.App.FindCachedCollectionByNameOrId("alerts")
+	if err != nil {
+		return err
+	}
+	// Alerts: admins can manage, users can view
+	alertsReadRule := "@request.auth.id != \"\""
+	alertsCreateRule := "@request.auth.id != \"\" && @request.auth.role = \"admin\""
+	alertsUpdateRule := "@request.auth.id != \"\" && @request.auth.role = \"admin\""
+	alertsDeleteRule := "@request.auth.id != \"\" && @request.auth.role = \"admin\""
+
+	alertsCollection.ListRule = &alertsReadRule
+	alertsCollection.ViewRule = &alertsReadRule
+	alertsCollection.CreateRule = &alertsCreateRule
+	alertsCollection.UpdateRule = &alertsUpdateRule
+	alertsCollection.DeleteRule = &alertsDeleteRule
+	if err := e.App.Save(alertsCollection); err != nil {
+		return err
+	}
+
+	// Set monitoring_config collection access rules - only admins can manage
+	monitoringConfigCollection, err := e.App.FindCachedCollectionByNameOrId("monitoring_config")
+	if err != nil {
+		return err
+	}
+	// Monitoring config: all users can read, only admins can manage
+	monitoringConfigReadRule := "@request.auth.id != \"\""
+	monitoringConfigCreateRule := "@request.auth.id != \"\" && @request.auth.role = \"admin\""
+	monitoringConfigUpdateRule := "@request.auth.id != \"\" && @request.auth.role = \"admin\""
+	monitoringConfigDeleteRule := "@request.auth.id != \"\" && @request.auth.role = \"admin\""
+
+	monitoringConfigCollection.ListRule = &monitoringConfigReadRule
+	monitoringConfigCollection.ViewRule = &monitoringConfigReadRule
+	monitoringConfigCollection.CreateRule = &monitoringConfigCreateRule
+	monitoringConfigCollection.UpdateRule = &monitoringConfigUpdateRule
+	monitoringConfigCollection.DeleteRule = &monitoringConfigDeleteRule
+	if err := e.App.Save(monitoringConfigCollection); err != nil {
 		return err
 	}
 	return nil

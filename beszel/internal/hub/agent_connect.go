@@ -271,7 +271,7 @@ func (acr *agentConnectRequest) createSystem(agentFingerprint common.Fingerprint
 	systemRecord.Set("name", agentFingerprint.Hostname)
 	systemRecord.Set("host", remoteAddr)
 	systemRecord.Set("port", agentFingerprint.Port)
-	systemRecord.Set("users", []string{acr.userId})
+	// No longer assigning users - using role-based access control instead
 
 	return systemRecord.Id, acr.hub.Save(systemRecord)
 }

@@ -41,7 +41,7 @@ import { memo, useEffect, useMemo, useState, useRef } from "react"
 import { $systems } from "@/lib/stores"
 import { useStore } from "@nanostores/react"
 import { updateSystemList } from "@/lib/utils"
-import { cn, useLocalStorage } from "@/lib/utils"
+import { cn, useLocalStorage, isAdmin } from "@/lib/utils"
 import { $router, Link, navigate } from "../router"
 import { useLingui, Trans } from "@lingui/react/macro"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
@@ -364,8 +364,8 @@ const SystemCard = memo(
 							</CardTitle>
 							{table.getColumn("actions")?.getIsVisible() && (
 								<div className="flex gap-1 flex-shrink-0 relative z-10">
-									<SystemConfigDialog system={system} />
-									<AlertButton system={system} />
+									{isAdmin() && <SystemConfigDialog system={system} />}
+									{isAdmin() && <AlertButton system={system} />}
 									<ActionsButton system={system} />
 								</div>
 							)}

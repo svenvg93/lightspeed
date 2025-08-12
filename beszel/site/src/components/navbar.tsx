@@ -16,7 +16,7 @@ import { LangToggle } from "./lang-toggle"
 import { ModeToggle } from "./mode-toggle"
 import { Logo } from "./logo"
 import { pb } from "@/lib/stores"
-import { cn, isReadOnlyUser, isAdmin, logOut } from "@/lib/utils"
+import { cn, isAdmin, logOut } from "@/lib/utils"
 import {
 	DropdownMenu,
 	DropdownMenuTrigger,
@@ -57,7 +57,7 @@ export default function Navbar() {
 							<UserIcon className="h-[1.2rem] w-[1.2rem]" />
 						</button>
 					</DropdownMenuTrigger>
-					<DropdownMenuContent align={isReadOnlyUser() ? "end" : "center"} className="min-w-44">
+					<DropdownMenuContent align="center" className="min-w-44">
 						<DropdownMenuLabel>{pb.authStore.record?.email}</DropdownMenuLabel>
 						<DropdownMenuSeparator />
 						<DropdownMenuGroup>

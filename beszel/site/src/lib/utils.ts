@@ -130,7 +130,6 @@ export const updateFavicon = (newIcon: string) => {
 }
 
 export const isAdmin = () => pb.authStore.record?.role === "admin"
-export const isReadOnlyUser = () => pb.authStore.record?.role === "readonly"
 
 /** Update systems / alerts list when records change  */
 export function updateRecordList<T extends RecordModel>(e: RecordSubscription<T>, $store: WritableAtom<T[]>) {

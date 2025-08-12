@@ -60,17 +60,19 @@ export default function SettingsLayout() {
 			title: t`Bulk Systems`,
 			href: getPagePath($router, "settings", { name: "bulk-systems" }),
 			icon: ServerIcon,
+			admin: true,
 		},
 		{
 			title: t`Notifications`,
 			href: getPagePath($router, "settings", { name: "notifications" }),
 			icon: BellIcon,
+			admin: true,
 		},
 		{
 			title: t`Tokens & Fingerprints`,
 			href: getPagePath($router, "settings", { name: "tokens" }),
 			icon: FingerprintIcon,
-			noReadOnly: true,
+			admin: true,
 		},
 		{
 			title: t`Alert History`,
