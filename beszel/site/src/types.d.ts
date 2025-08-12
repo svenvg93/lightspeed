@@ -28,6 +28,13 @@ export interface SystemRecord extends RecordModel {
 	status: "up" | "down" | "paused" | "pending"
 	port: string
 	info: SystemInfo
+	averages?: {
+		ap?: number   // Average ping
+		ad?: number   // Average DNS
+		ah?: number   // Average HTTP
+		adl?: number  // Average download
+		aul?: number  // Average upload
+	}
 	v: string
 	
 	// Unified monitoring configuration

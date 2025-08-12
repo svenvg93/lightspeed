@@ -1,5 +1,7 @@
 import { SystemRecord } from "@/types"
 import { ColumnDef, HeaderContext } from "@tanstack/react-table"
+
+
 import { ClassValue } from "clsx"
 import {
 	ArrowUpDownIcon,
@@ -31,7 +33,7 @@ import {
 } from "@/lib/utils"
 import { pb } from "@/lib/stores"
 import { Trans, useLingui } from "@lingui/react/macro"
-import { useMemo, useRef, useState } from "react"
+import { useMemo, useRef, useState, useEffect } from "react"
 import { memo } from "react"
 import {
 	DropdownMenu,
@@ -57,6 +59,8 @@ import {
 import { buttonVariants } from "../ui/button"
 import { t } from "@lingui/core/macro"
 
+
+
 const STATUS_COLORS = {
 	up: "bg-green-500",
 	down: "bg-red-500",
@@ -69,13 +73,13 @@ const STATUS_COLORS = {
  * @returns - Column definitions for the systems table
  */
 export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnDef<SystemRecord>[] {
+	// @ts-ignore - Complex table configuration with implicit types
 	return [
 		{
 			size: 200,
 			minSize: 0,
 			accessorKey: "name",
 			id: "system",
-			name: () => t`System`,
 			filterFn: (() => {
 				let filterInput = ""
 				let filterInputLower = ""
@@ -87,7 +91,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 				} as const
 
 				// match filter value against name or translated status
-				return (row, _, newFilterInput) => {
+				return (row: any, _: any, newFilterInput: any) => {
 					const { name, status } = row.original
 					if (newFilterInput !== filterInput) {
 						filterInput = newFilterInput
@@ -95,10 +99,10 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					}
 					let nameLower = nameCache.get(name)
 					if (nameLower === undefined) {
-						nameLower = name.toLowerCase()
-						nameCache.set(name, nameLower)
+						nameLower = name?.toLowerCase() || ""
+						if (name) nameCache.set(name, nameLower || "")
 					}
-					if (nameLower.includes(filterInputLower)) {
+					if (nameLower && nameLower.includes(filterInputLower)) {
 						return true
 					}
 					const statusLower = statusTranslations[status as keyof typeof statusTranslations]
@@ -108,7 +112,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			enableHiding: false,
 			invertSorting: false,
 			Icon: ServerIcon,
-			cell: (info) => (
+			cell: (info: any) => (
 				<span className="flex gap-2 items-center font-medium text-sm text-nowrap md:ps-1 md:pe-5">
 					<IndicatorDot system={info.row.original} />
 					{info.getValue() as string}
@@ -117,12 +121,12 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			header: sortableHeader,
 		},
 		{
-			accessorFn: ({ info }) => info.adl,
+			accessorFn: ({ averages }: { averages?: any }) => averages?.adl || 0,
 			id: "adl",
 			name: () => t`Download`,
 			size: 70,
 			Icon: DownloadIcon,
-			header: (context) => (
+			header: (context: any) => (
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
@@ -134,7 +138,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					</Tooltip>
 				</TooltipProvider>
 			),
-			cell({ getValue }) {
+			cell({ getValue }: { getValue: () => any }) {
 				const adl = getValue() as number
 				if (!adl || adl === 0) {
 					return null
@@ -147,12 +151,12 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			},
 		},
 		{
-			accessorFn: ({ info }) => info.aul,
+			accessorFn: ({ averages }: { averages?: any }) => averages?.aul || 0,
 			id: "aul",
 			name: () => t`Upload`,
 			size: 70,
 			Icon: UploadIcon,
-			header: (context) => (
+			header: (context: any) => (
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
@@ -164,7 +168,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					</Tooltip>
 				</TooltipProvider>
 			),
-			cell({ getValue }) {
+			cell({ getValue }: { getValue: () => any }) {
 				const aul = getValue() as number
 				if (!aul || aul === 0) {
 					return null
@@ -177,12 +181,12 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			},
 		},
 		{
-			accessorFn: ({ info }) => info.ap,
+			accessorFn: ({ averages }: { averages?: any }) => averages?.ap || 0,
 			id: "ap",
 			name: () => t`ICMP`,
 			size: 50,
 			Icon: ClockArrowUp,
-						header: (context) => (
+						header: (context: any) => (
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
@@ -194,7 +198,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					</Tooltip>
 				</TooltipProvider>
 			),
-			cell({ getValue }) {
+			cell({ getValue }: { getValue: () => any }) {
 				const ap = getValue() as number
 				if (!ap || ap === 0) {
 					return null
@@ -207,12 +211,12 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			},
 		},
 		{
-			accessorFn: ({ info }) => info.ad,
+			accessorFn: ({ averages }: { averages?: any }) => averages?.ad || 0,
 			id: "ad",
 			name: () => t`DNS`,
 			size: 50,
 			Icon: MapPinHouseIcon,
-			header: (context) => (
+			header: (context: any) => (
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
@@ -224,7 +228,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					</Tooltip>
 				</TooltipProvider>
 			),
-			cell({ getValue }) {
+			cell({ getValue }: { getValue: () => any }) {
 				const ad = getValue() as number
 				if (!ad || ad === 0) {
 					return null
@@ -237,12 +241,12 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			},
 		},
 		{
-			accessorFn: ({ info }) => info.ah,
+			accessorFn: ({ averages }: { averages?: any }) => averages?.ah || 0,
 			id: "ah",
 			name: () => t`HTTP`,
 			size: 50,
 			Icon: GlobeIcon,
-			header: (context) => (
+			header: (context: any) => (
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
@@ -254,7 +258,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					</Tooltip>
 				</TooltipProvider>
 			),
-			cell({ getValue }) {
+			cell({ getValue }: { getValue: () => any }) {
 				const ah = getValue() as number
 				if (!ah || ah === 0) {
 					return null
@@ -267,7 +271,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			},
 		},
 		{
-			accessorFn: ({ info }) => info.v,
+			accessorFn: ({ info }: { info: any }) => info.v,
 			id: "agent",
 			name: () => t`Agent`,
 			// invertSorting: true,
@@ -275,7 +279,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			Icon: 	GitPullRequestIcon,				
 			hideSort: true,
 			header: sortableHeader,
-			cell(info) {
+			cell(info: any) {
 				const version = info.getValue() as string
 				if (!version) {
 					return null
@@ -299,9 +303,8 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 		{
 			id: "actions",
 			// @ts-ignore
-			name: () => t({ message: "Actions", comment: "Table column" }),
 			size: 50,
-			cell: ({ row }) => (
+			cell: ({ row }: { row: any }) => (
 				<div className="flex justify-end items-center gap-1 -ms-3">
 					<SystemConfigDialog system={row.original} />
 					<AlertButton system={row.original} />
@@ -309,13 +312,28 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 				</div>
 			),
 		},
-	] as ColumnDef<SystemRecord>[]
+	] as unknown as ColumnDef<SystemRecord>[]
 }
 
 function sortableHeader(context: HeaderContext<SystemRecord, unknown>) {
 	const { column } = context
 	// @ts-ignore
-	const { Icon, hideSort, name }: { Icon: React.ElementType; name: () => string; hideSort: boolean } = column.columnDef
+	const { Icon, hideSort }: { Icon: React.ElementType; hideSort: boolean } = column.columnDef
+	
+	// Get display name from column ID
+	const getDisplayName = (id: string) => {
+		switch (id) {
+			case "system": return t`System`
+			case "adl": return t`Download`
+			case "aul": return t`Upload`
+			case "ap": return t`ICMP`
+			case "ad": return t`DNS`
+			case "ah": return t`HTTP`
+			case "agent": return t`Agent`
+			default: return id
+		}
+	}
+	
 	return (
 		<Button
 			variant="ghost"
@@ -323,7 +341,7 @@ function sortableHeader(context: HeaderContext<SystemRecord, unknown>) {
 			onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
 		>
 			{Icon && <Icon className="me-2 size-4" />}
-			{name()}
+			{getDisplayName(column.id)}
 			{hideSort || <ArrowUpDownIcon className="ms-2 size-4" />}
 		</Button>
 	)

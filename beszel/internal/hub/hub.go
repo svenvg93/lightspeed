@@ -222,6 +222,13 @@ func (h *Hub) registerCronJobs(_ *core.ServeEvent) error {
 	h.Cron().MustAdd("delete old records", "8 * * * *", h.rm.DeleteOldRecords)
 	// create longer records every 10 minutes
 	h.Cron().MustAdd("create longer records", "*/10 * * * *", h.rm.CreateLongerRecords)
+	// calculate system averages every 5 minutes
+	h.Cron().MustAdd("calculate system averages", "*/5 * * * *", func() {
+		if err := h.calculateSystemAverages(); err != nil {
+			h.Logger().Error("Failed to calculate system averages", "err", err)
+		}
+	})
+
 	return nil
 }
 
@@ -242,6 +249,13 @@ func (h *Hub) registerApiRoutes(se *core.ServeEvent) error {
 	})
 	// send test notification
 	se.Router.GET("/api/beszel/send-test-notification", h.SendTestNotification)
+	// manually trigger average calculation for testing
+	se.Router.GET("/api/beszel/calculate-averages", func(e *core.RequestEvent) error {
+		if err := h.calculateSystemAverages(); err != nil {
+			return e.JSON(500, map[string]string{"error": err.Error()})
+		}
+		return e.JSON(200, map[string]string{"status": "averages calculated"})
+	})
 	// API endpoint to get config.yml content
 	se.Router.GET("/api/beszel/config-yaml", config.GetYamlConfig)
 	// handle agent websocket connection

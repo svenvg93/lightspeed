@@ -40,6 +40,7 @@ import {
 import { memo, useEffect, useMemo, useState } from "react"
 import { $systems } from "@/lib/stores"
 import { useStore } from "@nanostores/react"
+import { updateSystemList } from "@/lib/utils"
 import { cn, useLocalStorage } from "@/lib/utils"
 import { $router, Link, navigate } from "../router"
 import { useLingui, Trans } from "@lingui/react/macro"
@@ -54,6 +55,24 @@ type ViewMode = "table" | "grid"
 
 export default function SystemsTable() {
 	const data = useStore($systems)
+	const [isLoadingAverages, setIsLoadingAverages] = useState(false)
+	
+	// Trigger average calculation on page load
+	useEffect(() => {
+		if (data && data.length > 0 && !data[0].averages) {
+			setIsLoadingAverages(true)
+			fetch('/api/beszel/calculate-averages')
+				.then(() => {
+					// Refresh the systems data after calculation
+					setTimeout(() => {
+						updateSystemList()
+						setIsLoadingAverages(false)
+					}, 1000)
+				})
+				.catch(() => setIsLoadingAverages(false))
+		}
+	}, [data])
+	
 	const { i18n, t } = useLingui()
 	const [filter, setFilter] = useState<string>()
 	const [sorting, setSorting] = useState<SortingState>([{ id: "system", desc: false }])
@@ -98,6 +117,7 @@ export default function SystemsTable() {
 	const rows = table.getRowModel().rows
 	const columns = table.getAllColumns()
 	const visibleColumns = table.getVisibleLeafColumns()
+	
 	// TODO: hiding temp then gpu messes up table headers
 	const CardHead = useMemo(() => {
 		return (
@@ -171,8 +191,7 @@ export default function SystemsTable() {
 														key={column.id}
 													>
 														{Icon}
-														{/* @ts-ignore */}
-														{column.columnDef.name()}
+														{(column.columnDef as any).name?.() || column.id}
 													</DropdownMenuItem>
 												)
 											})}
@@ -196,8 +215,7 @@ export default function SystemsTable() {
 															checked={column.getIsVisible()}
 															onCheckedChange={(value) => column.toggleVisibility(!!value)}
 														>
-															{/* @ts-ignore */}
-															{column.columnDef.name()}
+															{(column.columnDef as any).name?.() || column.id}
 														</DropdownMenuCheckboxItem>
 													)
 												})}
@@ -360,12 +378,13 @@ const SystemCard = memo(
 							const cell = row.getAllCells().find((cell) => cell.column.id === column.id)
 							if (!cell) return null
 							// @ts-ignore
-							const { Icon, name } = column.columnDef as ColumnDef<SystemRecord, unknown>
+							const { Icon } = column.columnDef as ColumnDef<SystemRecord, unknown>
+							
 							return (
 								<div key={column.id} className="flex items-center gap-3">
 									{Icon && <Icon className="size-4 text-muted-foreground" />}
 									<div className="flex items-center gap-3 flex-1">
-										<span className="text-muted-foreground min-w-16">{name()}:</span>
+										<span className="text-muted-foreground min-w-16">{(column.columnDef as any).name?.() || column.id}:</span>
 										<div className="flex-1">{flexRender(cell.column.columnDef.cell, cell.getContext())}</div>
 									</div>
 								</div>

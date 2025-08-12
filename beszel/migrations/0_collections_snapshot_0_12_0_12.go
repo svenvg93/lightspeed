@@ -511,6 +511,16 @@ func init() {
 				"system": false,
 				"type": "relation"
 			},
+			{
+				"hidden": false,
+				"id": "averages_field",
+				"maxSize": 2000000,
+				"name": "averages",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "json"
+			},
 
 			{
 				"hidden": false,
