@@ -1,31 +1,22 @@
 package systems
 
 import (
-	"beszel"
 	"beszel/internal/entities/system"
 	"beszel/internal/hub/ws"
 	"context"
-	"encoding/json"
 	"errors"
-	"fmt"
 	"math/rand"
-	"net"
-	"strings"
 	"time"
 
 	"github.com/blang/semver"
-	"github.com/fxamacker/cbor/v2"
 	"github.com/pocketbase/pocketbase/core"
-	"golang.org/x/crypto/ssh"
 )
 
 type System struct {
 	Id                string               `db:"id"`
 	Host              string               `db:"host"`
-	Port              string               `db:"port"`
 	Status            string               `db:"status"`
 	manager           *SystemManager       // Manager that this system belongs to
-	client            *ssh.Client          // SSH client for fetching data
 	data              *system.CombinedData // system data from agent
 	ctx               context.Context      // Context for stopping the updater
 	cancel            context.CancelFunc   // Stops and removes system from updater
@@ -57,7 +48,6 @@ func (sys *System) StartUpdater() {
 
 	// Add random jitter to first WebSocket connection to prevent
 	// clustering if all agents are started at the same time.
-	// SSH connections during hub startup are already staggered.
 	var jitter <-chan time.Time
 	if sys.WsConn != nil {
 		jitter = getJitter()
@@ -69,8 +59,7 @@ func (sys *System) StartUpdater() {
 		time.Sleep(11 * time.Second)
 	}
 
-	// update immediately if system is not paused (only for ws connections)
-	// we'll wait a minute before connecting via SSH to prioritize ws connections
+	// update immediately if system is not paused
 	if sys.Status != paused && sys.ctx.Err() == nil {
 		// Add a small delay to allow the WebSocket connection to fully establish
 		time.Sleep(1 * time.Second)
@@ -385,27 +374,17 @@ func (sys *System) getContext() (context.Context, context.CancelFunc) {
 	return sys.ctx, sys.cancel
 }
 
-// fetchDataFromAgent attempts to fetch data from the agent,
-// prioritizing WebSocket if available.
+// fetchDataFromAgent attempts to fetch data from the agent via WebSocket.
 func (sys *System) fetchDataFromAgent() (*system.CombinedData, error) {
 	if sys.data == nil {
 		sys.data = &system.CombinedData{}
 	}
 
 	if sys.WsConn != nil && sys.WsConn.IsConnected() {
-		wsData, err := sys.fetchDataViaWebSocket()
-		if err == nil {
-			return wsData, nil
-		}
-		// close the WebSocket connection if error and try SSH
-		sys.closeWebSocketConnection()
+		return sys.fetchDataViaWebSocket()
 	}
 
-	sshData, err := sys.fetchDataViaSSH()
-	if err != nil {
-		return nil, err
-	}
-	return sshData, nil
+	return nil, errors.New("no websocket connection available")
 }
 
 func (sys *System) fetchDataViaWebSocket() (*system.CombinedData, error) {
@@ -419,141 +398,12 @@ func (sys *System) fetchDataViaWebSocket() (*system.CombinedData, error) {
 	return sys.data, nil
 }
 
-// fetchDataViaSSH handles fetching data using SSH.
-// This function encapsulates the original SSH logic.
-// It updates sys.data directly upon successful fetch.
-func (sys *System) fetchDataViaSSH() (*system.CombinedData, error) {
-	maxRetries := 1
-	for attempt := 0; attempt <= maxRetries; attempt++ {
-		if sys.client == nil || sys.Status == down {
-			if err := sys.createSSHClient(); err != nil {
-				return nil, err
-			}
-		}
-
-		session, err := sys.createSessionWithTimeout(4 * time.Second)
-		if err != nil {
-			if attempt >= maxRetries {
-				return nil, err
-			}
-			sys.manager.hub.Logger().Warn("Session closed. Retrying...", "host", sys.Host, "port", sys.Port, "err", err)
-			sys.closeSSHConnection()
-			// Reset format detection on connection failure - agent might have been upgraded
-			continue
-		}
-		defer session.Close()
-
-		stdout, err := session.StdoutPipe()
-		if err != nil {
-			return nil, err
-		}
-		if err := session.Shell(); err != nil {
-			return nil, err
-		}
-
-		*sys.data = system.CombinedData{}
-
-		if sys.agentVersion.GTE(beszel.MinVersionCbor) {
-			err = cbor.NewDecoder(stdout).Decode(sys.data)
-		} else {
-			err = json.NewDecoder(stdout).Decode(sys.data)
-		}
-
-		if err != nil {
-			sys.closeSSHConnection()
-			if attempt < maxRetries {
-				continue
-			}
-			return nil, err
-		}
-
-		// wait for the session to complete
-		if err := session.Wait(); err != nil {
-			return nil, err
-		}
-
-		return sys.data, nil
-	}
-
-	// this should never be reached due to the return in the loop
-	return nil, fmt.Errorf("failed to fetch data")
-}
-
-// createSSHClient creates a new SSH client for the system
-func (s *System) createSSHClient() error {
-	if s.manager.sshConfig == nil {
-		if err := s.manager.createSSHClientConfig(); err != nil {
-			return err
-		}
-	}
-	network := "tcp"
-	host := s.Host
-	if strings.HasPrefix(host, "/") {
-		network = "unix"
-	} else {
-		host = net.JoinHostPort(host, s.Port)
-	}
-	var err error
-	s.client, err = ssh.Dial(network, host, s.manager.sshConfig)
-	if err != nil {
-		return err
-	}
-	s.agentVersion, _ = extractAgentVersion(string(s.client.Conn.ServerVersion()))
-	return nil
-}
-
-// createSessionWithTimeout creates a new SSH session with a timeout to avoid hanging
-// in case of network issues
-func (sys *System) createSessionWithTimeout(timeout time.Duration) (*ssh.Session, error) {
-	if sys.client == nil {
-		return nil, fmt.Errorf("client not initialized")
-	}
-
-	ctx, cancel := context.WithTimeout(sys.ctx, timeout)
-	defer cancel()
-
-	sessionChan := make(chan *ssh.Session, 1)
-	errChan := make(chan error, 1)
-
-	go func() {
-		if session, err := sys.client.NewSession(); err != nil {
-			errChan <- err
-		} else {
-			sessionChan <- session
-		}
-	}()
-
-	select {
-	case session := <-sessionChan:
-		return session, nil
-	case err := <-errChan:
-		return nil, err
-	case <-ctx.Done():
-		return nil, fmt.Errorf("timeout")
-	}
-}
-
-// closeSSHConnection closes the SSH connection but keeps the system in the manager
-func (sys *System) closeSSHConnection() {
-	if sys.client != nil {
-		sys.client.Close()
-		sys.client = nil
-	}
-}
-
-// closeWebSocketConnection closes the WebSocket connection but keeps the system in the manager
-// to allow updating via SSH. It will be removed if the WS connection is re-established.
+// closeWebSocketConnection closes the WebSocket connection but keeps the system in the manager.
 // The system will be set as down a few seconds later if the connection is not re-established.
 func (sys *System) closeWebSocketConnection() {
 	if sys.WsConn != nil {
 		sys.WsConn.Close(nil)
 	}
-}
-
-// extractAgentVersion extracts the beszel version from SSH server version string
-func extractAgentVersion(versionString string) (semver.Version, error) {
-	_, after, _ := strings.Cut(versionString, "_")
-	return semver.Parse(after)
 }
 
 // getJitter returns a channel that will be triggered after a random delay

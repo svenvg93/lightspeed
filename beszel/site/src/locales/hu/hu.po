@@ -1183,8 +1183,8 @@ msgid "Please sign in to your account"
 msgstr "Kérjük, jelentkezzen be a fiókjába"
 
 #: src/components/add-system.tsx
-msgid "Port"
-msgstr "Port"
+#~ msgid "Port"
+#~ msgstr "Port"
 
 #: src/components/routes/system.tsx
 #: src/components/routes/system.tsx

@@ -22,7 +22,7 @@ const getScriptUrl = (path: string = "") => {
 	// return url.toString()
 }
 
-export function copyDockerCompose(port = "45876", publicKey: string, token: string) {
+export function copyDockerCompose(publicKey: string, token: string) {
 	copyToClipboard(`services:
   beszel-agent:
     image: henrygd/beszel-agent
@@ -35,22 +35,21 @@ export function copyDockerCompose(port = "45876", publicKey: string, token: stri
       # monitor other disks / partitions by mounting a folder in /extra-filesystems
       # - /mnt/disk/.beszel:/extra-filesystems/sda1:ro
     environment:
-      LISTEN: ${port}
       KEY: '${publicKey}'
       TOKEN: ${token}
       HUB_URL: ${getHubURL()}`)
 }
 
-export function copyDockerRun(port = "45876", publicKey: string, token: string) {
+export function copyDockerRun(publicKey: string, token: string) {
 	copyToClipboard(
-		`docker run -d --name beszel-agent --network host --restart unless-stopped -v /var/run/docker.sock:/var/run/docker.sock:ro -v ./beszel_agent_data:/var/lib/beszel-agent -e KEY="${publicKey}" -e LISTEN=${port} -e TOKEN="${token}" -e HUB_URL="${getHubURL()}" henrygd/beszel-agent`
+		`docker run -d --name beszel-agent --network host --restart unless-stopped -v /var/run/docker.sock:/var/run/docker.sock:ro -v ./beszel_agent_data:/var/lib/beszel-agent -e KEY="${publicKey}" -e TOKEN="${token}" -e HUB_URL="${getHubURL()}" henrygd/beszel-agent`
 	)
 }
 
-export function copyLinuxCommand(port = "45876", publicKey: string, token: string, brew = false) {
+export function copyLinuxCommand(publicKey: string, token: string, brew = false) {
 	let cmd = `curl -sL ${getScriptUrl(
 		brew ? "/brew" : ""
-	)} -o /tmp/install-agent.sh && chmod +x /tmp/install-agent.sh && /tmp/install-agent.sh -p ${port} -k "${publicKey}" -t "${token}" -url "${getHubURL()}"`
+	)} -o /tmp/install-agent.sh && chmod +x /tmp/install-agent.sh && /tmp/install-agent.sh -k "${publicKey}" -t "${token}" -url "${getHubURL()}"`
 	// brew script does not support --china-mirrors
 	if (!brew && (i18n.locale + navigator.language).includes("zh-CN")) {
 		cmd += ` --china-mirrors`
@@ -58,9 +57,9 @@ export function copyLinuxCommand(port = "45876", publicKey: string, token: strin
 	copyToClipboard(cmd)
 }
 
-export function copyWindowsCommand(port = "45876", publicKey: string, token: string) {
+export function copyWindowsCommand(publicKey: string, token: string) {
 	copyToClipboard(
-		`& iwr -useb ${getScriptUrl()} -OutFile "$env:TEMP\\install-agent.ps1"; & Powershell -ExecutionPolicy Bypass -File "$env:TEMP\\install-agent.ps1" -Key "${publicKey}" -Port ${port} -Token "${token}" -Url "${getHubURL()}"`
+		`& iwr -useb ${getScriptUrl()} -OutFile "$env:TEMP\\install-agent.ps1"; & Powershell -ExecutionPolicy Bypass -File "$env:TEMP\\install-agent.ps1" -Key "${publicKey}" -Token "${token}" -Url "${getHubURL()}"`
 	)
 }
 

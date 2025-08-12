@@ -447,20 +447,7 @@ func init() {
 				"system": false,
 				"type": "text"
 			},
-			{
-				"autogeneratePattern": "",
-				"hidden": false,
-				"id": "pij0k2jk",
-				"max": 0,
-				"min": 0,
-				"name": "port",
-				"pattern": "",
-				"presentable": false,
-				"primaryKey": false,
-				"required": false,
-				"system": false,
-				"type": "text"
-			},
+
 			{
 				"hidden": false,
 				"id": "qoq64ntl",

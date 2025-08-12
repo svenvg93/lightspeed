@@ -1,103 +1,28 @@
 package main
 
 import (
-	"beszel/internal/agent"
-	"crypto/ed25519"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/ssh"
 )
 
-func TestGetAddress(t *testing.T) {
-	tests := []struct {
-		name     string
-		opts     cmdOptions
-		envVars  map[string]string
-		expected string
-	}{
-		{
-			name:     "default port when no config",
-			opts:     cmdOptions{},
-			expected: ":45876",
-		},
-		{
-			name: "use address from flag",
-			opts: cmdOptions{
-				listen: "8080",
-			},
-			expected: ":8080",
-		},
-		{
-			name: "use unix socket from flag",
-			opts: cmdOptions{
-				listen: "/tmp/beszel.sock",
-			},
-			expected: "/tmp/beszel.sock",
-		},
-		{
-			name: "use LISTEN env var",
-			opts: cmdOptions{},
-			envVars: map[string]string{
-				"LISTEN": "1.2.3.4:9090",
-			},
-			expected: "1.2.3.4:9090",
-		},
-		{
-			name: "use legacy PORT env var",
-			opts: cmdOptions{},
-			envVars: map[string]string{
-				"PORT": "7070",
-			},
-			expected: ":7070",
-		},
-		{
-			name: "use unix socket from env var",
-			opts: cmdOptions{
-				listen: "",
-			},
-			envVars: map[string]string{
-				"LISTEN": "/tmp/beszel.sock",
-			},
-			expected: "/tmp/beszel.sock",
-		},
-		{
-			name: "flag takes precedence over env vars",
-			opts: cmdOptions{
-				listen: ":8080",
-			},
-			envVars: map[string]string{
-				"LISTEN": ":9090",
-				"PORT":   "7070",
-			},
-			expected: ":8080",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Setup environment
-			for k, v := range tt.envVars {
-				t.Setenv(k, v)
-			}
-
-			addr := tt.opts.getAddress()
-			assert.Equal(t, tt.expected, addr)
-		})
-	}
-}
-
-func TestLoadPublicKeys(t *testing.T) {
-	// Generate a test key
-	_, priv, err := ed25519.GenerateKey(nil)
+func TestLoadAuthKey(t *testing.T) {
+	// Generate a test RSA key
+	privKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	require.NoError(t, err)
-	signer, err := ssh.NewSignerFromKey(priv)
-	require.NoError(t, err)
-	pubKey := ssh.MarshalAuthorizedKey(signer.PublicKey())
+
+	// Encode to base64 format
+	keyBytes := x509.MarshalPKCS1PublicKey(&privKey.PublicKey)
+	pubKeyData := "base64:" + base64.StdEncoding.EncodeToString(keyBytes)
 
 	tests := []struct {
 		name        string
@@ -110,33 +35,33 @@ func TestLoadPublicKeys(t *testing.T) {
 		{
 			name: "load key from flag",
 			opts: cmdOptions{
-				key: string(pubKey),
+				key: pubKeyData,
 			},
 		},
 		{
 			name: "load key from env var",
 			envVars: map[string]string{
-				"KEY": string(pubKey),
+				"KEY": pubKeyData,
 			},
 		},
 		{
 			name: "load key from file",
 			envVars: map[string]string{
-				"KEY_FILE": "testkey.pub",
+				"KEY_FILE": "testkey.txt",
 			},
 			setupFiles: map[string][]byte{
-				"testkey.pub": pubKey,
+				"testkey.txt": []byte(pubKeyData),
 			},
 		},
 		{
 			name:        "error when no key provided",
 			wantErr:     true,
-			errContains: "no key provided",
+			errContains: "no authentication key provided",
 		},
 		{
 			name: "error on invalid key file",
 			envVars: map[string]string{
-				"KEY_FILE": "nonexistent.pub",
+				"KEY_FILE": "nonexistent.txt",
 			},
 			wantErr:     true,
 			errContains: "failed to read key file",
@@ -170,7 +95,7 @@ func TestLoadPublicKeys(t *testing.T) {
 				t.Setenv(k, v)
 			}
 
-			keys, err := tt.opts.loadPublicKeys()
+			authKey, err := tt.opts.loadAuthKey()
 			if tt.wantErr {
 				assert.Error(t, err)
 				if tt.errContains != "" {
@@ -180,62 +105,8 @@ func TestLoadPublicKeys(t *testing.T) {
 			}
 
 			require.NoError(t, err)
-			assert.Len(t, keys, 1)
-			assert.Equal(t, signer.PublicKey().Type(), keys[0].Type())
-		})
-	}
-}
-
-func TestGetNetwork(t *testing.T) {
-	tests := []struct {
-		name     string
-		opts     cmdOptions
-		envVars  map[string]string
-		expected string
-	}{
-		{
-			name: "NETWORK env var",
-			envVars: map[string]string{
-				"NETWORK": "tcp4",
-			},
-			expected: "tcp4",
-		},
-		{
-			name:     "only port",
-			opts:     cmdOptions{listen: "8080"},
-			expected: "tcp",
-		},
-		{
-			name:     "ipv4 address",
-			opts:     cmdOptions{listen: "1.2.3.4:8080"},
-			expected: "tcp",
-		},
-		{
-			name:     "ipv6 address",
-			opts:     cmdOptions{listen: "[2001:db8::1]:8080"},
-			expected: "tcp",
-		},
-		{
-			name:     "unix network",
-			opts:     cmdOptions{listen: "/tmp/beszel.sock"},
-			expected: "unix",
-		},
-		{
-			name:     "env var network",
-			opts:     cmdOptions{listen: ":8080"},
-			envVars:  map[string]string{"NETWORK": "tcp4"},
-			expected: "tcp4",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Setup environment
-			for k, v := range tt.envVars {
-				t.Setenv(k, v)
-			}
-			network := agent.GetNetwork(tt.opts.listen)
-			assert.Equal(t, tt.expected, network)
+			assert.NotEmpty(t, authKey)
+			assert.True(t, strings.HasPrefix(authKey, "base64:"))
 		})
 	}
 }
@@ -257,32 +128,14 @@ func TestParseFlags(t *testing.T) {
 			name: "no flags",
 			args: []string{"cmd"},
 			expected: cmdOptions{
-				key:    "",
-				listen: "",
+				key: "",
 			},
 		},
 		{
 			name: "key flag only",
 			args: []string{"cmd", "-key", "testkey"},
 			expected: cmdOptions{
-				key:    "testkey",
-				listen: "",
-			},
-		},
-		{
-			name: "addr flag only",
-			args: []string{"cmd", "-listen", ":8080"},
-			expected: cmdOptions{
-				key:    "",
-				listen: ":8080",
-			},
-		},
-		{
-			name: "both flags",
-			args: []string{"cmd", "-key", "testkey", "-listen", ":8080"},
-			expected: cmdOptions{
-				key:    "testkey",
-				listen: ":8080",
+				key: "testkey",
 			},
 		},
 	}

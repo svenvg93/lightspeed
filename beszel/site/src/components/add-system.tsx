@@ -74,7 +74,7 @@ let nextSystemToken: string | null = null
  */
 export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => void; system?: SystemRecord }) => {
 	const publicKey = useStore($publicKey)
-	const port = useRef<HTMLInputElement>(null)
+
 	const [hostValue, setHostValue] = useState(system?.host ?? "")
 	const isUnixSocket = hostValue.startsWith("/")
 	const [tab, setTab] = useLocalStorage("as-tab", "docker")
@@ -222,19 +222,9 @@ export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => 
 								setHostValue(e.target.value)
 							}}
 						/>
-						<Label htmlFor="port" className={cn("xs:text-end", isUnixSocket && "hidden")}>
-							<Trans>Port</Trans>
-						</Label>
-						<Input
-							ref={port}
-							name="port"
-							id="port"
-							defaultValue={system?.port || "45876"}
-							required={!isUnixSocket}
-							className={cn(isUnixSocket && "hidden")}
-						/>
+
 						<Label htmlFor="pkey" className="xs:text-end whitespace-pre">
-							<Trans comment="Use 'Key' if your language requires many more characters">Public Key</Trans>
+							<Trans comment="Use 'Key' if your language requires many more characters">Auth Key</Trans>
 						</Label>
 						<InputCopy value={publicKey} id="pkey" name="pkey" />
 						<Label htmlFor="tkn" className="xs:text-end whitespace-pre">
@@ -278,14 +268,14 @@ export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => 
 							<CopyButton
 								text={t({ message: "Copy docker compose", context: "Button to copy docker compose file content" })}
 								onClick={async () =>
-									copyDockerCompose(isUnixSocket ? hostValue : port.current?.value, publicKey, token)
+									copyDockerCompose(publicKey, token)
 								}
 								icon={<DockerIcon className="size-4 -me-0.5" />}
 								dropdownItems={[
 									{
 										text: t({ message: "Copy docker run", context: "Button to copy docker run command" }),
 										onClick: async () =>
-											copyDockerRun(isUnixSocket ? hostValue : port.current?.value, publicKey, token),
+											copyDockerRun(publicKey, token),
 										icons: [DockerIcon],
 									},
 								]}
@@ -296,26 +286,8 @@ export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => 
 							<CopyButton
 								text={t`Copy Linux command`}
 								icon={<TuxIcon className="size-4" />}
-								onClick={async () => copyLinuxCommand(isUnixSocket ? hostValue : port.current?.value, publicKey, token)}
-								dropdownItems={[
-									{
-										text: t({ message: "Homebrew command", context: "Button to copy install command" }),
-										onClick: async () =>
-											copyLinuxCommand(isUnixSocket ? hostValue : port.current?.value, publicKey, token, true),
-										icons: [AppleIcon, TuxIcon],
-									},
-									{
-										text: t({ message: "Windows command", context: "Button to copy install command" }),
-										onClick: async () =>
-											copyWindowsCommand(isUnixSocket ? hostValue : port.current?.value, publicKey, token),
-										icons: [WindowsIcon],
-									},
-									{
-										text: t`Manual setup instructions`,
-										url: "https://beszel.dev/guide/agent-installation#binary",
-										icons: [ExternalLinkIcon],
-									},
-								]}
+								onClick={async () => copyLinuxCommand(publicKey, token)}
+
 							/>
 						</TabsContent>
 						{/* Save */}
@@ -330,7 +302,7 @@ export const SystemDialog = ({ setOpen, system }: { setOpen: (open: boolean) => 
 interface CopyButtonProps {
 	text: string
 	onClick: () => void
-	dropdownItems: DropdownItem[]
+	dropdownItems?: DropdownItem[]
 	icon?: React.ReactElement
 }
 
@@ -341,19 +313,23 @@ const CopyButton = memo((props: CopyButtonProps) => {
 				type="button"
 				variant="outline"
 				onClick={props.onClick}
-				className="rounded-e-none dark:border-e-0 grow flex items-center gap-2"
+				className={props.dropdownItems ? "rounded-e-none dark:border-e-0 grow flex items-center gap-2" : "flex items-center gap-2"}
 			>
 				{props.text} {props.icon}
 			</Button>
-			<div className="w-px h-full bg-muted"></div>
-			<DropdownMenu>
-				<DropdownMenuTrigger asChild>
-					<Button variant="outline" className={"px-2 rounded-s-none border-s-0"}>
-						<ChevronDownIcon />
-					</Button>
-				</DropdownMenuTrigger>
-				<InstallDropdown items={props.dropdownItems} />
-			</DropdownMenu>
+			{props.dropdownItems && (
+				<>
+					<div className="w-px h-full bg-muted"></div>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button variant="outline" className={"px-2 rounded-s-none border-s-0"}>
+								<ChevronDownIcon />
+							</Button>
+						</DropdownMenuTrigger>
+						<InstallDropdown items={props.dropdownItems} />
+					</DropdownMenu>
+				</>
+			)}
 		</div>
 	)
 })

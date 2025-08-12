@@ -22,7 +22,7 @@ type HubRequest[T any] struct {
 }
 
 type FingerprintRequest struct {
-	Signature   []byte `cbor:"0,keyasint"`
+	JWTToken    string `cbor:"0,keyasint"` // JWT token for authentication
 	NeedSysInfo bool   `cbor:"1,keyasint"` // For universal token system creation
 }
 

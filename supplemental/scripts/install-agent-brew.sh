@@ -9,7 +9,7 @@ usage() {
   printf "Beszel Agent homebrew installation script\n\n"
   printf "Usage: ./install-agent-brew.sh [options]\n\n"
   printf "Options: \n"
-  printf "  -k            SSH key (required, or interactive if not provided)\n"
+  printf "  -k            Auth key (required, or interactive if not provided)\n"
   printf "  -p            Port (default: $PORT)\n"
   printf "  -t            Token (optional for backwards compatibility)\n"
   printf "  -url          Hub URL (optional for backwards compatibility)\n"
@@ -67,7 +67,7 @@ if ! command -v brew &>/dev/null; then
 fi
 
 if [ -z "$KEY" ]; then
-  read -p "Enter SSH key: " KEY
+  read -p "Enter auth key: " KEY
 fi
 
 # TOKEN and HUB_URL are optional for backwards compatibility - no interactive prompts

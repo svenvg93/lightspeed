@@ -10,12 +10,12 @@ func (h *Hub) GetSystemManager() *systems.SystemManager {
 	return h.sm
 }
 
-// TESTING ONLY: GetPubkey returns the public key
-func (h *Hub) GetPubkey() string {
-	return h.pubKey
+// TESTING ONLY: GetAuthKey returns the authentication key
+func (h *Hub) GetAuthKey() string {
+	return h.authKey
 }
 
-// TESTING ONLY: SetPubkey sets the public key
-func (h *Hub) SetPubkey(pubkey string) {
-	h.pubKey = pubkey
+// TESTING ONLY: SetAuthKey sets the authentication key
+func (h *Hub) SetAuthKey(authKey string) {
+	h.authKey = authKey
 }

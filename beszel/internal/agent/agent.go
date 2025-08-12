@@ -1,4 +1,4 @@
-// Package agent handles the agent's SSH server and system stats collection.
+// Package agent handles the agent's system stats collection and JWT authentication.
 package agent
 
 import (
@@ -13,10 +13,13 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gliderlabs/ssh"
 	"github.com/shirou/gopsutil/v4/host"
-	gossh "golang.org/x/crypto/ssh"
 )
+
+// ServerOptions contains configuration options for authentication.
+type ServerOptions struct {
+	AuthKey string // Base64 authentication key for hub verification
+}
 
 type Agent struct {
 	sync.Mutex      // Used to lock agent while collecting data
@@ -30,9 +33,8 @@ type Agent struct {
 
 	cache             *SessionCache      // Cache for system stats based on primary session ID
 	connectionManager *ConnectionManager // Channel to signal connection events
-	server            *ssh.Server        // SSH server
 	dataDir           string             // Directory for persisting data
-	keys              []gossh.PublicKey  // SSH public keys
+	authKey           string             // Base64 authentication key for hub verification
 }
 
 // NewAgent creates a new agent with the given data directory for persisting data.
@@ -141,7 +143,7 @@ func (a *Agent) gatherStats(sessionID string) *system.CombinedData {
 
 // StartAgent initializes and starts the agent with optional WebSocket connection
 func (a *Agent) Start(serverOptions ServerOptions) error {
-	a.keys = serverOptions.Keys
+	a.authKey = serverOptions.AuthKey
 	return a.connectionManager.Start(serverOptions)
 }
 

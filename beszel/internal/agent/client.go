@@ -8,7 +8,6 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
-	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -18,7 +17,6 @@ import (
 
 	"github.com/fxamacker/cbor/v2"
 	"github.com/lxzan/gws"
-	"golang.org/x/crypto/ssh"
 )
 
 const (
@@ -173,14 +171,14 @@ func (client *WebSocketClient) OnPing(conn *gws.Conn, message []byte) {
 	conn.WritePong(message)
 }
 
-// handleAuthChallenge verifies the authenticity of the hub and returns the system's fingerprint.
+// handleAuthChallenge verifies the authenticity of the hub using JWT and returns the system's fingerprint.
 func (client *WebSocketClient) handleAuthChallenge(msg *common.HubRequest[cbor.RawMessage]) (err error) {
 	var authRequest common.FingerprintRequest
 	if err := cbor.Unmarshal(msg.Data, &authRequest); err != nil {
 		return err
 	}
 
-	if err := client.verifySignature(authRequest.Signature); err != nil {
+	if err := client.verifyAuthKey(authRequest.JWTToken); err != nil {
 		return err
 	}
 
@@ -193,25 +191,23 @@ func (client *WebSocketClient) handleAuthChallenge(msg *common.HubRequest[cbor.R
 
 	if authRequest.NeedSysInfo {
 		response.Hostname = client.agent.systemInfo.Hostname
-		serverAddr := client.agent.connectionManager.serverOptions.Addr
-		_, response.Port, _ = net.SplitHostPort(serverAddr)
 	}
 
 	return client.sendMessage(response)
 }
 
-// verifySignature verifies the signature of the token using the public keys.
-func (client *WebSocketClient) verifySignature(signature []byte) (err error) {
-	for _, pubKey := range client.agent.keys {
-		sig := ssh.Signature{
-			Format: pubKey.Type(),
-			Blob:   signature,
-		}
-		if err = pubKey.Verify([]byte(client.token), &sig); err == nil {
-			return nil
-		}
+// verifyAuthKey verifies the base64 authentication key.
+func (client *WebSocketClient) verifyAuthKey(authKey string) (err error) {
+	// Simple comparison of the base64 auth key
+	if client.agent.authKey == "" {
+		return errors.New("no authentication key available")
 	}
-	return errors.New("invalid signature - check KEY value")
+
+	if authKey != client.agent.authKey {
+		return errors.New("authentication key mismatch")
+	}
+
+	return nil
 }
 
 // Close closes the WebSocket connection gracefully.

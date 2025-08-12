@@ -4,8 +4,6 @@
 package agent
 
 import (
-	"crypto/ed25519"
-	"fmt"
 	"net"
 	"net/url"
 	"os"
@@ -14,7 +12,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/ssh"
 )
 
 func createTestAgent(t *testing.T) *Agent {
@@ -25,12 +22,6 @@ func createTestAgent(t *testing.T) *Agent {
 }
 
 func createTestServerOptions(t *testing.T) ServerOptions {
-	// Generate test key pair
-	_, privKey, err := ed25519.GenerateKey(nil)
-	require.NoError(t, err)
-	sshPubKey, err := ssh.NewPublicKey(privKey.Public().(ed25519.PublicKey))
-	require.NoError(t, err)
-
 	// Find available port
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(t, err)
@@ -38,9 +29,7 @@ func createTestServerOptions(t *testing.T) ServerOptions {
 	listener.Close()
 
 	return ServerOptions{
-		Network: "tcp",
-		Addr:    fmt.Sprintf("127.0.0.1:%d", port),
-		Keys:    []ssh.PublicKey{sshPubKey},
+		AuthKey: "base64:dGVzdC1hdXRoLWtleS1mb3ItdGVzdGluZw==",
 	}
 }
 
@@ -75,9 +64,6 @@ func TestConnectionManager_StateTransitions(t *testing.T) {
 	cm.handleStateChange(WebSocketConnected)
 	assert.Equal(t, WebSocketConnected, cm.State, "State should change to WebSocketConnected")
 
-	cm.handleStateChange(SSHConnected)
-	assert.Equal(t, SSHConnected, cm.State, "State should change to SSHConnected")
-
 	cm.handleStateChange(Disconnected)
 	assert.Equal(t, Disconnected, cm.State, "State should change to Disconnected")
 
@@ -110,34 +96,10 @@ func TestConnectionManager_EventHandling(t *testing.T) {
 			expectedState: WebSocketConnected,
 		},
 		{
-			name:          "SSH connect from disconnected",
-			initialState:  Disconnected,
-			event:         SSHConnect,
-			expectedState: SSHConnected,
-		},
-		{
 			name:          "WebSocket disconnect from connected",
 			initialState:  WebSocketConnected,
 			event:         WebSocketDisconnect,
 			expectedState: Disconnected,
-		},
-		{
-			name:          "SSH disconnect from connected",
-			initialState:  SSHConnected,
-			event:         SSHDisconnect,
-			expectedState: Disconnected,
-		},
-		{
-			name:          "WebSocket disconnect from SSH connected (no change)",
-			initialState:  SSHConnected,
-			event:         WebSocketDisconnect,
-			expectedState: SSHConnected,
-		},
-		{
-			name:          "SSH disconnect from WebSocket connected (no change)",
-			initialState:  WebSocketConnected,
-			event:         SSHDisconnect,
-			expectedState: WebSocketConnected,
 		},
 	}
 

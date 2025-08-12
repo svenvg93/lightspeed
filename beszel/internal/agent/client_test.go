@@ -6,7 +6,6 @@ package agent
 import (
 	"beszel"
 	"beszel/internal/common"
-	"crypto/ed25519"
 	"net/url"
 	"os"
 	"strings"
@@ -16,7 +15,6 @@ import (
 	"github.com/fxamacker/cbor/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/ssh"
 )
 
 // TestNewWebSocketClient tests WebSocket client creation
@@ -168,20 +166,9 @@ func TestWebSocketClient_GetOptions(t *testing.T) {
 	}
 }
 
-// TestWebSocketClient_VerifySignature tests signature verification
-func TestWebSocketClient_VerifySignature(t *testing.T) {
+// TestWebSocketClient_VerifyAuthKey tests auth key verification
+func TestWebSocketClient_VerifyAuthKey(t *testing.T) {
 	agent := createTestAgent(t)
-
-	// Generate test key pairs
-	_, goodPrivKey, err := ed25519.GenerateKey(nil)
-	require.NoError(t, err)
-	goodPubKey, err := ssh.NewPublicKey(goodPrivKey.Public().(ed25519.PublicKey))
-	require.NoError(t, err)
-
-	_, badPrivKey, err := ed25519.GenerateKey(nil)
-	require.NoError(t, err)
-	badPubKey, err := ssh.NewPublicKey(badPrivKey.Public().(ed25519.PublicKey))
-	require.NoError(t, err)
 
 	// Set up environment
 	os.Setenv("BESZEL_AGENT_HUB_URL", "http://localhost:8080")
@@ -195,56 +182,54 @@ func TestWebSocketClient_VerifySignature(t *testing.T) {
 	require.NoError(t, err)
 
 	testCases := []struct {
-		name        string
-		keys        []ssh.PublicKey
-		token       string
-		signWith    ed25519.PrivateKey
-		expectError bool
+		name         string
+		agentAuthKey string
+		hubAuthKey   string
+		expectError  bool
+		errorMsg     string
 	}{
 		{
-			name:        "valid signature with correct key",
-			keys:        []ssh.PublicKey{goodPubKey},
-			token:       "test-token",
-			signWith:    goodPrivKey,
-			expectError: false,
+			name:         "matching auth keys",
+			agentAuthKey: "base64:dGVzdC1hdXRoLWtleQ==",
+			hubAuthKey:   "base64:dGVzdC1hdXRoLWtleQ==",
+			expectError:  false,
 		},
 		{
-			name:        "invalid signature with wrong key",
-			keys:        []ssh.PublicKey{goodPubKey},
-			token:       "test-token",
-			signWith:    badPrivKey,
-			expectError: true,
+			name:         "different auth keys",
+			agentAuthKey: "base64:dGVzdC1hdXRoLWtleQ==",
+			hubAuthKey:   "base64:ZGlmZmVyZW50LWtleQ==",
+			expectError:  true,
+			errorMsg:     "authentication key mismatch",
 		},
 		{
-			name:        "valid signature with multiple keys",
-			keys:        []ssh.PublicKey{badPubKey, goodPubKey},
-			token:       "test-token",
-			signWith:    goodPrivKey,
-			expectError: false,
+			name:         "empty agent auth key",
+			agentAuthKey: "",
+			hubAuthKey:   "base64:dGVzdC1hdXRoLWtleQ==",
+			expectError:  true,
+			errorMsg:     "no authentication key available",
 		},
 		{
-			name:        "no valid keys",
-			keys:        []ssh.PublicKey{badPubKey},
-			token:       "test-token",
-			signWith:    goodPrivKey,
-			expectError: true,
+			name:         "malformed auth key",
+			agentAuthKey: "not-base64-key",
+			hubAuthKey:   "base64:dGVzdC1hdXRoLWtleQ==",
+			expectError:  true,
+			errorMsg:     "authentication key mismatch",
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			// Set up agent with test keys
-			agent.keys = tc.keys
-			client.token = tc.token
+			// Set up agent with test auth key
+			agent.authKey = tc.agentAuthKey
 
-			// Create signature
-			signature := ed25519.Sign(tc.signWith, []byte(tc.token))
-
-			err := client.verifySignature(signature)
+			// Simulate the verification process
+			err := client.verifyAuthKey(tc.hubAuthKey)
 
 			if tc.expectError {
 				assert.Error(t, err)
-				assert.Contains(t, err.Error(), "invalid signature")
+				if tc.errorMsg != "" {
+					assert.Contains(t, err.Error(), tc.errorMsg)
+				}
 			} else {
 				assert.NoError(t, err)
 			}

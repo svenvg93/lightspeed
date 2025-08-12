@@ -1183,8 +1183,8 @@ msgid "Please sign in to your account"
 msgstr "Пожалуйста, войдите в свою учетную запись"
 
 #: src/components/add-system.tsx
-msgid "Port"
-msgstr "Порт"
+#~ msgid "Port"
+#~ msgstr "Порт"
 
 #: src/components/routes/system.tsx
 #: src/components/routes/system.tsx

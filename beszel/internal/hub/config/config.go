@@ -12,7 +12,6 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
-	"github.com/spf13/cast"
 	"gopkg.in/yaml.v3"
 )
 
@@ -23,7 +22,6 @@ type config struct {
 type systemConfig struct {
 	Name  string `yaml:"name"`
 	Host  string `yaml:"host"`
-	Port  uint16 `yaml:"port,omitempty"`
 	Token string `yaml:"token,omitempty"`
 	// Removed Users field - using role-based access control instead
 }
@@ -57,17 +55,16 @@ func SyncSystems(e *core.ServeEvent) error {
 	// Create a map of existing systems
 	existingSystemsMap := make(map[string]*core.Record)
 	for _, system := range existingSystems {
-		key := system.GetString("name") + system.GetString("host") + system.GetString("port")
+		key := system.GetString("name") + system.GetString("host")
 		existingSystemsMap[key] = system
 	}
 
 	// Process systems from config
 	for _, sysConfig := range config.Systems {
-		key := sysConfig.Name + sysConfig.Host + cast.ToString(sysConfig.Port)
+		key := sysConfig.Name + sysConfig.Host
 		if existingSystem, ok := existingSystemsMap[key]; ok {
-			// Update existing system
-			existingSystem.Set("name", sysConfig.Name)
-			existingSystem.Set("port", sysConfig.Port)
+					// Update existing system
+		existingSystem.Set("name", sysConfig.Name)
 			if err := h.Save(existingSystem); err != nil {
 				return err
 			}
@@ -89,7 +86,6 @@ func SyncSystems(e *core.ServeEvent) error {
 			newSystem := core.NewRecord(systemsCollection)
 			newSystem.Set("name", sysConfig.Name)
 			newSystem.Set("host", sysConfig.Host)
-			newSystem.Set("port", sysConfig.Port)
 			newSystem.Set("info", system.Info{})
 			newSystem.Set("status", "pending")
 			if err := h.Save(newSystem); err != nil {
@@ -174,7 +170,6 @@ func generateYAML(h core.App) (string, error) {
 		sysConfig := systemConfig{
 			Name:  system.GetString("name"),
 			Host:  system.GetString("host"),
-			Port:  cast.ToUint16(system.Get("port")),
 			Token: systemTokenMap[system.Id],
 		}
 		config.Systems = append(config.Systems, sysConfig)

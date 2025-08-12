@@ -90,7 +90,7 @@ func (acr *agentConnectRequest) agentConnect() (err error) {
 }
 
 // verifyWsConn verifies the WebSocket connection using the agent's fingerprint and
-// SSH key signature, then adds the system to the system manager.
+// JWT token, then adds the system to the system manager.
 func (acr *agentConnectRequest) verifyWsConn(conn *gws.Conn, fpRecords []ws.FingerprintRecord) (err error) {
 	wsConn := ws.NewWsConnection(conn)
 
@@ -106,12 +106,13 @@ func (acr *agentConnectRequest) verifyWsConn(conn *gws.Conn, fpRecords []ws.Fing
 
 	go conn.ReadLoop()
 
-	signer, err := acr.hub.GetSSHKey("")
-	if err != nil {
-		return err
+	// Get system ID for authentication
+	systemID := ""
+	if len(fpRecords) > 0 {
+		systemID = fpRecords[0].SystemId
 	}
 
-	agentFingerprint, err := wsConn.GetFingerprint(acr.token, signer, acr.isUniversalToken)
+	agentFingerprint, err := wsConn.GetFingerprint(acr.token, acr.hub.GetAuthKey(), systemID, acr.isUniversalToken, acr.isUniversalToken)
 	if err != nil {
 		return err
 	}
@@ -259,18 +260,14 @@ func (acr *agentConnectRequest) createSystem(agentFingerprint common.Fingerprint
 		return "", err
 	}
 	remoteAddr := getRealIP(acr.req)
-	// separate port from address
+	// set hostname if not provided
 	if agentFingerprint.Hostname == "" {
 		agentFingerprint.Hostname = remoteAddr
-	}
-	if agentFingerprint.Port == "" {
-		agentFingerprint.Port = "45876"
 	}
 	// create new record
 	systemRecord := core.NewRecord(systemsCollection)
 	systemRecord.Set("name", agentFingerprint.Hostname)
 	systemRecord.Set("host", remoteAddr)
-	systemRecord.Set("port", agentFingerprint.Port)
 	// No longer assigning users - using role-based access control instead
 
 	return systemRecord.Id, acr.hub.Save(systemRecord)

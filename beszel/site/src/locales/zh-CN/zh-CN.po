@@ -1183,8 +1183,8 @@ msgid "Please sign in to your account"
 msgstr "请登录您的账户"
 
 #: src/components/add-system.tsx
-msgid "Port"
-msgstr "端口"
+#~ msgid "Port"
+#~ msgstr "端口"
 
 #: src/components/routes/system.tsx
 #: src/components/routes/system.tsx

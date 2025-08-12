@@ -11,8 +11,8 @@ param (
 
 # Check if required parameters are provided
 if ([string]::IsNullOrWhiteSpace($Key)) {
-    Write-Host "ERROR: SSH Key is required." -ForegroundColor Red
-    Write-Host "Usage: .\install-agent.ps1 -Key 'your-ssh-key-here' [-Token 'your-token-here'] [-Url 'your-hub-url-here'] [-Port port-number]" -ForegroundColor Yellow
+    Write-Host "ERROR: Auth Key is required." -ForegroundColor Red
+Write-Host "Usage: .\install-agent.ps1 -Key 'your-auth-key-here' [-Token 'your-token-here'] [-Url 'your-hub-url-here'] [-Port port-number]" -ForegroundColor Yellow
     Write-Host "Note: Token and Url are optional for backwards compatibility with older hub versions." -ForegroundColor Yellow
     exit 1
 }

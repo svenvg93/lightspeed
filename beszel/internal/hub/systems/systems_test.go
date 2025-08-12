@@ -43,10 +43,9 @@ func TestSystemManagerNew(t *testing.T) {
 		assert.Equal(t, "pending", record.GetString("status"), "System status should be 'pending'")
 		assert.Equal(t, "pending", sm.GetSystemStatusFromStore(record.Id), "System status should be 'pending'")
 
-		// Verify the system host and port
-		host, port := sm.GetSystemHostPort(record.Id)
+		// Verify the system host
+		host, _ := sm.GetSystemHostPort(record.Id)
 		assert.Equal(t, record.GetString("host"), host, "System host should match")
-		assert.Equal(t, record.GetString("port"), port, "System port should match")
 
 		time.Sleep(13 * time.Second)
 		synctest.Wait()

@@ -1,8 +1,6 @@
 package systems
 
 import (
-	"beszel"
-	"beszel/internal/common"
 	"beszel/internal/entities/system"
 	"beszel/internal/hub/ws"
 	"errors"
@@ -12,7 +10,6 @@ import (
 	"github.com/blang/semver"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/store"
-	"golang.org/x/crypto/ssh"
 )
 
 // System status constants
@@ -25,9 +22,6 @@ const (
 	// interval is the default update interval in milliseconds (60 seconds)
 	interval int = 60_000
 	// interval int = 10_000 // Debug interval for faster updates
-
-	// sessionTimeout is the maximum time to wait for SSH connections
-	sessionTimeout = 4 * time.Second
 )
 
 var (
@@ -36,11 +30,10 @@ var (
 )
 
 // SystemManager manages a collection of monitored systems and their connections.
-// It handles system lifecycle, status updates, and maintains both SSH and WebSocket connections.
+// It handles system lifecycle, status updates, and maintains WebSocket connections.
 type SystemManager struct {
 	hub        hubLike                       // Hub interface for database and alert operations
 	systems    *store.Store[string, *System] // Thread-safe store of active systems
-	sshConfig  *ssh.ClientConfig             // SSH client configuration for system connections
 	configSent map[string]bool               // Track which systems have received monitoring config
 }
 
@@ -48,7 +41,6 @@ type SystemManager struct {
 // It extends core.App with system-specific functionality.
 type hubLike interface {
 	core.App
-	GetSSHKey(dataDir string) (ssh.Signer, error)
 	HandleSystemAlerts(systemRecord *core.Record, data *system.CombinedData) error
 	HandleStatusAlerts(status string, systemRecord *core.Record) error
 	SendMonitoringConfigToAgent(systemRecord *core.Record) error
@@ -66,20 +58,14 @@ func NewSystemManager(hub hubLike) *SystemManager {
 }
 
 // Initialize sets up the system manager by binding event hooks and starting existing systems.
-// It configures SSH client settings and begins monitoring all non-paused systems from the database.
+// It begins monitoring all non-paused systems from the database.
 // Systems are started with staggered delays to prevent overwhelming the hub during startup.
 func (sm *SystemManager) Initialize() error {
 	sm.bindEventHooks()
 
-	// Initialize SSH client configuration
-	err := sm.createSSHClientConfig()
-	if err != nil {
-		return err
-	}
-
 	// Load existing systems from database (excluding paused ones)
 	var systems []*System
-	err = sm.hub.DB().NewQuery("SELECT id, host, port, status FROM systems WHERE status != 'paused'").All(&systems)
+	err := sm.hub.DB().NewQuery("SELECT id, host, port, status FROM systems WHERE status != 'paused'").All(&systems)
 	if err != nil || len(systems) == 0 {
 		return err
 	}
@@ -157,7 +143,7 @@ func (sm *SystemManager) onRecordUpdate(e *core.RecordEvent) error {
 // onRecordAfterUpdateSuccess handles system record updates after they're committed to the database.
 // It manages system lifecycle based on status changes and triggers appropriate alerts.
 // Status transitions are handled as follows:
-// - paused: Closes SSH connection and deactivates alerts
+// - paused: Closes connection and deactivates alerts
 // - pending: Starts monitoring (reuses WebSocket if available)
 // - up: Triggers system alerts
 // - down: Triggers status change alerts
@@ -174,7 +160,6 @@ func (sm *SystemManager) onRecordAfterUpdateSuccess(e *core.RecordEvent) error {
 	case paused:
 		if ok {
 			// Pause monitoring but keep system in manager for potential resume
-			system.closeSSHConnection()
 		}
 		_ = deactivateAlerts(e.App, e.Record.Id)
 		return e.Next()
@@ -256,8 +241,7 @@ func (sm *SystemManager) RemoveSystem(systemID string) error {
 		system.cancel()
 	}
 
-	// Clean up all connections
-	system.closeSSHConnection()
+	// Clean up WebSocket connection
 	system.closeWebSocketConnection()
 	sm.systems.Remove(systemID)
 	sm.ClearConfigSent(systemID)
@@ -282,7 +266,6 @@ func (sm *SystemManager) AddRecord(record *core.Record, system *System) (err err
 	// Populate system from record
 	system.Status = record.GetString("status")
 	system.Host = record.GetString("host")
-	system.Port = record.GetString("port")
 
 	return sm.AddSystem(system)
 }
@@ -343,30 +326,6 @@ func (sm *SystemManager) MarkConfigAsSent(systemID string) {
 // ClearConfigSent clears the config sent status for a system
 func (sm *SystemManager) ClearConfigSent(systemID string) {
 	delete(sm.configSent, systemID)
-}
-
-// createSSHClientConfig initializes the SSH client configuration for connecting to an agent's server
-func (sm *SystemManager) createSSHClientConfig() error {
-	privateKey, err := sm.hub.GetSSHKey("")
-	if err != nil {
-		return err
-	}
-
-	sm.sshConfig = &ssh.ClientConfig{
-		User: "u",
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(privateKey),
-		},
-		Config: ssh.Config{
-			Ciphers:      common.DefaultCiphers,
-			KeyExchanges: common.DefaultKeyExchanges,
-			MACs:         common.DefaultMACs,
-		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		ClientVersion:   fmt.Sprintf("SSH-2.0-%s_%s", beszel.AppName, beszel.Version),
-		Timeout:         sessionTimeout,
-	}
-	return nil
 }
 
 // deactivateAlerts finds all triggered alerts for a system and sets them to inactive.

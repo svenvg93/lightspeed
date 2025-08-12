@@ -9,7 +9,6 @@ import (
 
 	"github.com/fxamacker/cbor/v2"
 	"github.com/lxzan/gws"
-	"golang.org/x/crypto/ssh"
 )
 
 const (
@@ -149,20 +148,14 @@ func (ws *WsConn) SendMonitoringConfig(config interface{}) error {
 	})
 }
 
-// GetFingerprint authenticates with the agent using SSH signature and returns the agent's fingerprint.
-func (ws *WsConn) GetFingerprint(token string, signer ssh.Signer, needSysInfo bool) (common.FingerprintResponse, error) {
+// GetFingerprint authenticates with the agent using base64 key and returns the agent's fingerprint.
+func (ws *WsConn) GetFingerprint(token string, authKey string, systemID string, isUniversal bool, needSysInfo bool) (common.FingerprintResponse, error) {
 	var clientFingerprint common.FingerprintResponse
-	challenge := []byte(token)
 
-	signature, err := signer.Sign(nil, challenge)
-	if err != nil {
-		return clientFingerprint, err
-	}
-
-	err = ws.sendMessage(common.HubRequest[any]{
+	err := ws.sendMessage(common.HubRequest[any]{
 		Action: common.CheckFingerprint,
 		Data: common.FingerprintRequest{
-			Signature:   signature.Blob,
+			JWTToken:    authKey, // Using authKey instead of JWT token
 			NeedSysInfo: needSysInfo,
 		},
 	})

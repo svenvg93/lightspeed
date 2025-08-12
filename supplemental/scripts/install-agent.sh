@@ -84,7 +84,7 @@ case "$1" in
   printf "Beszel Agent installation script\n\n"
   printf "Usage: ./install-agent.sh [options]\n\n"
   printf "Options: \n"
-  printf "  -k                    : SSH key (required, or interactive if not provided)\n"
+  printf "  -k                    : Auth key (required, or interactive if not provided)\n"
   printf "  -p                    : Port (default: $PORT)\n"
   printf "  -t                    : Token (optional for backwards compatibility)\n"
   printf "  -url                  : Hub URL (optional for backwards compatibility)\n"
@@ -315,9 +315,9 @@ else
   echo "Warning: Please ensure 'tar' and 'curl' and 'sha256sum (coreutils)' are installed."
 fi
 
-# If no SSH key is provided, ask for the SSH key interactively
+# If no JWT public key is provided, ask for the JWT public key interactively
 if [ -z "$KEY" ]; then
-  printf "Enter your SSH key: "
+  printf "Enter your JWT public key (base64 format): "
   read KEY
 fi
 

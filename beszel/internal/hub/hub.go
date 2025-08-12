@@ -9,15 +9,16 @@ import (
 	"beszel/internal/records"
 	"beszel/internal/users"
 	"beszel/site"
-	"crypto/ed25519"
-	"encoding/pem"
+	"crypto/rand"
+	"encoding/base64"
 	"fmt"
 	"io/fs"
+	"log/slog"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -25,18 +26,16 @@ import (
 	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
-	"golang.org/x/crypto/ssh"
 )
 
 type Hub struct {
 	core.App
 	*alerts.AlertManager
-	um     *users.UserManager
-	rm     *records.RecordManager
-	sm     *systems.SystemManager
-	pubKey string
-	signer ssh.Signer
-	appURL string
+	um      *users.UserManager
+	rm      *records.RecordManager
+	sm      *systems.SystemManager
+	authKey string // Base64 authentication key for agents
+	appURL  string
 }
 
 // NewHub creates a new Hub instance with default configuration
@@ -49,7 +48,67 @@ func NewHub(app core.App) *Hub {
 	hub.rm = records.NewRecordManager(hub)
 	hub.sm = systems.NewSystemManager(hub)
 	hub.appURL, _ = GetEnv("APP_URL")
+
+	// Generate base64 authentication key for agents
+	hub.generateAuthKey()
+
 	return hub
+}
+
+// generateAuthKey creates a random base64 key for agent authentication
+func (h *Hub) generateAuthKey() {
+	// Try to load existing key from disk first
+	if h.loadAuthKeyFromDisk() {
+		slog.Info("Loaded existing auth key from disk")
+		return
+	}
+
+	slog.Info("No existing auth key found, generating new one")
+
+	// Generate new key if none exists
+	keyBytes := make([]byte, 32)
+	if _, err := rand.Read(keyBytes); err != nil {
+		// Fallback to a deterministic key if random generation fails
+		keyBytes = []byte("default-auth-key-for-beszel-hub")
+	}
+
+	// Encode to base64
+	h.authKey = "base64:" + base64.StdEncoding.EncodeToString(keyBytes)
+
+	// Save the new key to disk
+	h.saveAuthKeyToDisk()
+}
+
+// loadAuthKeyFromDisk loads the authentication key from disk
+func (h *Hub) loadAuthKeyFromDisk() bool {
+	keyPath := filepath.Join(h.DataDir(), "auth_key")
+	slog.Debug("Trying to load auth key from", "path", keyPath)
+	keyData, err := os.ReadFile(keyPath)
+	if err != nil {
+		slog.Debug("Failed to load auth key from disk", "err", err)
+		return false
+	}
+
+	h.authKey = string(keyData)
+	slog.Debug("Successfully loaded auth key from disk")
+	return true
+}
+
+// saveAuthKeyToDisk saves the authentication key to disk
+func (h *Hub) saveAuthKeyToDisk() {
+	keyPath := filepath.Join(h.DataDir(), "auth_key")
+	slog.Debug("Saving auth key to disk", "path", keyPath)
+	err := os.WriteFile(keyPath, []byte(h.authKey), 0600)
+	if err != nil {
+		slog.Error("Failed to save auth key to disk", "err", err)
+	} else {
+		slog.Info("Successfully saved auth key to disk")
+	}
+}
+
+// GetAuthKey returns the base64 authentication key for agents
+func (h *Hub) GetAuthKey() string {
+	return h.authKey
 }
 
 // GetEnv retrieves an environment variable with a "BESZEL_HUB_" prefix, or falls back to the unprefixed key.
@@ -273,13 +332,14 @@ func (h *Hub) registerCronJobs(_ *core.ServeEvent) error {
 
 // custom api routes
 func (h *Hub) registerApiRoutes(se *core.ServeEvent) error {
-	// returns public key and version
+	// returns auth key and version
 	se.Router.GET("/api/beszel/getkey", func(e *core.RequestEvent) error {
 		info, _ := e.RequestInfo()
 		if info.Auth == nil {
 			return apis.NewForbiddenError("Forbidden", nil)
 		}
-		return e.JSON(http.StatusOK, map[string]string{"key": h.pubKey, "v": beszel.Version})
+
+		return e.JSON(http.StatusOK, map[string]string{"key": h.GetAuthKey(), "v": beszel.Version})
 	})
 	// check if first time setup on login page
 	se.Router.GET("/api/beszel/first-run", func(e *core.RequestEvent) error {
@@ -315,6 +375,7 @@ func (h *Hub) getUniversalToken(e *core.RequestEvent) error {
 		return apis.NewForbiddenError("Forbidden", nil)
 	}
 
+	// The JWT manager is no longer used, so we return a placeholder
 	tokenMap := universalTokenMap.GetMap()
 	userID := info.Auth.Id
 	query := e.Request.URL.Query()
@@ -339,58 +400,6 @@ func (h *Hub) getUniversalToken(e *core.RequestEvent) error {
 	}
 	_, response["active"] = tokenMap.GetOk(token)
 	return e.JSON(http.StatusOK, response)
-}
-
-// generates key pair if it doesn't exist and returns signer
-func (h *Hub) GetSSHKey(dataDir string) (ssh.Signer, error) {
-	if h.signer != nil {
-		return h.signer, nil
-	}
-
-	if dataDir == "" {
-		dataDir = h.DataDir()
-	}
-
-	privateKeyPath := path.Join(dataDir, "id_ed25519")
-
-	// check if the key pair already exists
-	existingKey, err := os.ReadFile(privateKeyPath)
-	if err == nil {
-		private, err := ssh.ParsePrivateKey(existingKey)
-		if err != nil {
-			return nil, fmt.Errorf("failed to parse private key: %s", err)
-		}
-		pubKeyBytes := ssh.MarshalAuthorizedKey(private.PublicKey())
-		h.pubKey = strings.TrimSuffix(string(pubKeyBytes), "\n")
-		return private, nil
-	} else if !os.IsNotExist(err) {
-		// File exists but couldn't be read for some other reason
-		return nil, fmt.Errorf("failed to read %s: %w", privateKeyPath, err)
-	}
-
-	// Generate the Ed25519 key pair
-	_, privKey, err := ed25519.GenerateKey(nil)
-	if err != nil {
-		return nil, err
-	}
-	privKeyPem, err := ssh.MarshalPrivateKey(privKey, "")
-	if err != nil {
-		return nil, err
-	}
-
-	if err := os.WriteFile(privateKeyPath, pem.EncodeToMemory(privKeyPem), 0600); err != nil {
-		return nil, fmt.Errorf("failed to write private key to %q: err: %w", privateKeyPath, err)
-	}
-
-	// These are fine to ignore the errors on, as we've literally just created a crypto.PublicKey | crypto.Signer
-	sshPrivate, _ := ssh.NewSignerFromSigner(privKey)
-	pubKeyBytes := ssh.MarshalAuthorizedKey(sshPrivate.PublicKey())
-	h.pubKey = strings.TrimSuffix(string(pubKeyBytes), "\n")
-
-	h.Logger().Info("ed25519 key pair generated successfully.")
-	h.Logger().Info("Saved to: " + privateKeyPath)
-
-	return sshPrivate, err
 }
 
 // MakeLink formats a link with the app URL and path segments.

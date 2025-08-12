@@ -26,7 +26,6 @@ export interface SystemRecord extends RecordModel {
 	name: string
 	host: string
 	status: "up" | "down" | "paused" | "pending"
-	port: string
 	info: SystemInfo
 	averages?: {
 		ap?: number   // Average ping

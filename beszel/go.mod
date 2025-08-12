@@ -8,7 +8,7 @@ replace github.com/nicholas-fedor/shoutrrr => github.com/nicholas-fedor/shoutrrr
 require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/fxamacker/cbor/v2 v2.9.0
-	github.com/gliderlabs/ssh v0.3.8
+
 	github.com/google/uuid v1.6.0
 	github.com/jaypipes/ghw v0.17.0
 	github.com/lxzan/gws v1.8.9
