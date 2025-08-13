@@ -15,8 +15,14 @@ interface SpeedtestUploadChartProps {
 export default function SpeedtestUploadChart({ chartData, serverIds, serverNames }: SpeedtestUploadChartProps) {
 	const { yAxisWidth, updateYAxisWidth } = useYAxisWidth()
 	
-	// Use all speedtest data including gaps
-	const speedtestData = chartData.speedtestData || []
+	// Filter speedtest data for the specific servers and handle gaps
+	const speedtestData = chartData.speedtestData?.filter(data => {
+		if (!data) return false
+		// Include gap data points
+		if (data.created === null) return true
+		// Include data points that have data for at least one of the servers
+		return serverIds.some(serverId => data[serverId])
+	}) || []
 
 	if (speedtestData.length === 0) {
 		return (

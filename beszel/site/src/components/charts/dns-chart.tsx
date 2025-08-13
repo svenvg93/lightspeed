@@ -14,8 +14,8 @@ interface DnsChartProps {
 export default function DnsChart({ chartData, targetKey }: DnsChartProps) {
 	const { yAxisWidth, updateYAxisWidth } = useYAxisWidth()
 	
-	// Use all DNS data including gaps
-	const dnsData = chartData.dnsData || []
+	// Filter DNS data for this specific target and handle gaps
+	const dnsData = chartData.dnsData?.filter(data => data && (data.created === null || data[targetKey])) || []
 
 	if (dnsData.length === 0) {
 		return (

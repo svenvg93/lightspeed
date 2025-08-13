@@ -14,8 +14,8 @@ interface HttpChartProps {
 export default function HttpChart({ chartData, targetKey }: HttpChartProps) {
 	const { yAxisWidth, updateYAxisWidth } = useYAxisWidth()
 	
-	// Use all HTTP data including gaps
-	const httpData = chartData.httpData || []
+	// Filter HTTP data for this specific target and handle gaps
+	const httpData = chartData.httpData?.filter(data => data && (data.created === null || data[targetKey])) || []
 
 	if (httpData.length === 0) {
 		return (
