@@ -145,13 +145,13 @@ func testOld(t *testing.T, hub *tests.TestHub) {
 		require.NoError(t, err)
 		assert.NotNil(t, systems)
 
-		systemStats, err := hub.FindCachedCollectionByNameOrId("system_stats")
+		pingStats, err := hub.FindCachedCollectionByNameOrId("ping_stats")
 		require.NoError(t, err)
-		assert.NotNil(t, systemStats)
+		assert.NotNil(t, pingStats)
 
-		containerStats, err := hub.FindCachedCollectionByNameOrId("container_stats")
+		dnsStats, err := hub.FindCachedCollectionByNameOrId("dns_stats")
 		require.NoError(t, err)
-		assert.NotNil(t, containerStats)
+		assert.NotNil(t, dnsStats)
 	})
 
 	t.Run("RemoveSystem", func(t *testing.T) {

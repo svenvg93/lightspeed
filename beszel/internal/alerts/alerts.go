@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/nicholas-fedor/shoutrrr"
-	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/tools/mailer"
@@ -39,8 +38,6 @@ type UserNotificationSettings struct {
 	Emails   []string `json:"emails"`
 	Webhooks []string `json:"webhooks"`
 }
-
-
 
 type SystemAlertData struct {
 	systemRecord *core.Record
@@ -94,52 +91,68 @@ func (am *AlertManager) bindEvents() {
 	am.hub.OnRecordAfterDeleteSuccess("alerts").BindFunc(resolveHistoryOnAlertDelete)
 }
 
-// SendAlert sends an alert to the user
+// SendAlert sends an alert to all users with notification settings
 func (am *AlertManager) SendAlert(data AlertMessageData) error {
-	// get user settings
-	record, err := am.hub.FindFirstRecordByFilter(
-		"user_settings", "user={:user}",
-		dbx.Params{"user": data.UserID},
-	)
+	// Debug logging
+	am.hub.Logger().Info("SendAlert called", "title", data.Title)
+
+	// get all user settings
+	records, err := am.hub.FindAllRecords("user_settings", nil)
 	if err != nil {
+		am.hub.Logger().Error("Failed to find user settings", "err", err)
 		return err
 	}
-	// unmarshal user settings
-	userAlertSettings := UserNotificationSettings{
-		Emails:   []string{},
-		Webhooks: []string{},
-	}
-	if err := record.UnmarshalJSONField("settings", &userAlertSettings); err != nil {
-		am.hub.Logger().Error("Failed to unmarshal user settings", "err", err)
-	}
-	// send alerts via webhooks
-	for _, webhook := range userAlertSettings.Webhooks {
-		if err := am.SendShoutrrrAlert(webhook, data.Title, data.Message, data.Link, data.LinkText); err != nil {
-			am.hub.Logger().Error("Failed to send shoutrrr alert", "err", err)
-		}
-	}
-	// send alerts via email
-	if len(userAlertSettings.Emails) == 0 {
+
+	if len(records) == 0 {
+		am.hub.Logger().Info("No user settings found, skipping notifications")
 		return nil
 	}
-	addresses := []mail.Address{}
-	for _, email := range userAlertSettings.Emails {
-		addresses = append(addresses, mail.Address{Address: email})
+
+	// Process each user's notification settings
+	for _, record := range records {
+		// unmarshal user settings
+		userAlertSettings := UserNotificationSettings{
+			Emails:   []string{},
+			Webhooks: []string{},
+		}
+		if err := record.UnmarshalJSONField("settings", &userAlertSettings); err != nil {
+			am.hub.Logger().Error("Failed to unmarshal user settings", "err", err)
+			continue
+		}
+
+		// Debug logging
+		am.hub.Logger().Info("User notification settings", "userID", record.GetString("user"), "emails", userAlertSettings.Emails, "webhooks", userAlertSettings.Webhooks)
+
+		// send alerts via webhooks
+		for _, webhook := range userAlertSettings.Webhooks {
+			if err := am.SendShoutrrrAlert(webhook, data.Title, data.Message, data.Link, data.LinkText); err != nil {
+				am.hub.Logger().Error("Failed to send shoutrrr alert", "err", err)
+			}
+		}
+
+		// send alerts via email
+		if len(userAlertSettings.Emails) > 0 {
+			addresses := []mail.Address{}
+			for _, email := range userAlertSettings.Emails {
+				addresses = append(addresses, mail.Address{Address: email})
+			}
+			message := mailer.Message{
+				To:      addresses,
+				Subject: data.Title,
+				Text:    data.Message + fmt.Sprintf("\n\n%s", data.Link),
+				From: mail.Address{
+					Address: am.hub.Settings().Meta.SenderAddress,
+					Name:    am.hub.Settings().Meta.SenderName,
+				},
+			}
+			if err := am.hub.NewMailClient().Send(&message); err != nil {
+				am.hub.Logger().Error("Failed to send email alert", "err", err)
+			} else {
+				am.hub.Logger().Info("Sent email alert", "to", message.To, "subj", message.Subject)
+			}
+		}
 	}
-	message := mailer.Message{
-		To:      addresses,
-		Subject: data.Title,
-		Text:    data.Message + fmt.Sprintf("\n\n%s", data.Link),
-		From: mail.Address{
-			Address: am.hub.Settings().Meta.SenderAddress,
-			Name:    am.hub.Settings().Meta.SenderName,
-		},
-	}
-	err = am.hub.NewMailClient().Send(&message)
-	if err != nil {
-		return err
-	}
-	am.hub.Logger().Info("Sent email alert", "to", message.To, "subj", message.Subject)
+
 	return nil
 }
 
@@ -213,4 +226,3 @@ func (am *AlertManager) SendTestNotification(e *core.RequestEvent) error {
 	}
 	return e.JSON(200, map[string]bool{"err": false})
 }
-

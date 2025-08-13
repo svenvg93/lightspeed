@@ -41,12 +41,13 @@ func TestDeleteOldRecords(t *testing.T) {
 
 	now := time.Now()
 
-	// Create old system_stats records that should be deleted
+	// Create old ping_stats records that should be deleted
 	var record *core.Record
-	record, err = tests.CreateRecord(hub, "system_stats", map[string]any{
-		"system": system.Id,
-		"type":   "1m",
-		"stats":  `{"cpu": 50.0, "mem": 1024}`,
+	record, err = tests.CreateRecord(hub, "ping_stats", map[string]any{
+		"system":      system.Id,
+		"host":        "test-host",
+		"packet_loss": 5.0,
+		"avg_rtt":     50.0,
 	})
 	require.NoError(t, err)
 	// created is autodate field, so we need to set it manually
@@ -56,14 +57,15 @@ func TestDeleteOldRecords(t *testing.T) {
 	require.NotNil(t, record)
 	require.InDelta(t, record.GetDateTime("created").Time().UTC().Unix(), now.UTC().Add(-2*time.Hour).Unix(), 1)
 	require.Equal(t, record.Get("system"), system.Id)
-	require.Equal(t, record.Get("type"), "1m")
+	require.Equal(t, record.Get("host"), "test-host")
 
-	// Create recent system_stats record that should be kept
-	_, err = tests.CreateRecord(hub, "system_stats", map[string]any{
-		"system":  system.Id,
-		"type":    "1m",
-		"stats":   `{"cpu": 30.0, "mem": 512}`,
-		"created": now.Add(-30 * time.Minute), // 30 minutes old, should be kept
+	// Create recent ping_stats record that should be kept
+	_, err = tests.CreateRecord(hub, "ping_stats", map[string]any{
+		"system":      system.Id,
+		"host":        "test-host",
+		"packet_loss": 2.0,
+		"avg_rtt":     30.0,
+		"created":     now.Add(-30 * time.Minute), // 30 minutes old, should be kept
 	})
 	require.NoError(t, err)
 
@@ -80,7 +82,7 @@ func TestDeleteOldRecords(t *testing.T) {
 	}
 
 	// Count records before deletion
-	systemStatsCountBefore, err := hub.CountRecords("system_stats")
+	pingStatsCountBefore, err := hub.CountRecords("ping_stats")
 	require.NoError(t, err)
 	alertsCountBefore, err := hub.CountRecords("alerts_history")
 	require.NoError(t, err)
@@ -89,13 +91,13 @@ func TestDeleteOldRecords(t *testing.T) {
 	rm.DeleteOldRecords()
 
 	// Count records after deletion
-	systemStatsCountAfter, err := hub.CountRecords("system_stats")
+	pingStatsCountAfter, err := hub.CountRecords("ping_stats")
 	require.NoError(t, err)
 	alertsCountAfter, err := hub.CountRecords("alerts_history")
 	require.NoError(t, err)
 
-	// Verify old system stats were deleted
-	assert.Less(t, systemStatsCountAfter, systemStatsCountBefore, "Old system stats should be deleted")
+	// Verify old ping stats were deleted
+	assert.Less(t, pingStatsCountAfter, pingStatsCountBefore, "Old ping stats should be deleted")
 
 	// Verify alerts history was trimmed
 	assert.Less(t, alertsCountAfter, alertsCountBefore, "Excessive alerts history should be deleted")
@@ -143,8 +145,8 @@ func TestDeleteOldSystemStats(t *testing.T) {
 		{"480m", 30 * 24 * time.Hour, false, 45 * 24 * time.Hour, "480m record older than 30 days should be deleted"},
 	}
 
-	// Create test records for both system_stats and container_stats
-	collections := []string{"system_stats", "container_stats"}
+	// Create test records for both ping_stats and dns_stats
+	collections := []string{"ping_stats", "dns_stats"}
 	recordIds := make(map[string][]string)
 
 	for _, collection := range collections {
@@ -153,18 +155,26 @@ func TestDeleteOldSystemStats(t *testing.T) {
 		for i, tc := range testCases {
 			recordTime := now.Add(-tc.ageFromNow)
 
-			var stats string
-			if collection == "system_stats" {
-				stats = fmt.Sprintf(`{"cpu": %d.0, "mem": %d}`, i*10, i*100)
+			var recordData map[string]any
+			if collection == "ping_stats" {
+				recordData = map[string]any{
+					"system":      system.Id,
+					"host":        fmt.Sprintf("host%d", i),
+					"packet_loss": float64(i * 5),
+					"avg_rtt":     float64(i * 10),
+				}
 			} else {
-				stats = fmt.Sprintf(`[{"name": "container%d", "cpu": %d.0, "mem": %d}]`, i, i*5, i*50)
+				recordData = map[string]any{
+					"system":      system.Id,
+					"domain":      fmt.Sprintf("domain%d.com", i),
+					"server":      "8.8.8.8",
+					"type":        "A",
+					"status":      "success",
+					"lookup_time": float64(i * 5),
+				}
 			}
 
-			record, err := tests.CreateRecord(hub, collection, map[string]any{
-				"system": system.Id,
-				"type":   tc.recordType,
-				"stats":  stats,
-			})
+			record, err := tests.CreateRecord(hub, collection, recordData)
 			require.NoError(t, err)
 			record.SetRaw("created", recordTime.Format(types.DefaultDateLayout))
 			err = hub.SaveNoValidate(record)

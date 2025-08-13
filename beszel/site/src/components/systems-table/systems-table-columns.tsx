@@ -503,9 +503,9 @@ function SpeedMeterCell({ getValue, row, column }: { getValue: () => any; row: a
 	// If no expected speed is set, just show the value
 	if (!expectedSpeed) {
 		return (
-			<span className="tabular-nums">
-				{speed.toFixed(1)} Mbps
-			</span>
+					<span className="tabular-nums">
+			{speed.toFixed(2)} Mbps
+		</span>
 		)
 	}
 
@@ -522,7 +522,7 @@ function SpeedMeterCell({ getValue, row, column }: { getValue: () => any; row: a
 
 	return (
 		<div className="flex gap-2 items-center tabular-nums tracking-tight">
-			<span className="min-w-12">{speed.toFixed(1)} Mbps</span>
+			<span className="min-w-12">{speed.toFixed(2)} Mbps</span>
 			<span className="grow min-w-8 block bg-muted h-[1em] relative rounded-sm overflow-hidden">
 				<span
 					className={cn(

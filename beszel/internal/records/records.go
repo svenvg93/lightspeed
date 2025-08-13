@@ -56,7 +56,7 @@ func (rm *RecordManager) DeleteOldRecords() {
 
 	rm.app.RunInTransaction(func(txApp core.App) error {
 		// Collections to process
-		collections := [6]string{"system_stats", "container_stats", "ping_stats", "dns_stats", "http_stats", "speedtest_stats"}
+		collections := [5]string{"ping_stats", "dns_stats", "http_stats", "speedtest_stats", "system_averages"}
 
 		for _, collection := range collections {
 			// Delete records older than the retention period

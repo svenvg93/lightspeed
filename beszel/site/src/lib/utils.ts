@@ -17,10 +17,10 @@ import { RecordModel, RecordSubscription } from "pocketbase"
 import { WritableAtom } from "nanostores"
 import { timeDay, timeHour } from "d3-time"
 import { useEffect, useState } from "react"
-import { CpuIcon, HardDriveIcon, MemoryStickIcon, ServerIcon } from "lucide-react"
-import { EthernetIcon, HourglassIcon, ThermometerIcon } from "@/components/ui/icons"
+import { ServerIcon } from "lucide-react"
 import { prependBasePath } from "@/components/router"
 import { MeterState, Unit } from "./enums"
+import { DownloadIcon, UploadIcon, ActivityIcon, GlobeIcon } from "lucide-react"
 
 export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
@@ -68,10 +68,42 @@ export const updateSystemList = (() => {
 		try {
 			const records = await pb
 				.collection<SystemRecord>("systems")
-				.getFullList({ sort: "+name", fields: "id,name,host,info,status,monitoring_config,averages,tags,expected_performance" })
+				.getFullList({ sort: "+name", fields: "id,name,host,info,status,monitoring_config,tags,expected_performance" })
 
 			if (records.length) {
-				$systems.set(records)
+				// Fetch the latest averages from system_averages collection
+				const averagesRecords = await pb
+					.collection("system_averages")
+					.getFullList({ 
+						sort: "-created", 
+						fields: "system,ping_latency,ping_packet_loss,dns_latency,dns_failure_rate,http_latency,http_failure_rate,download_speed,upload_speed,created" 
+					})
+
+				// Create a map of the latest averages for each system
+				const latestAverages = new Map<string, any>()
+				for (const avgRecord of averagesRecords) {
+					const systemId = avgRecord.system
+					if (!latestAverages.has(systemId)) {
+						latestAverages.set(systemId, {
+							ap: avgRecord.ping_latency,
+							apl: avgRecord.ping_packet_loss,
+							ad: avgRecord.dns_latency,
+							adf: avgRecord.dns_failure_rate,
+							ah: avgRecord.http_latency,
+							ahf: avgRecord.http_failure_rate,
+							adl: avgRecord.download_speed,
+							aul: avgRecord.upload_speed,
+						})
+					}
+				}
+
+				// Merge the latest averages with the system records
+				const systemsWithLatestAverages = records.map(system => ({
+					...system,
+					averages: latestAverages.get(system.id) || null
+				}))
+
+				$systems.set(systemsWithLatestAverages)
 			} else {
 				verifyAuth()
 			}
@@ -377,66 +409,85 @@ export const alertInfo: Record<string, AlertInfo> = {
 		/** "for x minutes" is appended to desc when only one value */
 		singleDesc: () => t`System` + " " + t`Down`,
 	},
-	CPU: {
-		name: () => t`CPU Usage`,
+	PingPacketLoss: {
+		name: () => t`Ping Packet Loss`,
 		unit: "%",
-		icon: CpuIcon,
-		desc: () => t`Triggers when CPU usage exceeds a threshold`,
+		icon: ActivityIcon,
+		max: 100,
+		min: 0,
+		start: 10,
+		step: 1,
+		desc: () => t`Triggers when average packet loss across all ping targets exceeds threshold`,
 	},
-	Memory: {
-		name: () => t`Memory Usage`,
+	PingLatency: {
+		name: () => t`Ping Latency`,
+		unit: " ms",
+		icon: ActivityIcon,
+		max: 1000,
+		min: 1,
+		start: 100,
+		step: 1,
+		desc: () => t`Triggers when average latency across all ping targets exceeds threshold`,
+	},
+	DNSTime: {
+		name: () => t`DNS Lookup Time`,
+		unit: " ms",
+		icon: GlobeIcon,
+		max: 1000,
+		min: 1,
+		start: 100,
+		step: 1,
+		desc: () => t`Triggers when average DNS lookup time exceeds threshold`,
+	},
+	DNSFailures: {
+		name: () => t`DNS Failures`,
 		unit: "%",
-		icon: MemoryStickIcon,
-		desc: () => t`Triggers when memory usage exceeds a threshold`,
+		icon: GlobeIcon,
+		max: 100,
+		min: 0,
+		start: 10,
+		step: 1,
+		desc: () => t`Triggers when DNS lookup failure rate exceeds threshold`,
 	},
-	Disk: {
-		name: () => t`Disk Usage`,
+	HTTPResponseTime: {
+		name: () => t`HTTP Response Time`,
+		unit: " ms",
+		icon: GlobeIcon,
+		max: 1000,
+		min: 1,
+		start: 200,
+		step: 1,
+		desc: () => t`Triggers when average HTTP response time exceeds threshold`,
+	},
+	HTTPFailures: {
+		name: () => t`HTTP Failures`,
 		unit: "%",
-		icon: HardDriveIcon,
-		desc: () => t`Triggers when usage of any disk exceeds a threshold`,
-	},
-	Bandwidth: {
-		name: () => t`Bandwidth`,
-		unit: " MB/s",
-		icon: EthernetIcon,
-		desc: () => t`Triggers when combined up/down exceeds a threshold`,
-		max: 125,
-	},
-	Temperature: {
-		name: () => t`Temperature`,
-		unit: "°C",
-		icon: ThermometerIcon,
-		desc: () => t`Triggers when any sensor exceeds a threshold`,
-	},
-	LoadAvg1: {
-		name: () => t`Load Average 1m`,
-		unit: "",
-		icon: HourglassIcon,
+		icon: GlobeIcon,
 		max: 100,
-		min: 0.1,
+		min: 0,
 		start: 10,
-		step: 0.1,
-		desc: () => t`Triggers when 1 minute load average exceeds a threshold`,
+		step: 1,
+		desc: () => t`Triggers when HTTP request failure rate exceeds threshold`,
 	},
-	LoadAvg5: {
-		name: () => t`Load Average 5m`,
-		unit: "",
-		icon: HourglassIcon,
-		max: 100,
-		min: 0.1,
-		start: 10,
-		step: 0.1,
-		desc: () => t`Triggers when 5 minute load average exceeds a threshold`,
+	SpeedtestDownload: {
+		name: () => t`Speedtest Download`,
+		unit: " Mbps",
+		icon: DownloadIcon,
+		max: 1000,
+		min: 1,
+		start: 100,
+		step: 1,
+		desc: () => t`Triggers when average download speed across all servers drops below threshold`,
 	},
-	LoadAvg15: {
-		name: () => t`Load Average 15m`,
-		unit: "",
-		icon: HourglassIcon,
-		min: 0.1,
-		max: 100,
-		start: 10,
-		step: 0.1,
-		desc: () => t`Triggers when 15 minute load average exceeds a threshold`,
+	SpeedtestUpload: {
+		name: () => t`Speedtest Upload`,
+		unit: " Mbps",
+		icon: UploadIcon,
+		max: 1000,
+		min: 1,
+		start: 20,
+		step: 1,
+		desc: () => t`Triggers when average upload speed across all servers drops below threshold`,
 	},
 }
 

@@ -42,15 +42,20 @@ export const Home = memo(() => {
 		// make sure we have the latest list of systems
 		updateSystemList()
 
-		// subscribe to real time updates for systems / alerts
+		// subscribe to real time updates for systems / alerts / system_averages
 		pb.collection<SystemRecord>("systems").subscribe("*", (e) => {
 			updateRecordList(e, $systems)
 		})
 		pb.collection<AlertRecord>("alerts").subscribe("*", (e) => {
 			updateRecordList(e, $alerts)
 		})
+		pb.collection("system_averages").subscribe("*", () => {
+			// When system_averages are updated, refresh the system list to get latest averages
+			updateSystemList()
+		})
 		return () => {
 			pb.collection("systems").unsubscribe("*")
+			pb.collection("system_averages").unsubscribe("*")
 			// pb.collection('alerts').unsubscribe('*')
 		}
 	}, [])

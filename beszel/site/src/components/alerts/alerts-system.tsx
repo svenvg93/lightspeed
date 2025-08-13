@@ -48,7 +48,6 @@ export function SystemAlert({
 			} else if (checked) {
 				pb.collection("alerts").create({
 					system: system.id,
-					user: pb.authStore.record!.id,
 					name: data.name,
 					value: value,
 					min: min,
@@ -136,7 +135,6 @@ export const SystemAlertGlobal = ({ data, overwrite }: { data: AlertData; overwr
 					// create new alert if checked and not existing
 					return batch.create({
 						system: system.id,
-						user: pb.authStore.record!.id,
 						name: data.name,
 						...recordData,
 					})

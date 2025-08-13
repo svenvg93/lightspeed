@@ -59,7 +59,14 @@ func init() {
 				"type": "select",
 				"values": [
 					"Status",
-					"Ping"
+					"PingPacketLoss",
+					"PingLatency",
+					"SpeedtestDownload",
+					"SpeedtestUpload",
+					"DNSTime",
+					"DNSFailures",
+					"HTTPResponseTime",
+					"HTTPFailures"
 				]
 			},
 			{
@@ -453,17 +460,6 @@ func init() {
 				"id": "qoq64ntl",
 				"maxSize": 2000000,
 				"name": "info",
-				"presentable": false,
-				"required": false,
-				"system": false,
-				"type": "json"
-			},
-
-			{
-				"hidden": false,
-				"id": "averages_field",
-				"maxSize": 2000000,
-				"name": "averages",
 				"presentable": false,
 				"required": false,
 				"system": false,
@@ -1404,6 +1400,163 @@ func init() {
 			{
 				"hidden": false,
 				"id": "autodate3332085495",
+				"name": "updated",
+				"onCreate": true,
+				"onUpdate": true,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			}
+		],
+		"indexes": [],
+		"system": false
+	},
+	{
+		"id": "system_averages_collection",
+		"listRule": "@request.auth.id != \"\"",
+		"viewRule": "@request.auth.id != \"\"",
+		"createRule": "@request.auth.id != \"\" && @request.auth.role = \"admin\"",
+		"updateRule": "@request.auth.id != \"\" && @request.auth.role = \"admin\"",
+		"deleteRule": "@request.auth.id != \"\" && @request.auth.role = \"admin\"",
+		"name": "system_averages",
+		"type": "base",
+		"fields": [
+			{
+				"autogeneratePattern": "[a-z0-9]{15}",
+				"hidden": false,
+				"id": "system_averages_id",
+				"max": 15,
+				"min": 15,
+				"name": "id",
+				"pattern": "^[a-z0-9]+$",
+				"presentable": false,
+				"primaryKey": true,
+				"required": true,
+				"system": true,
+				"type": "text"
+			},
+			{
+				"cascadeDelete": true,
+				"collectionId": "2hz5ncl8tizk5nx",
+				"hidden": false,
+				"id": "system_averages_system",
+				"maxSelect": 1,
+				"minSelect": 0,
+				"name": "system",
+				"presentable": false,
+				"required": true,
+				"system": false,
+				"type": "relation"
+			},
+			{
+				"hidden": false,
+				"id": "system_averages_ping_latency",
+				"max": null,
+				"min": null,
+				"name": "ping_latency",
+				"onlyInt": false,
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "system_averages_ping_packet_loss",
+				"max": null,
+				"min": null,
+				"name": "ping_packet_loss",
+				"onlyInt": false,
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "system_averages_dns_latency",
+				"max": null,
+				"min": null,
+				"name": "dns_latency",
+				"onlyInt": false,
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "system_averages_dns_failure_rate",
+				"max": null,
+				"min": null,
+				"name": "dns_failure_rate",
+				"onlyInt": false,
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "system_averages_http_latency",
+				"max": null,
+				"min": null,
+				"name": "http_latency",
+				"onlyInt": false,
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "system_averages_http_failure_rate",
+				"max": null,
+				"min": null,
+				"name": "http_failure_rate",
+				"onlyInt": false,
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "system_averages_download_speed",
+				"max": null,
+				"min": null,
+				"name": "download_speed",
+				"onlyInt": false,
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "system_averages_upload_speed",
+				"max": null,
+				"min": null,
+				"name": "upload_speed",
+				"onlyInt": false,
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "number"
+			},
+			{
+				"hidden": false,
+				"id": "system_averages_created",
+				"name": "created",
+				"onCreate": true,
+				"onUpdate": false,
+				"presentable": false,
+				"system": false,
+				"type": "autodate"
+			},
+			{
+				"hidden": false,
+				"id": "system_averages_updated",
 				"name": "updated",
 				"onCreate": true,
 				"onUpdate": true,

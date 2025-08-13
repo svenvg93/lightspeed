@@ -119,7 +119,7 @@ func (sys *System) handlePaused() {
 	}
 }
 
-// createRecords updates the system record and adds system_stats records
+// createRecords updates the system record and adds individual stats records
 func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error) {
 	systemRecord, err := sys.getRecord()
 	if err != nil {

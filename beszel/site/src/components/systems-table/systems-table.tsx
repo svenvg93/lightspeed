@@ -37,7 +37,7 @@ import {
 	Settings2Icon,
 	EyeIcon,
 } from "lucide-react"
-import { memo, useEffect, useMemo, useState, useRef } from "react"
+import { memo, useEffect, useMemo, useState } from "react"
 import { $systems } from "@/lib/stores"
 import { useStore } from "@nanostores/react"
 import { updateSystemList } from "@/lib/utils"
@@ -55,22 +55,6 @@ type ViewMode = "table" | "grid"
 
 export default function SystemsTable() {
 	const data = useStore($systems)
-	const hasTriggeredCalculation = useRef(false)
-	
-	// Trigger average calculation on page load (only once)
-	useEffect(() => {
-		if (data && data.length > 0 && !data[0].averages && !hasTriggeredCalculation.current) {
-			hasTriggeredCalculation.current = true
-			fetch('/api/beszel/calculate-averages')
-				.then(() => {
-					// Refresh the systems data after calculation
-					setTimeout(() => {
-						updateSystemList()
-					}, 1000)
-				})
-				.catch(() => {})
-		}
-	}, [data])
 	
 	const { i18n, t } = useLingui()
 	const [filter, setFilter] = useState<string>()
