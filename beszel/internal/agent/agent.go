@@ -25,11 +25,12 @@ type Agent struct {
 	sync.Mutex      // Used to lock agent while collecting data
 	debug      bool // true if LOG_LEVEL is set to debug
 
-	pingManager      *PingManager      // Manages ping tests
-	dnsManager       *DnsManager       // Manages DNS lookups
-	httpManager      *HttpManager      // Manages HTTP checks
-	speedtestManager *SpeedtestManager // Manages speedtest checks
-	systemInfo       system.Info       // Host system info
+	pingManager       *PingManager       // Manages ping tests
+	dnsManager        *DnsManager        // Manages DNS lookups
+	httpManager       *HttpManager       // Manages HTTP checks
+	speedtestManager  *SpeedtestManager  // Manages speedtest checks
+	systemInfo        system.Info        // Host system info
+	systemInfoManager *SystemInfoManager // Manages periodic system info refreshes
 
 	cache             *SessionCache      // Cache for system stats based on primary session ID
 	connectionManager *ConnectionManager // Channel to signal connection events
@@ -68,6 +69,9 @@ func NewAgent(dataDir ...string) (agent *Agent, err error) {
 
 	// initialize system info
 	agent.initializeSystemInfo()
+
+	// initialize system info manager
+	agent.systemInfoManager = NewSystemInfoManager(agent)
 
 	// initialize connection manager
 	agent.connectionManager = newConnectionManager(agent)
@@ -144,6 +148,12 @@ func (a *Agent) gatherStats(sessionID string) *system.CombinedData {
 // StartAgent initializes and starts the agent with optional WebSocket connection
 func (a *Agent) Start(serverOptions ServerOptions) error {
 	a.authKey = serverOptions.AuthKey
+
+	// Start the system info refresh manager
+	if a.systemInfoManager != nil {
+		a.systemInfoManager.Start()
+	}
+
 	return a.connectionManager.Start(serverOptions)
 }
 
@@ -201,4 +211,24 @@ func (a *Agent) UpdateSpeedtestConfig(targets []system.SpeedtestTarget, cronExpr
 	if a.speedtestManager != nil {
 		a.speedtestManager.UpdateConfig(targets, cronExpression)
 	}
+}
+
+// Stop gracefully shuts down the agent and all its managers
+func (a *Agent) Stop() {
+	if a.systemInfoManager != nil {
+		a.systemInfoManager.Stop()
+	}
+
+	if a.pingManager != nil {
+		a.pingManager.Close()
+	}
+
+	if a.dnsManager != nil {
+		a.dnsManager.Close()
+	}
+
+	// Note: HttpManager and SpeedtestManager don't have Close methods
+	// They are managed by their respective cron schedulers
+
+	slog.Info("Agent stopped")
 }

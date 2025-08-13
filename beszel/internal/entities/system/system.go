@@ -123,17 +123,12 @@ type MonitoringConfig struct {
 }
 
 type Info struct {
-	Hostname     string  `json:"h" cbor:"0,keyasint"`
-	AgentVersion string  `json:"v" cbor:"10,keyasint"`
-	NetworkSpeed uint64  `json:"ns" cbor:"11,keyasint"`            // Network interface speed in Mbps
-	PublicIP     string  `json:"ip" cbor:"12,keyasint"`            // Public IP address
-	ISP          string  `json:"isp" cbor:"13,keyasint"`           // Internet Service Provider
-	ASN          string  `json:"asn" cbor:"14,keyasint"`           // Autonomous System Number
-	AvgPing      float64 `json:"ap" cbor:"15,keyasint,omitempty"`  // Average ping across all targets (ms)
-	AvgDns       float64 `json:"ad" cbor:"16,keyasint,omitempty"`  // Average DNS lookup time across all targets (ms)
-	AvgHttp      float64 `json:"ah" cbor:"17,keyasint,omitempty"`  // Average HTTP response time across all targets (ms)
-	AvgDownload  float64 `json:"adl" cbor:"18,keyasint,omitempty"` // Average download speed across all speedtest targets (Mbps)
-	AvgUpload    float64 `json:"aul" cbor:"19,keyasint,omitempty"` // Average upload speed across all speedtest targets (Mbps)
+	Hostname     string `json:"h" cbor:"0,keyasint"`
+	AgentVersion string `json:"v" cbor:"10,keyasint"`
+	NetworkSpeed uint64 `json:"ns" cbor:"11,keyasint"`  // Network interface speed in Mbps
+	PublicIP     string `json:"ip" cbor:"12,keyasint"`  // Public IP address
+	ISP          string `json:"isp" cbor:"13,keyasint"` // Internet Service Provider
+	ASN          string `json:"asn" cbor:"14,keyasint"` // Autonomous System Number
 }
 
 // Final data structure to return to the hub

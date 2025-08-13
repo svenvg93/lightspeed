@@ -8,7 +8,6 @@ replace github.com/nicholas-fedor/shoutrrr => github.com/nicholas-fedor/shoutrrr
 require (
 	github.com/blang/semver v3.5.1+incompatible
 	github.com/fxamacker/cbor/v2 v2.9.0
-
 	github.com/google/uuid v1.6.0
 	github.com/jaypipes/ghw v0.17.0
 	github.com/lxzan/gws v1.8.9
@@ -22,13 +21,12 @@ require (
 	github.com/spf13/cast v1.9.2
 	github.com/spf13/cobra v1.9.1
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/crypto v0.40.0
+	golang.org/x/crypto v0.40.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
 	github.com/StackExchange/wmi v1.2.1 // indirect
-	github.com/anmitsu/go-shlex v0.0.0-20200514113438-38f4b401e2be // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/disintegration/imaging v1.6.2 // indirect

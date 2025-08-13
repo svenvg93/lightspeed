@@ -77,7 +77,7 @@ func (a *Agent) getIPInfo() {
 		"country", geoInfo.Country)
 }
 
-// getNetworkSpeed returns the speed of the primary network interface in Mbps
+// getNetworkSpeed returns the speed of the first valid network interface in Mbps
 func (a *Agent) getNetworkSpeed() uint64 {
 	netInfo, err := ghwnet.New()
 	if err != nil {
@@ -85,14 +85,13 @@ func (a *Agent) getNetworkSpeed() uint64 {
 		return 0
 	}
 
-	// Find the first active network interface with a valid speed
+	// Find the first valid interface with speed information
 	for _, nic := range netInfo.NICs {
 		if nic.IsVirtual {
 			continue // Skip virtual interfaces
 		}
 
 		if nic.Speed != "" {
-			// Parse speed string like "1000Mb/s" or "1Gb/s"
 			speedMbps := a.parseSpeedString(nic.Speed)
 			if speedMbps > 0 {
 				slog.Debug("Found network interface", "name", nic.Name, "speed", nic.Speed, "speed_mbps", speedMbps)
@@ -103,6 +102,45 @@ func (a *Agent) getNetworkSpeed() uint64 {
 
 	slog.Debug("No network interface with valid speed found")
 	return 0
+}
+
+// getAllNetworkInterfaces returns information about all network interfaces
+// This can be used for debugging or future enhancements
+func (a *Agent) getAllNetworkInterfaces() []struct {
+	Name      string `json:"name"`
+	Speed     uint64 `json:"speed_mbps"`
+	IsVirtual bool   `json:"is_virtual"`
+} {
+	netInfo, err := ghwnet.New()
+	if err != nil {
+		slog.Debug("Failed to get network info", "error", err)
+		return nil
+	}
+
+	var interfaces []struct {
+		Name      string `json:"name"`
+		Speed     uint64 `json:"speed_mbps"`
+		IsVirtual bool   `json:"is_virtual"`
+	}
+
+	for _, nic := range netInfo.NICs {
+		speedMbps := uint64(0)
+		if nic.Speed != "" {
+			speedMbps = a.parseSpeedString(nic.Speed)
+		}
+
+		interfaces = append(interfaces, struct {
+			Name      string `json:"name"`
+			Speed     uint64 `json:"speed_mbps"`
+			IsVirtual bool   `json:"is_virtual"`
+		}{
+			Name:      nic.Name,
+			Speed:     speedMbps,
+			IsVirtual: nic.IsVirtual,
+		})
+	}
+
+	return interfaces
 }
 
 // parseSpeedString parses speed strings like "1000Mb/s" or "1Gb/s" and returns Mbps
