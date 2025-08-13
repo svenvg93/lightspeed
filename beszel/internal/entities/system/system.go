@@ -125,10 +125,10 @@ type MonitoringConfig struct {
 type Info struct {
 	Hostname     string `json:"h" cbor:"0,keyasint"`
 	AgentVersion string `json:"v" cbor:"10,keyasint"`
-	NetworkSpeed uint64 `json:"ns" cbor:"11,keyasint"`  // Network interface speed in Mbps
-	PublicIP     string `json:"ip" cbor:"12,keyasint"`  // Public IP address
-	ISP          string `json:"isp" cbor:"13,keyasint"` // Internet Service Provider
-	ASN          string `json:"asn" cbor:"14,keyasint"` // Autonomous System Number
+
+	PublicIP string `json:"ip" cbor:"12,keyasint"`  // Public IP address
+	ISP      string `json:"isp" cbor:"13,keyasint"` // Internet Service Provider
+	ASN      string `json:"asn" cbor:"14,keyasint"` // Autonomous System Number
 }
 
 // Final data structure to return to the hub

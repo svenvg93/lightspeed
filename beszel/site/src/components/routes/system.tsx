@@ -736,12 +736,7 @@ export default function SystemDetail({ name }: { name: string }) {
 				// hide if hostname is same as host or name
 				hide: system.info.h === system.host || system.info.h === system.name,
 			},
-			{
-				value: system.info.ns ? `${system.info.ns} Mbps` : undefined,
-				Icon: EthernetPortIcon,
-				label: t`Network Interface Speed`,
-				hide: !system.info.ns,
-			},
+
 			{
 				value: system.info.ip,
 				Icon: GlobeIcon,

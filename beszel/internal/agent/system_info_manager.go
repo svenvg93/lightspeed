@@ -56,12 +56,8 @@ func (sim *SystemInfoManager) refreshSystemInfo() {
 	oldIP := sim.agent.systemInfo.PublicIP
 	oldISP := sim.agent.systemInfo.ISP
 	oldASN := sim.agent.systemInfo.ASN
-	oldNetworkSpeed := sim.agent.systemInfo.NetworkSpeed
 
 	slog.Debug("Starting system info refresh")
-
-	// Refresh network speed
-	sim.agent.systemInfo.NetworkSpeed = sim.agent.getNetworkSpeed()
 
 	// Refresh IP info
 	sim.agent.getIPInfo()
@@ -69,18 +65,15 @@ func (sim *SystemInfoManager) refreshSystemInfo() {
 	// Check if anything changed
 	changed := oldIP != sim.agent.systemInfo.PublicIP ||
 		oldISP != sim.agent.systemInfo.ISP ||
-		oldASN != sim.agent.systemInfo.ASN ||
-		oldNetworkSpeed != sim.agent.systemInfo.NetworkSpeed
+		oldASN != sim.agent.systemInfo.ASN
 
 	if changed {
 		slog.Info("System info updated",
 			"ip_changed", oldIP != sim.agent.systemInfo.PublicIP,
 			"isp_changed", oldISP != sim.agent.systemInfo.ISP,
 			"asn_changed", oldASN != sim.agent.systemInfo.ASN,
-			"network_speed_changed", oldNetworkSpeed != sim.agent.systemInfo.NetworkSpeed,
 			"new_ip", sim.agent.systemInfo.PublicIP,
-			"new_isp", sim.agent.systemInfo.ISP,
-			"new_network_speed", sim.agent.systemInfo.NetworkSpeed)
+			"new_isp", sim.agent.systemInfo.ISP)
 
 		// TODO: Push updated system info to hub when push functionality is implemented
 		sim.pushSystemInfo()

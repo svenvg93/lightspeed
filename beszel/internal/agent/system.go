@@ -19,9 +19,6 @@ func (a *Agent) initializeSystemInfo() {
 	a.systemInfo.AgentVersion = beszel.Version
 	a.systemInfo.Hostname, _ = os.Hostname()
 
-	// Get network interface speed
-	a.systemInfo.NetworkSpeed = a.getNetworkSpeed()
-
 	// Get public IP, ISP, and ASN information
 	a.getIPInfo()
 }
@@ -75,33 +72,6 @@ func (a *Agent) getIPInfo() {
 		"asn", a.systemInfo.ASN,
 		"city", geoInfo.City,
 		"country", geoInfo.Country)
-}
-
-// getNetworkSpeed returns the speed of the first valid network interface in Mbps
-func (a *Agent) getNetworkSpeed() uint64 {
-	netInfo, err := ghwnet.New()
-	if err != nil {
-		slog.Debug("Failed to get network info", "error", err)
-		return 0
-	}
-
-	// Find the first valid interface with speed information
-	for _, nic := range netInfo.NICs {
-		if nic.IsVirtual {
-			continue // Skip virtual interfaces
-		}
-
-		if nic.Speed != "" {
-			speedMbps := a.parseSpeedString(nic.Speed)
-			if speedMbps > 0 {
-				slog.Debug("Found network interface", "name", nic.Name, "speed", nic.Speed, "speed_mbps", speedMbps)
-				return speedMbps
-			}
-		}
-	}
-
-	slog.Debug("No network interface with valid speed found")
-	return 0
 }
 
 // getAllNetworkInterfaces returns information about all network interfaces

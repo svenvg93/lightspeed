@@ -105,8 +105,7 @@ export interface SystemInfo {
 	h: string
 	/** agent version */
 	v: string
-	/** network interface speed (mbps) */
-	ns?: number
+
 	/** public ip address */
 	ip?: string
 	/** internet service provider */
