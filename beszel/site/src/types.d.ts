@@ -34,6 +34,13 @@ export interface SystemRecord extends RecordModel {
 		adl?: number  // Average download
 		aul?: number  // Average upload
 	}
+	expected_performance?: {
+		ping_latency?: number      // Expected ping latency in ms
+		dns_lookup_time?: number   // Expected DNS lookup time in ms
+		http_response_time?: number // Expected HTTP response time in ms
+		download_speed?: number    // Expected download speed in Mbps
+		upload_speed?: number      // Expected upload speed in Mbps
+	}
 	tags?: string[]  // Array of tags for filtering and organization
 	v: string
 	
@@ -54,6 +61,7 @@ export interface SystemRecord extends RecordModel {
 				timeout: number
 			}[]
 			interval?: string | number // Override global interval
+			expected_latency?: number // Expected ping latency in ms
 		}
 		dns?: {
 			targets: {
@@ -65,6 +73,7 @@ export interface SystemRecord extends RecordModel {
 				protocol?: "udp" | "tcp" | "doh" | "dot"
 			}[]
 			interval?: string | number // Override global interval
+			expected_lookup_time?: number // Expected DNS lookup time in ms
 		}
 		http?: {
 			targets: {
@@ -76,6 +85,7 @@ export interface SystemRecord extends RecordModel {
 				headers?: Record<string, string>
 			}[]
 			interval?: string | number // Override global interval
+			expected_response_time?: number // Expected HTTP response time in ms
 		}
 		speedtest?: {
 			targets: {
@@ -84,6 +94,8 @@ export interface SystemRecord extends RecordModel {
 				timeout: number
 			}[]
 			interval?: string | number // Override global interval
+			expected_download_speed?: number // Expected download speed in Mbps
+			expected_upload_speed?: number   // Expected upload speed in Mbps
 		}
 	}
 }
@@ -101,16 +113,6 @@ export interface SystemInfo {
 	isp?: string
 	/** autonomous system number */
 	asn?: string
-	/** average ping across all targets (ms) */
-	ap?: number
-	/** average DNS lookup time across all targets (ms) */
-	ad?: number
-	/** average HTTP response time across all targets (ms) */
-	ah?: number
-	/** average download speed across all speedtest targets (Mbps) */
-	adl?: number
-	/** average upload speed across all speedtest targets (Mbps) */
-	aul?: number
 }
 
 

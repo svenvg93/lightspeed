@@ -19,6 +19,7 @@ import {
 	DownloadIcon,
 	UploadIcon,
 	TagsIcon,
+	ActivityIcon,
 } from "lucide-react"
 import { Button } from "../ui/button"
 import {
@@ -178,7 +179,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 			accessorFn: ({ averages }: { averages?: any }) => averages?.adl || 0,
 			id: "adl",
 			name: () => t`Download`,
-			size: 70,
+			size: 140,
 			Icon: DownloadIcon,
 			header: (context: any) => (
 				<TooltipProvider>
@@ -192,23 +193,13 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					</Tooltip>
 				</TooltipProvider>
 			),
-			cell({ getValue }: { getValue: () => any }) {
-				const adl = getValue() as number
-				if (!adl || adl === 0) {
-					return null
-				}
-				return (
-					<span className="tabular-nums">
-						{adl.toFixed(1)} Mbps
-					</span>
-				)
-			},
+			cell: ({ getValue, row, column }: { getValue: () => any; row: any; column: any }) => <SpeedMeterCell getValue={getValue} row={row} column={column} />,
 		},
 		{
 			accessorFn: ({ averages }: { averages?: any }) => averages?.aul || 0,
 			id: "aul",
 			name: () => t`Upload`,
-			size: 70,
+			size: 140,
 			Icon: UploadIcon,
 			header: (context: any) => (
 				<TooltipProvider>
@@ -222,17 +213,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					</Tooltip>
 				</TooltipProvider>
 			),
-			cell({ getValue }: { getValue: () => any }) {
-				const aul = getValue() as number
-				if (!aul || aul === 0) {
-					return null
-				}
-				return (
-					<span className="tabular-nums">
-						{aul.toFixed(1)} Mbps
-					</span>
-				)
-			},
+			cell: ({ getValue, row, column }: { getValue: () => any; row: any; column: any }) => <SpeedMeterCell getValue={getValue} row={row} column={column} />,
 		},
 		{
 			accessorFn: ({ averages }: { averages?: any }) => averages?.ap || 0,
@@ -252,17 +233,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					</Tooltip>
 				</TooltipProvider>
 			),
-			cell({ getValue }: { getValue: () => any }) {
-				const ap = getValue() as number
-				if (!ap || ap === 0) {
-					return null
-				}
-				return (
-					<span className="tabular-nums">
-						{ap.toFixed(1)} ms
-					</span>
-				)
-			},
+			cell: ({ getValue, row, column }: { getValue: () => any; row: any; column: any }) => <PerformanceDotCell getValue={getValue} row={row} column={column} />,
 		},
 		{
 			accessorFn: ({ averages }: { averages?: any }) => averages?.ad || 0,
@@ -282,17 +253,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					</Tooltip>
 				</TooltipProvider>
 			),
-			cell({ getValue }: { getValue: () => any }) {
-				const ad = getValue() as number
-				if (!ad || ad === 0) {
-					return null
-				}
-				return (
-					<span className="tabular-nums">
-						{ad.toFixed(1)} ms
-					</span>
-				)
-			},
+			cell: ({ getValue, row, column }: { getValue: () => any; row: any; column: any }) => <PerformanceDotCell getValue={getValue} row={row} column={column} />,
 		},
 		{
 			accessorFn: ({ averages }: { averages?: any }) => averages?.ah || 0,
@@ -312,17 +273,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 					</Tooltip>
 				</TooltipProvider>
 			),
-			cell({ getValue }: { getValue: () => any }) {
-				const ah = getValue() as number
-				if (!ah || ah === 0) {
-					return null
-				}
-				return (
-					<span className="tabular-nums">
-						{ah.toFixed(1)} ms
-					</span>
-				)
-			},
+			cell: ({ getValue, row, column }: { getValue: () => any; row: any; column: any }) => <PerformanceDotCell getValue={getValue} row={row} column={column} />,
 		},
 		{
 			accessorFn: ({ info }: { info: any }) => info.v,
@@ -415,7 +366,9 @@ export function IndicatorDot({ system, className }: { system: SystemRecord; clas
 export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 	const [deleteOpen, setDeleteOpen] = useState(false)
 	const [editOpen, setEditOpen] = useState(false)
+	const [configOpen, setConfigOpen] = useState(false)
 	let editOpened = useRef(false)
+	let configOpened = useRef(false)
 	const { t } = useLingui()
 	const { id, status, host, name } = system
 
@@ -443,6 +396,7 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 								<Trans>Edit</Trans>
 							</DropdownMenuItem>
 						)}
+
 						{isAdmin() && (
 							<DropdownMenuItem
 								onClick={() => {
@@ -487,6 +441,10 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 				<Dialog open={editOpen} onOpenChange={setEditOpen}>
 					{editOpened.current && <SystemDialog system={system} setOpen={setEditOpen} />}
 				</Dialog>
+				{/* config dialog */}
+				<Dialog open={configOpen} onOpenChange={setConfigOpen}>
+					{configOpened.current && <SystemConfigDialog system={system} />}
+				</Dialog>
 				{/* deletion dialog */}
 				<AlertDialog open={deleteOpen} onOpenChange={(open) => setDeleteOpen(open)}>
 					<AlertDialogContent>
@@ -516,5 +474,122 @@ export const ActionsButton = memo(({ system }: { system: SystemRecord }) => {
 				</AlertDialog>
 			</>
 		)
-	}, [id, status, host, name, t, deleteOpen, editOpen])
+	}, [id, status, host, name, t, deleteOpen, editOpen, configOpen])
 })
+
+// SpeedMeterCell component for displaying speed meters
+function SpeedMeterCell({ getValue, row, column }: { getValue: () => any; row: any; column: any }) {
+	const speed = getValue() as number
+	const system = row.original as SystemRecord
+	
+	// Get expected speed directly from system record
+	const expectedSpeed = column.id === "adl" 
+		? system.expected_performance?.download_speed
+		: system.expected_performance?.upload_speed
+	
+		// Debug logging
+	console.log(`SpeedMeterCell ${column.id}:`, { 
+		speed, 
+		expectedSpeed, 
+		systemId: system.id, 
+		systemStatus: system.status,
+		hasSpeed: speed > 0
+	})
+	
+	if (!speed || speed === 0) {
+		return null
+	}
+
+	// If no expected speed is set, just show the value
+	if (!expectedSpeed) {
+		return (
+			<span className="tabular-nums">
+				{speed.toFixed(1)} Mbps
+			</span>
+		)
+	}
+
+	// Calculate percentage of expected speed
+	const percentage = Math.min((speed / expectedSpeed) * 100, 100)
+	
+	// Determine meter state based on percentage
+	let meterState = "bg-green-500"
+	if (percentage < 50) {
+		meterState = "bg-red-600"
+	} else if (percentage < 80) {
+		meterState = "bg-yellow-500"
+	}
+
+	return (
+		<div className="flex gap-2 items-center tabular-nums tracking-tight">
+			<span className="min-w-12">{speed.toFixed(1)} Mbps</span>
+			<span className="grow min-w-8 block bg-muted h-[1em] relative rounded-sm overflow-hidden">
+				<span
+					className={cn(
+						"absolute inset-0 w-full h-full origin-left",
+						(system.status !== "up" && "bg-primary/30") ||
+						meterState
+					)}
+					style={{
+						transform: `scalex(${percentage / 100})`,
+					}}
+				></span>
+			</span>
+		</div>
+	)
+}
+
+// PerformanceDotCell component for displaying performance dots
+function PerformanceDotCell({ getValue, row, column }: { getValue: () => any; row: any; column: any }) {
+	const value = getValue() as number
+	const system = row.original as SystemRecord
+	
+	// Get expected value based on column type
+	let expectedValue: number | undefined
+	switch (column.id) {
+		case "ap": // ping
+			expectedValue = system.expected_performance?.ping_latency
+			break
+		case "ad": // DNS
+			expectedValue = system.expected_performance?.dns_lookup_time
+			break
+		case "ah": // HTTP
+			expectedValue = system.expected_performance?.http_response_time
+			break
+		default:
+			expectedValue = undefined
+	}
+
+	if (!value || value === 0) {
+		return null
+	}
+
+	if (!expectedValue) {
+		return (
+			<span className="tabular-nums">
+				{value.toFixed(1)} ms
+			</span>
+		)
+	}
+
+	// For latency metrics, lower is better (opposite of speed)
+	const percentage = Math.min((expectedValue / value) * 100, 100)
+
+	let dotColor = "bg-green-500"
+	if (percentage < 50) {
+		dotColor = "bg-red-600"
+	} else if (percentage < 80) {
+		dotColor = "bg-yellow-500"
+	}
+
+	return (
+		<div className="flex gap-2 items-center tabular-nums tracking-tight">
+			<span className={cn(
+				"size-2 rounded-full",
+				(system.status !== "up" && "bg-primary/30") ||
+				dotColor
+			)} />
+			<span className="min-w-8">{value.toFixed(1)} ms</span>
+		</div>
+	)
+}

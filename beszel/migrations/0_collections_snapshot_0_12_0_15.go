@@ -479,6 +479,16 @@ func init() {
 				"system": false,
 				"type": "json"
 			},
+			{
+				"hidden": false,
+				"id": "expected_performance_field",
+				"maxSize": 2000000,
+				"name": "expected_performance",
+				"presentable": false,
+				"required": false,
+				"system": false,
+				"type": "json"
+			},
 
 			{
 				"hidden": false,

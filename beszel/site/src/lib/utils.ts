@@ -68,7 +68,7 @@ export const updateSystemList = (() => {
 		try {
 			const records = await pb
 				.collection<SystemRecord>("systems")
-				.getFullList({ sort: "+name", fields: "id,name,host,info,status,monitoring_config,averages,tags" })
+				.getFullList({ sort: "+name", fields: "id,name,host,info,status,monitoring_config,averages,tags,expected_performance" })
 
 			if (records.length) {
 				$systems.set(records)

@@ -17,6 +17,7 @@ import {
   DnsConfigTab, 
   HttpConfigTab, 
   SpeedtestConfigTab,
+  ExpectedPerformanceTab,
   PingTarget,
   DnsTarget,
   HttpTarget,
@@ -29,6 +30,13 @@ interface System {
   host: string
   status: string
   monitoring_config?: string
+  expected_performance?: {
+    ping_latency?: number
+    dns_lookup_time?: number
+    http_response_time?: number
+    download_speed?: number
+    upload_speed?: number
+  }
 }
 
 interface MonitoringConfig {
@@ -56,6 +64,8 @@ interface MonitoringConfig {
   speedtest: {
     targets: SpeedtestTarget[]
     interval: string
+    expected_download_speed?: number
+    expected_upload_speed?: number
   }
 }
 
@@ -68,19 +78,19 @@ export default function BulkSystemsSettings() {
   const [selectAll, setSelectAll] = useState(false)
 
   // Config state (matching dialog structure)
-  const [pingConfig, setPingConfig] = useState<{ targets: PingTarget[], interval: string }>({
+  const [pingConfig, setPingConfig] = useState<{ targets: PingTarget[], interval: string, expected_latency?: number }>({
     targets: [],
     interval: ''
   })
-  const [dnsConfig, setDnsConfig] = useState<{ targets: DnsTarget[], interval: string }>({
+  const [dnsConfig, setDnsConfig] = useState<{ targets: DnsTarget[], interval: string, expected_lookup_time?: number }>({
     targets: [],
     interval: ''
   })
-  const [httpConfig, setHttpConfig] = useState<{ targets: HttpTarget[], interval: string }>({
+  const [httpConfig, setHttpConfig] = useState<{ targets: HttpTarget[], interval: string, expected_response_time?: number }>({
     targets: [],
     interval: ''
   })
-  const [speedtestConfig, setSpeedtestConfig] = useState<{ targets: SpeedtestTarget[], interval: string }>({
+  const [speedtestConfig, setSpeedtestConfig] = useState<{ targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }>({
     targets: [],
     interval: ''
   })
@@ -156,21 +166,31 @@ export default function BulkSystemsSettings() {
 
     // Use the first config as a template
     const templateConfig = selectedConfigs[0]
+    
+    // Get the first system to load expected performance values
+    const firstSystemId = Array.from(selectedSystems)[0]
+    const firstSystem = systems.find(s => s.id === firstSystemId)
+    
     setPingConfig({
       targets: templateConfig.ping?.targets || [],
-      interval: templateConfig.ping?.interval || ''
+      interval: templateConfig.ping?.interval || '',
+      expected_latency: firstSystem?.expected_performance?.ping_latency
     })
     setDnsConfig({
       targets: templateConfig.dns?.targets || [],
-      interval: templateConfig.dns?.interval || ''
+      interval: templateConfig.dns?.interval || '',
+      expected_lookup_time: firstSystem?.expected_performance?.dns_lookup_time
     })
     setHttpConfig({
       targets: templateConfig.http?.targets || [],
-      interval: templateConfig.http?.interval || ''
+      interval: templateConfig.http?.interval || '',
+      expected_response_time: firstSystem?.expected_performance?.http_response_time
     })
     setSpeedtestConfig({
       targets: templateConfig.speedtest?.targets || [],
-      interval: templateConfig.speedtest?.interval || ''
+      interval: templateConfig.speedtest?.interval || '',
+      expected_download_speed: firstSystem?.expected_performance?.download_speed || templateConfig.speedtest?.expected_download_speed,
+      expected_upload_speed: firstSystem?.expected_performance?.upload_speed || templateConfig.speedtest?.expected_upload_speed
     })
 
     toast.success(`Loaded configuration from ${selectedConfigs.length} system(s)`)
@@ -210,7 +230,9 @@ export default function BulkSystemsSettings() {
           speedtest: {
             enabled: speedtestConfig.targets.length > 0,
             targets: speedtestConfig.targets,
-            interval: speedtestConfig.interval
+            interval: speedtestConfig.interval,
+            expected_download_speed: speedtestConfig.expected_download_speed,
+            expected_upload_speed: speedtestConfig.expected_upload_speed
           }
         }
 
@@ -223,6 +245,17 @@ export default function BulkSystemsSettings() {
           // Create new config
           await pb.collection('monitoring_config').create(monitoringConfigData)
         }
+        
+        // Save expected performance values to system record
+        await pb.collection("systems").update(systemId, {
+          expected_performance: {
+            ping_latency: pingConfig.expected_latency,
+            dns_lookup_time: dnsConfig.expected_lookup_time,
+            http_response_time: httpConfig.expected_response_time,
+            download_speed: speedtestConfig.expected_download_speed,
+            upload_speed: speedtestConfig.expected_upload_speed
+          }
+        })
       }
 
       toast.success(`Configuration updated for ${selectedSystems.size} system(s)`)
@@ -369,11 +402,12 @@ export default function BulkSystemsSettings() {
 
                 {/* Monitoring Types - using shared components */}
                 <Tabs defaultValue="speedtest" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="speedtest">Speedtest</TabsTrigger>
                     <TabsTrigger value="ping">Ping</TabsTrigger>
                     <TabsTrigger value="dns">DNS</TabsTrigger>
                     <TabsTrigger value="http">HTTP</TabsTrigger>
+                    <TabsTrigger value="performance">Thresholds</TabsTrigger>
                   </TabsList>
                   
                   <TabsContent value="speedtest" className="mt-6">
@@ -387,6 +421,18 @@ export default function BulkSystemsSettings() {
                   </TabsContent>
                   <TabsContent value="http" className="mt-6">
                     <HttpConfigTab httpConfig={httpConfig} setHttpConfig={setHttpConfig} />
+                  </TabsContent>
+                  <TabsContent value="performance" className="mt-6">
+                    <ExpectedPerformanceTab 
+                      pingConfig={pingConfig}
+                      setPingConfig={setPingConfig}
+                      dnsConfig={dnsConfig}
+                      setDnsConfig={setDnsConfig}
+                      httpConfig={httpConfig}
+                      setHttpConfig={setHttpConfig}
+                      speedtestConfig={speedtestConfig}
+                      setSpeedtestConfig={setSpeedtestConfig}
+                    />
                   </TabsContent>
                 </Tabs>
               </div>

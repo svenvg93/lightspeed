@@ -20,6 +20,7 @@ import {
   DnsConfigTab, 
   HttpConfigTab, 
   SpeedtestConfigTab,
+  ExpectedPerformanceTab,
   PingTarget,
   DnsTarget,
   HttpTarget,
@@ -58,10 +59,10 @@ interface MonitoringConfig {
 
 export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: { system: SystemRecord }) {
 	// Unified state management
-	const [pingConfig, setPingConfig] = useState<{ targets: PingTarget[], interval: string }>({ targets: [], interval: "*/3 * * * *" })
-	const [dnsConfig, setDnsConfig] = useState<{ targets: DnsTarget[], interval: string }>({ targets: [], interval: "*/5 * * * *" })
-	const [httpConfig, setHttpConfig] = useState<{ targets: HttpTarget[], interval: string }>({ targets: [], interval: "*/2 * * * *" })
-	const [speedtestConfig, setSpeedtestConfig] = useState<{ targets: SpeedtestTarget[], interval: string }>({ targets: [], interval: "0 */6 * * *" })
+	const [pingConfig, setPingConfig] = useState<{ targets: PingTarget[], interval: string, expected_latency?: number }>({ targets: [], interval: "*/3 * * * *" })
+	const [dnsConfig, setDnsConfig] = useState<{ targets: DnsTarget[], interval: string, expected_lookup_time?: number }>({ targets: [], interval: "*/5 * * * *" })
+	const [httpConfig, setHttpConfig] = useState<{ targets: HttpTarget[], interval: string, expected_response_time?: number }>({ targets: [], interval: "*/2 * * * *" })
+	const [speedtestConfig, setSpeedtestConfig] = useState<{ targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }>({ targets: [], interval: "0 */6 * * *" })
 	const [isLoading, setIsLoading] = useState(false)
 	const [isConfigLoading, setIsConfigLoading] = useState(true)
 	const [monitoringConfigId, setMonitoringConfigId] = useState<string | null>(null)
@@ -75,6 +76,7 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 				await new Promise(resolve => setTimeout(resolve, 100))
 				
 				const existingConfig = await pb.collection("monitoring_config").getFirstListItem(`system = "${system.id}"`)
+				console.log("Monitoring config from collection:", existingConfig)
 				
 				if (existingConfig) {
 					setMonitoringConfigId(existingConfig.id)
@@ -84,7 +86,8 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 						const pingData = typeof existingConfig.ping === 'string' ? JSON.parse(existingConfig.ping) : existingConfig.ping
 						setPingConfig({
 							targets: pingData.targets || [],
-							interval: pingData.interval || "*/3 * * * *"
+							interval: pingData.interval || "*/3 * * * *",
+							expected_latency: system.expected_performance?.ping_latency
 						})
 					}
 					
@@ -93,7 +96,8 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 						const dnsData = typeof existingConfig.dns === 'string' ? JSON.parse(existingConfig.dns) : existingConfig.dns
 						setDnsConfig({
 							targets: dnsData.targets || [],
-							interval: dnsData.interval || "*/5 * * * *"
+							interval: dnsData.interval || "*/5 * * * *",
+							expected_lookup_time: system.expected_performance?.dns_lookup_time
 						})
 					}
 					
@@ -102,7 +106,8 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 						const httpData = typeof existingConfig.http === 'string' ? JSON.parse(existingConfig.http) : existingConfig.http
 						setHttpConfig({
 							targets: httpData.targets || [],
-							interval: httpData.interval || "*/2 * * * *"
+							interval: httpData.interval || "*/2 * * * *",
+							expected_response_time: system.expected_performance?.http_response_time
 						})
 					}
 					
@@ -111,12 +116,35 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 						const speedtestData = typeof existingConfig.speedtest === 'string' ? JSON.parse(existingConfig.speedtest) : existingConfig.speedtest
 						setSpeedtestConfig({
 							targets: speedtestData.targets || [],
-							interval: speedtestData.interval || "0 */6 * * *"
+							interval: speedtestData.interval || "0 */6 * * *",
+							expected_download_speed: system.expected_performance?.download_speed || speedtestData.expected_download_speed,
+							expected_upload_speed: system.expected_performance?.upload_speed || speedtestData.expected_upload_speed
 						})
 					}
 				}
 			} catch (error) {
-				// No existing config found, use defaults
+				// No existing config found, use defaults but still load expected performance from system
+				setPingConfig({
+					targets: [],
+					interval: "*/3 * * * *",
+					expected_latency: system.expected_performance?.ping_latency
+				})
+				setDnsConfig({
+					targets: [],
+					interval: "*/5 * * * *",
+					expected_lookup_time: system.expected_performance?.dns_lookup_time
+				})
+				setHttpConfig({
+					targets: [],
+					interval: "*/2 * * * *",
+					expected_response_time: system.expected_performance?.http_response_time
+				})
+				setSpeedtestConfig({
+					targets: [],
+					interval: "0 */6 * * *",
+					expected_download_speed: system.expected_performance?.download_speed,
+					expected_upload_speed: system.expected_performance?.upload_speed
+				})
 			} finally {
 				setIsConfigLoading(false)
 			}
@@ -148,11 +176,7 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 			const speedtestError = validateCronExpression(speedtestConfig.interval)
 
 			if (pingError || dnsError || httpError || speedtestError) {
-				toast({
-					title: t`Invalid Configuration`,
-					description: pingError || dnsError || httpError || speedtestError,
-					variant: "destructive",
-				})
+				toast.error(pingError || dnsError || httpError || speedtestError)
 				return
 			}
 
@@ -200,11 +224,13 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 				speedtest: {
 					enabled: validSpeedtestTargets.length > 0,
 					targets: validSpeedtestTargets,
-					interval: speedtestConfig.interval
+					interval: speedtestConfig.interval,
+					expected_download_speed: speedtestConfig.expected_download_speed,
+					expected_upload_speed: speedtestConfig.expected_upload_speed
 				}
 			}
 
-			// Save to the monitoring_config collection
+			// Save monitoring config to separate collection
 			if (monitoringConfigId) {
 				// Update existing record
 				await pb.collection("monitoring_config").update(monitoringConfigId, monitoringConfigData)
@@ -213,6 +239,22 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 				const newRecord = await pb.collection("monitoring_config").create(monitoringConfigData)
 				setMonitoringConfigId(newRecord.id)
 			}
+			
+			// Save expected performance values to system record
+			const expectedPerformanceData = {
+				expected_performance: {
+					ping_latency: pingConfig.expected_latency,
+					dns_lookup_time: dnsConfig.expected_lookup_time,
+					http_response_time: httpConfig.expected_response_time,
+					download_speed: speedtestConfig.expected_download_speed,
+					upload_speed: speedtestConfig.expected_upload_speed
+				}
+			}
+			
+			console.log("Saving expected performance data:", expectedPerformanceData)
+			
+			const updatedSystem = await pb.collection("systems").update(system.id, expectedPerformanceData)
+			console.log("Updated system record:", updatedSystem)
 
 			toast.success(t`Configuration saved successfully. Remember to restart the agent for changes to take effect.`)
 		} catch (error) {
@@ -240,11 +282,12 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 					</DialogDescription>
 				</DialogHeader>
 				<Tabs defaultValue="speedtest" className="w-full">
-					<TabsList className="grid w-full grid-cols-4">
+					<TabsList className="grid w-full grid-cols-5">
 						<TabsTrigger value="speedtest">{t`Speedtest`}</TabsTrigger>
 						<TabsTrigger value="ping">{t`Ping`}</TabsTrigger>
 						<TabsTrigger value="dns">{t`DNS`}</TabsTrigger>
 						<TabsTrigger value="http">{t`HTTP`}</TabsTrigger>
+						<TabsTrigger value="performance">{t`Thresholds`}</TabsTrigger>
 					</TabsList>
 					<TabsContent value="speedtest" className="mt-6">
 						<SpeedtestConfigTab speedtestConfig={speedtestConfig} setSpeedtestConfig={setSpeedtestConfig} />
@@ -257,6 +300,18 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 					</TabsContent>
 					<TabsContent value="http" className="mt-6">
 						<HttpConfigTab httpConfig={httpConfig} setHttpConfig={setHttpConfig} />
+					</TabsContent>
+					<TabsContent value="performance" className="mt-6">
+						<ExpectedPerformanceTab 
+							pingConfig={pingConfig}
+							setPingConfig={setPingConfig}
+							dnsConfig={dnsConfig}
+							setDnsConfig={setDnsConfig}
+							httpConfig={httpConfig}
+							setHttpConfig={setHttpConfig}
+							speedtestConfig={speedtestConfig}
+							setSpeedtestConfig={setSpeedtestConfig}
+						/>
 					</TabsContent>
 				</Tabs>
 

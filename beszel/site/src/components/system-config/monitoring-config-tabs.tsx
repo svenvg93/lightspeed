@@ -34,6 +34,141 @@ export interface SpeedtestTarget {
   timeout: number
 }
 
+export function ExpectedPerformanceTab({
+  pingConfig,
+  setPingConfig,
+  dnsConfig,
+  setDnsConfig,
+  httpConfig,
+  setHttpConfig,
+  speedtestConfig,
+  setSpeedtestConfig
+}: {
+  pingConfig: { targets: PingTarget[], interval: string, expected_latency?: number }
+  setPingConfig: (config: { targets: PingTarget[], interval: string, expected_latency?: number }) => void
+  dnsConfig: { targets: DnsTarget[], interval: string, expected_lookup_time?: number }
+  setDnsConfig: (config: { targets: DnsTarget[], interval: string, expected_lookup_time?: number }) => void
+  httpConfig: { targets: HttpTarget[], interval: string, expected_response_time?: number }
+  setHttpConfig: (config: { targets: HttpTarget[], interval: string, expected_response_time?: number }) => void
+  speedtestConfig: { targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }
+  setSpeedtestConfig: (config: { targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }) => void
+}): JSX.Element {
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <h3 className="text-lg font-medium">Performance Thresholds</h3>
+        <p className="text-sm text-muted-foreground">
+          Set expected performance thresholds to display colored indicators in the systems table.
+        </p>
+      </div>
+
+      <Separator />
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Download Speed */}
+        <div className="space-y-2">
+          <Label htmlFor="expected-download-speed">Expected Download Speed (Mbps)</Label>
+          <Input
+            id="expected-download-speed"
+            type="number"
+            min="0"
+            step="0.1"
+            placeholder="100"
+            value={speedtestConfig.expected_download_speed || ''}
+            onChange={(e) => setSpeedtestConfig({
+              ...speedtestConfig,
+              expected_download_speed: e.target.value ? parseFloat(e.target.value) : undefined
+            })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Green: &gt;80% of expected, Yellow: 50-80%, Red: &lt;50%
+          </p>
+        </div>
+
+        {/* Upload Speed */}
+        <div className="space-y-2">
+          <Label htmlFor="expected-upload-speed">Expected Upload Speed (Mbps)</Label>
+          <Input
+            id="expected-upload-speed"
+            type="number"
+            min="0"
+            step="0.1"
+            placeholder="20"
+            value={speedtestConfig.expected_upload_speed || ''}
+            onChange={(e) => setSpeedtestConfig({
+              ...speedtestConfig,
+              expected_upload_speed: e.target.value ? parseFloat(e.target.value) : undefined
+            })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Green: &gt;80% of expected, Yellow: 50-80%, Red: &lt;50%
+          </p>
+        </div>
+
+        {/* Ping Latency */}
+        <div className="space-y-2">
+          <Label htmlFor="expected-ping-latency">Expected Ping Latency (ms)</Label>
+          <Input
+            id="expected-ping-latency"
+            type="number"
+            min="0"
+            step="0.1"
+            placeholder="50"
+            value={pingConfig.expected_latency || ''}
+            onChange={(e) => setPingConfig({
+              ...pingConfig,
+              expected_latency: e.target.value ? parseFloat(e.target.value) : undefined
+            })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Green: &lt;80% of expected, Yellow: 50-80%, Red: &lt;50%
+          </p>
+        </div>
+
+        {/* DNS Lookup Time */}
+        <div className="space-y-2">
+          <Label htmlFor="expected-dns-lookup-time">Expected DNS Lookup Time (ms)</Label>
+          <Input
+            id="expected-dns-lookup-time"
+            type="number"
+            min="0"
+            step="0.1"
+            placeholder="100"
+            value={dnsConfig.expected_lookup_time || ''}
+            onChange={(e) => setDnsConfig({
+              ...dnsConfig,
+              expected_lookup_time: e.target.value ? parseFloat(e.target.value) : undefined
+            })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Green: &lt;80% of expected, Yellow: 50-80%, Red: &lt;50%
+          </p>
+        </div>
+
+        {/* HTTP Response Time */}
+        <div className="space-y-2">
+          <Label htmlFor="expected-http-response-time">Expected HTTP Response Time (ms)</Label>
+          <Input
+            id="expected-http-response-time"
+            type="number"
+            min="0"
+            step="0.1"
+            placeholder="200"
+            value={httpConfig.expected_response_time || ''}
+            onChange={(e) => setHttpConfig({
+              ...httpConfig,
+              expected_response_time: e.target.value ? parseFloat(e.target.value) : undefined
+            })}
+          />
+          <p className="text-xs text-muted-foreground">
+            Green: &lt;80% of expected, Yellow: 50-80%, Red: &lt;50%
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 const DNS_TYPES = [
   { value: "A", label: "A (IPv4 Address)" },
   { value: "AAAA", label: "AAAA (IPv6 Address)" },
@@ -56,8 +191,8 @@ export function PingConfigTab({
   pingConfig, 
   setPingConfig 
 }: { 
-  pingConfig: { targets: PingTarget[], interval: string }
-  setPingConfig: (config: { targets: PingTarget[], interval: string }) => void
+  pingConfig: { targets: PingTarget[], interval: string, expected_latency?: number }
+  setPingConfig: (config: { targets: PingTarget[], interval: string, expected_latency?: number }) => void
 }): JSX.Element {
 
   const addTarget = () => {
@@ -120,7 +255,7 @@ export function PingConfigTab({
         </p>
       </div>
 
-      <Separator />
+
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -215,8 +350,8 @@ export function DnsConfigTab({
   dnsConfig, 
   setDnsConfig 
 }: { 
-  dnsConfig: { targets: DnsTarget[], interval: string }
-  setDnsConfig: (config: { targets: DnsTarget[], interval: string }) => void
+  dnsConfig: { targets: DnsTarget[], interval: string, expected_lookup_time?: number }
+  setDnsConfig: (config: { targets: DnsTarget[], interval: string, expected_lookup_time?: number }) => void
 }): JSX.Element {
 
   const addTarget = () => {
@@ -303,7 +438,7 @@ export function DnsConfigTab({
         </p>
       </div>
 
-      <Separator />
+
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -427,8 +562,8 @@ export function HttpConfigTab({
   httpConfig, 
   setHttpConfig 
 }: { 
-  httpConfig: { targets: HttpTarget[], interval: string }
-  setHttpConfig: (config: { targets: HttpTarget[], interval: string }) => void
+  httpConfig: { targets: HttpTarget[], interval: string, expected_response_time?: number }
+  setHttpConfig: (config: { targets: HttpTarget[], interval: string, expected_response_time?: number }) => void
 }): JSX.Element {
 
   const addTarget = () => {
@@ -490,7 +625,7 @@ export function HttpConfigTab({
         </p>
       </div>
 
-      <Separator />
+
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
@@ -576,8 +711,8 @@ export function SpeedtestConfigTab({
   speedtestConfig, 
   setSpeedtestConfig 
 }: { 
-  speedtestConfig: { targets: SpeedtestTarget[], interval: string }
-  setSpeedtestConfig: (config: { targets: SpeedtestTarget[], interval: string }) => void
+  speedtestConfig: { targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }
+  setSpeedtestConfig: (config: { targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }) => void
 }): JSX.Element {
 
   const addTarget = () => {
@@ -639,7 +774,7 @@ export function SpeedtestConfigTab({
         </p>
       </div>
 
-      <Separator />
+
 
       <div className="space-y-4">
         <div className="flex items-center justify-between">
