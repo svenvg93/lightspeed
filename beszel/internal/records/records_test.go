@@ -33,7 +33,6 @@ func TestDeleteOldRecords(t *testing.T) {
 	system, err := tests.CreateRecord(hub, "systems", map[string]any{
 		"name":   "test-system",
 		"host":   "localhost",
-		"port":   "45876",
 		"status": "up",
 		"users":  []string{user.Id},
 	})
@@ -117,7 +116,6 @@ func TestDeleteOldSystemStats(t *testing.T) {
 	system, err := tests.CreateRecord(hub, "systems", map[string]any{
 		"name":   "test-system",
 		"host":   "localhost",
-		"port":   "45876",
 		"status": "up",
 		"users":  []string{user.Id},
 	})
@@ -220,7 +218,6 @@ func TestDeleteOldAlertsHistory(t *testing.T) {
 	system, err := tests.CreateRecord(hub, "systems", map[string]any{
 		"name":   "test-system",
 		"host":   "localhost",
-		"port":   "45876",
 		"status": "up",
 		"users":  []string{user1.Id, user2.Id},
 	})
@@ -324,7 +321,6 @@ func TestDeleteOldAlertsHistoryEdgeCases(t *testing.T) {
 		system, err := tests.CreateRecord(hub, "systems", map[string]any{
 			"name":   "test-system",
 			"host":   "localhost",
-			"port":   "45876",
 			"status": "up",
 			"users":  []string{user.Id},
 		})

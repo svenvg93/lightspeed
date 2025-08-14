@@ -68,14 +68,15 @@ func (sm *SystemManager) GetSystemData(systemID string) *entities.CombinedData {
 	return sys.data
 }
 
-// TESTING ONLY: GetSystemHostPort returns the host and port for a system with the given ID
-// Returns empty strings if the system doesn't exist
+// TESTING ONLY: GetSystemHostPort returns the host for a system with the given ID
+// Returns empty string if the system doesn't exist
+// Note: Port field has been removed from the system schema
 func (sm *SystemManager) GetSystemHostPort(systemID string) (string, string) {
 	sys, ok := sm.systems.GetOk(systemID)
 	if !ok {
 		return "", ""
 	}
-	return sys.Host, sys.Port
+	return sys.Host, ""
 }
 
 // TESTING ONLY: SetSystemStatusInDB sets the status of a system directly and updates the database record

@@ -349,6 +349,14 @@ export default function SystemDetail({ name }: { name: string }) {
 				allHttpTargets.add(record.url)
 			})
 			
+			// Sort HTTP records by timestamp
+			const sortedHttpRecords = [...httpStats].sort((a, b) => 
+				new Date(a.created).getTime() - new Date(b.created).getTime()
+			)
+			
+			// Group HTTP records by timestamp
+			let prevHttpTimestamp = 0
+			
 			// Get the user-defined HTTP interval from the monitoring configuration
 			let httpExpectedInterval = 5 * 60 * 1000 // Default fallback: 5 minutes
 			if (monitoringConfig?.http?.interval) {
@@ -363,49 +371,39 @@ export default function SystemDetail({ name }: { name: string }) {
 				}
 			}
 			
-			// Process each target separately (like ping does)
-			allHttpTargets.forEach(targetUrl => {
-				// Get records for this target only
-				const targetRecords = httpStats
-					.filter(record => record.url === targetUrl)
-					.sort((a, b) => new Date(a.created).getTime() - new Date(b.created).getTime())
+			sortedHttpRecords.forEach(record => {
+				const timestamp = new Date(record.created).getTime()
 				
-				let prevTimestamp = 0
+				// Add gap if interval is too large (more than 1.5x the expected interval)
+				if (prevHttpTimestamp && (timestamp - prevHttpTimestamp) > httpExpectedInterval * 1.5) {
+					// Add null record to create gap
+					const gapDataPoint: any = { created: null }
+					allHttpTargets.forEach(targetKey => {
+						gapDataPoint[targetKey] = null
+					})
+					httpData.push(gapDataPoint)
+				}
 				
-				targetRecords.forEach(record => {
-					const timestamp = new Date(record.created).getTime()
-					
-					// Add gap if interval is too large (more than 1.5x the expected interval)
-					if (prevTimestamp && (timestamp - prevTimestamp) > httpExpectedInterval * 1.5) {
-						// Add null record to create gap
-						const gapDataPoint: any = { created: null }
-						allHttpTargets.forEach(targetKey => {
-							gapDataPoint[targetKey] = null
-						})
-						httpData.push(gapDataPoint)
-					}
-					
-					// Find or create data point for this timestamp
-					let dataPoint = httpData.find(dp => dp.created === timestamp)
-					if (!dataPoint) {
-						dataPoint = { created: timestamp }
-						allHttpTargets.forEach(targetKey => {
-							dataPoint[targetKey] = null
-						})
-						httpData.push(dataPoint)
-					}
-					
-					// Add the actual data for this target
-					dataPoint[targetUrl] = {
-						url: record.url,
-						status: record.status,
-						response_time: record.response_time,
-						status_code: record.status_code,
-						error_code: record.error_code,
-					}
-					
-					prevTimestamp = timestamp
-				})
+				// Find or create data point for this timestamp
+				let dataPoint = httpData.find(dp => dp.created === timestamp)
+				if (!dataPoint) {
+					dataPoint = { created: timestamp }
+					allHttpTargets.forEach(targetKey => {
+						dataPoint[targetKey] = null
+					})
+					httpData.push(dataPoint)
+				}
+				
+				// Add the actual HTTP data for this target
+				dataPoint[record.url] = {
+					url: record.url,
+					status: record.status,
+					response_time: record.response_time,
+					status_code: record.status_code,
+					error_code: record.error_code,
+				}
+				
+				prevHttpTimestamp = timestamp
 			})
 		}
 

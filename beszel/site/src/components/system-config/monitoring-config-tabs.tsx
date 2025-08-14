@@ -50,8 +50,8 @@ export function ExpectedPerformanceTab({
   setDnsConfig: (config: { targets: DnsTarget[], interval: string, expected_lookup_time?: number }) => void
   httpConfig: { targets: HttpTarget[], interval: string, expected_response_time?: number }
   setHttpConfig: (config: { targets: HttpTarget[], interval: string, expected_response_time?: number }) => void
-  speedtestConfig: { targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }
-  setSpeedtestConfig: (config: { targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }) => void
+  speedtestConfig: { targets: SpeedtestTarget[], interval: string }
+  setSpeedtestConfig: (config: { targets: SpeedtestTarget[], interval: string }) => void
 }): JSX.Element {
   return (
     <div className="space-y-6">
@@ -65,45 +65,7 @@ export function ExpectedPerformanceTab({
       <Separator />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Download Speed */}
-        <div className="space-y-2">
-          <Label htmlFor="expected-download-speed">Expected Download Speed (Mbps)</Label>
-          <Input
-            id="expected-download-speed"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="100"
-            value={speedtestConfig.expected_download_speed || ''}
-            onChange={(e) => setSpeedtestConfig({
-              ...speedtestConfig,
-              expected_download_speed: e.target.value ? parseFloat(e.target.value) : undefined
-            })}
-          />
-          <p className="text-xs text-muted-foreground">
-            Green: &gt;80% of expected, Yellow: 50-80%, Red: &lt;50%
-          </p>
-        </div>
 
-        {/* Upload Speed */}
-        <div className="space-y-2">
-          <Label htmlFor="expected-upload-speed">Expected Upload Speed (Mbps)</Label>
-          <Input
-            id="expected-upload-speed"
-            type="number"
-            min="0"
-            step="0.1"
-            placeholder="20"
-            value={speedtestConfig.expected_upload_speed || ''}
-            onChange={(e) => setSpeedtestConfig({
-              ...speedtestConfig,
-              expected_upload_speed: e.target.value ? parseFloat(e.target.value) : undefined
-            })}
-          />
-          <p className="text-xs text-muted-foreground">
-            Green: &gt;80% of expected, Yellow: 50-80%, Red: &lt;50%
-          </p>
-        </div>
 
         {/* Ping Latency */}
         <div className="space-y-2">
@@ -711,8 +673,8 @@ export function SpeedtestConfigTab({
   speedtestConfig, 
   setSpeedtestConfig 
 }: { 
-  speedtestConfig: { targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }
-  setSpeedtestConfig: (config: { targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }) => void
+  speedtestConfig: { targets: SpeedtestTarget[], interval: string }
+  setSpeedtestConfig: (config: { targets: SpeedtestTarget[], interval: string }) => void
 }): JSX.Element {
 
   const addTarget = () => {

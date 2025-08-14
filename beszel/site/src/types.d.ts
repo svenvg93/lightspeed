@@ -97,8 +97,6 @@ export interface SystemRecord extends RecordModel {
 				timeout: number
 			}[]
 			interval?: string | number // Override global interval
-			expected_download_speed?: number // Expected download speed in Mbps
-			expected_upload_speed?: number   // Expected upload speed in Mbps
 		}
 	}
 }

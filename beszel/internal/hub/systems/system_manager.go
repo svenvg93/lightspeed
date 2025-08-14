@@ -65,7 +65,7 @@ func (sm *SystemManager) Initialize() error {
 
 	// Load existing systems from database (excluding paused ones)
 	var systems []*System
-	err := sm.hub.DB().NewQuery("SELECT id, host, port, status FROM systems WHERE status != 'paused'").All(&systems)
+	err := sm.hub.DB().NewQuery("SELECT id, host, status FROM systems WHERE status != 'paused'").All(&systems)
 	if err != nil || len(systems) == 0 {
 		return err
 	}

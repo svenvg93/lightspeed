@@ -35,7 +35,6 @@ func TestSystemManagerNew(t *testing.T) {
 		record, err := tests.CreateRecord(hub, "systems", map[string]any{
 			"name":  "it-was-coney-island",
 			"host":  "the-playground-of-the-world",
-			"port":  "33914",
 			"users": []string{user.Id},
 		})
 		require.NoError(t, err)
@@ -76,7 +75,6 @@ func TestSystemManagerNew(t *testing.T) {
 		record, err = tests.CreateRecord(hub, "systems", map[string]any{
 			"name":  "there-was-no-place-like-it",
 			"host":  "in-the-whole-world",
-			"port":  "33914",
 			"users": []string{user.Id},
 		})
 		require.NoError(t, err)
@@ -162,7 +160,6 @@ func testOld(t *testing.T, hub *tests.TestHub) {
 		record, err := tests.CreateRecord(hub, "systems", map[string]any{
 			"name":  "i-even-got-lost-at-coney-island",
 			"host":  "but-they-found-me",
-			"port":  "33914",
 			"users": []string{user.Id},
 		})
 		require.NoError(t, err)
@@ -203,7 +200,6 @@ func testOld(t *testing.T, hub *tests.TestHub) {
 		record, err := tests.CreateRecord(hub, "systems", map[string]any{
 			"name":  "and-you-know",
 			"host":  "i-feel-very-bad",
-			"port":  "33914",
 			"users": []string{user.Id},
 		})
 		require.NoError(t, err)
@@ -224,7 +220,6 @@ func testOld(t *testing.T, hub *tests.TestHub) {
 		record, err := tests.CreateRecord(hub, "systems", map[string]any{
 			"name":  "we-used-to-sleep-on-the-beach",
 			"host":  "sleep-overnight-here",
-			"port":  "33914",
 			"users": []string{user.Id},
 		})
 		require.NoError(t, err)
@@ -255,7 +250,6 @@ func testOld(t *testing.T, hub *tests.TestHub) {
 		record, err := tests.CreateRecord(hub, "systems", map[string]any{
 			"name":  "things-changed-you-know",
 			"host":  "they-dont-sleep-anymore-on-the-beach",
-			"port":  "33914",
 			"users": []string{user.Id},
 		})
 		require.NoError(t, err)
@@ -312,7 +306,6 @@ func testOld(t *testing.T, hub *tests.TestHub) {
 		record, err := tests.CreateRecord(hub, "systems", map[string]any{
 			"name":  "jfkjahkfajs",
 			"host":  "localhost",
-			"port":  "33914",
 			"users": []string{user.Id},
 		})
 		require.NoError(t, err)
@@ -352,7 +345,6 @@ func testOld(t *testing.T, hub *tests.TestHub) {
 		record, err := tests.CreateRecord(hub, "systems", map[string]any{
 			"name":  "lkhsdfsjf",
 			"host":  "localhost",
-			"port":  "33914",
 			"users": []string{user.Id},
 		})
 		require.NoError(t, err)

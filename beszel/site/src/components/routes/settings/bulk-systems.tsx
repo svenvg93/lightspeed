@@ -90,7 +90,7 @@ export default function BulkSystemsSettings() {
     targets: [],
     interval: ''
   })
-  const [speedtestConfig, setSpeedtestConfig] = useState<{ targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }>({
+  	const [speedtestConfig, setSpeedtestConfig] = useState<{ targets: SpeedtestTarget[], interval: string }>({
     targets: [],
     interval: ''
   })
@@ -188,9 +188,7 @@ export default function BulkSystemsSettings() {
     })
     setSpeedtestConfig({
       targets: templateConfig.speedtest?.targets || [],
-      interval: templateConfig.speedtest?.interval || '',
-      expected_download_speed: firstSystem?.expected_performance?.download_speed || templateConfig.speedtest?.expected_download_speed,
-      expected_upload_speed: firstSystem?.expected_performance?.upload_speed || templateConfig.speedtest?.expected_upload_speed
+      interval: templateConfig.speedtest?.interval || ''
     })
 
     toast.success(`Loaded configuration from ${selectedConfigs.length} system(s)`)
@@ -230,9 +228,7 @@ export default function BulkSystemsSettings() {
           speedtest: {
             enabled: speedtestConfig.targets.length > 0,
             targets: speedtestConfig.targets,
-            interval: speedtestConfig.interval,
-            expected_download_speed: speedtestConfig.expected_download_speed,
-            expected_upload_speed: speedtestConfig.expected_upload_speed
+            interval: speedtestConfig.interval
           }
         }
 

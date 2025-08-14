@@ -100,7 +100,6 @@ func TestConfigSyncWithTokens(t *testing.T) {
 				system, err := tests.CreateRecord(testHub.App, "systems", map[string]any{
 					"name":  "preserve-server",
 					"host":  "preserve.example.com",
-					"port":  45876,
 					"users": []string{user.Id},
 				})
 				require.NoError(t, err)
@@ -113,7 +112,6 @@ func TestConfigSyncWithTokens(t *testing.T) {
 			configYAML: `systems:
   - name: "preserve-server"
     host: "preserve.example.com"
-    port: 45876
     users:
       - "admin@example.com"`,
 			expectToken: "preserve-token-999",
@@ -200,7 +198,6 @@ func TestConfigMigrationScenario(t *testing.T) {
 	existingSystem, err := tests.CreateRecord(testHub.App, "systems", map[string]any{
 		"name":  "migrated-server",
 		"host":  "migrated.example.com",
-		"port":  45876,
 		"users": []string{user.Id},
 	})
 	require.NoError(t, err)
@@ -213,7 +210,6 @@ func TestConfigMigrationScenario(t *testing.T) {
 	oldConfigYAML := `systems:
   - name: "migrated-server"
     host: "migrated.example.com"
-    port: 45876
     users:
       - "admin@example.com"`
 
