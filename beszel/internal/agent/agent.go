@@ -6,9 +6,11 @@ import (
 	"beszel/internal/entities/system"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -36,6 +38,10 @@ type Agent struct {
 	connectionManager *ConnectionManager // Channel to signal connection events
 	dataDir           string             // Directory for persisting data
 	authKey           string             // Base64 authentication key for hub verification
+
+	// Configuration management
+	configManager     *OptimizedConfigManager // Manages configuration caching and validation
+	lastConfigVersion int64                   // Track last received configuration version
 }
 
 // NewAgent creates a new agent with the given data directory for persisting data.
@@ -44,6 +50,40 @@ func NewAgent(dataDir ...string) (agent *Agent, err error) {
 	agent = &Agent{
 		cache: NewSessionCache(69 * time.Second),
 	}
+
+	// Initialize configuration manager with defaults
+	cacheTTL := 5 * time.Minute
+	maxTargets := 100
+	maxInterval := 24 * time.Hour
+	var allowedDomains []string
+
+	// Override defaults with environment variables
+	if ttlStr, exists := GetEnv("CONFIG_CACHE_TTL"); exists {
+		if ttl, err := time.ParseDuration(ttlStr); err == nil {
+			cacheTTL = ttl
+		}
+	}
+
+	if maxTargetsStr, exists := GetEnv("CONFIG_MAX_TARGETS"); exists {
+		if max, err := strconv.Atoi(maxTargetsStr); err == nil && max > 0 {
+			maxTargets = max
+		}
+	}
+
+	if maxIntervalStr, exists := GetEnv("CONFIG_MAX_INTERVAL"); exists {
+		if interval, err := time.ParseDuration(maxIntervalStr); err == nil {
+			maxInterval = interval
+		}
+	}
+
+	if domainsStr, exists := GetEnv("CONFIG_ALLOWED_DOMAINS"); exists {
+		allowedDomains = strings.Split(domainsStr, ",")
+		for i, domain := range allowedDomains {
+			allowedDomains[i] = strings.TrimSpace(domain)
+		}
+	}
+
+	agent.configManager = NewOptimizedConfigManager(cacheTTL, maxTargets, maxInterval, allowedDomains)
 
 	agent.dataDir, err = getDataDir(dataDir...)
 	if err != nil {
@@ -211,6 +251,103 @@ func (a *Agent) UpdateSpeedtestConfig(targets []system.SpeedtestTarget, cronExpr
 	if a.speedtestManager != nil {
 		a.speedtestManager.UpdateConfig(targets, cronExpression)
 	}
+}
+
+// UpdateConfigurationOptimized updates the agent configuration with caching and validation
+func (a *Agent) UpdateConfigurationOptimized(config *system.MonitoringConfig, version int64) error {
+	// Check if configuration has changed
+	if version <= a.lastConfigVersion {
+		slog.Debug("Configuration version not increased, skipping update", "current", a.lastConfigVersion, "received", version)
+		return nil
+	}
+
+	// Check if configuration has actually changed using cache
+	if !a.configManager.HasChanged("current", config, version) {
+		slog.Debug("Configuration content unchanged, skipping update", "version", version)
+		a.lastConfigVersion = version
+		return nil
+	}
+
+	// Validate configuration
+	if err := a.configManager.SetConfig("current", config, version); err != nil {
+		return fmt.Errorf("configuration validation failed: %w", err)
+	}
+
+	// Update ping configuration if enabled
+	if config.Enabled.Ping && len(config.Ping.Targets) > 0 {
+		interval := config.Ping.Interval
+		if interval == "" {
+			interval = config.GlobalInterval
+		}
+		a.UpdatePingConfig(config.Ping.Targets, interval)
+		slog.Debug("Updated ping configuration", "targets", len(config.Ping.Targets), "interval", interval)
+	} else {
+		// Disable ping if not enabled or no targets
+		a.UpdatePingConfig([]system.PingTarget{}, "")
+		slog.Debug("Disabled ping configuration")
+	}
+
+	// Update DNS configuration if enabled
+	if config.Enabled.Dns && len(config.Dns.Targets) > 0 {
+		interval := config.Dns.Interval
+		if interval == "" {
+			interval = config.GlobalInterval
+		}
+		a.UpdateDnsConfig(config.Dns.Targets, interval)
+		slog.Debug("Updated DNS configuration", "targets", len(config.Dns.Targets), "interval", interval)
+	} else {
+		// Disable DNS if not enabled or no targets
+		a.UpdateDnsConfig([]system.DnsTarget{}, "")
+		slog.Debug("Disabled DNS configuration")
+	}
+
+	// Update HTTP configuration if enabled
+	if config.Enabled.Http && len(config.Http.Targets) > 0 {
+		interval := config.Http.Interval
+		if interval == "" {
+			interval = config.GlobalInterval
+		}
+		a.UpdateHttpConfig(config.Http.Targets, interval)
+		slog.Debug("Updated HTTP configuration", "targets", len(config.Http.Targets), "interval", interval)
+	} else {
+		// Disable HTTP if not enabled or no targets
+		a.UpdateHttpConfig([]system.HttpTarget{}, "")
+		slog.Debug("Disabled HTTP configuration")
+	}
+
+	// Update speedtest configuration if enabled
+	if config.Enabled.Speedtest && len(config.Speedtest.Targets) > 0 {
+		interval := config.Speedtest.Interval
+		if interval == "" {
+			interval = config.GlobalInterval
+		}
+		a.UpdateSpeedtestConfig(config.Speedtest.Targets, interval)
+		slog.Debug("Updated speedtest configuration", "targets", len(config.Speedtest.Targets), "interval", interval)
+	} else {
+		// Disable speedtest if not enabled or no targets
+		a.UpdateSpeedtestConfig([]system.SpeedtestTarget{}, "")
+		slog.Debug("Disabled speedtest configuration")
+	}
+
+	// Update version
+	a.lastConfigVersion = version
+	slog.Info("Configuration updated successfully", "version", version)
+
+	return nil
+}
+
+// GetConfigurationStats returns configuration cache statistics
+func (a *Agent) GetConfigurationStats() map[string]interface{} {
+	if a.configManager == nil {
+		return map[string]interface{}{
+			"error": "configuration manager not initialized",
+		}
+	}
+
+	stats := a.configManager.GetCacheStats()
+	stats["last_config_version"] = a.lastConfigVersion
+
+	return stats
 }
 
 // Stop gracefully shuts down the agent and all its managers

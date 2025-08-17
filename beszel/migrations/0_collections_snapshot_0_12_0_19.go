@@ -1575,6 +1575,39 @@ func init() {
 			return err
 		}
 
+		// Add performance indexes for faster queries
+		indexes := []string{
+			// System stats indexes for efficient filtering and sorting
+			"CREATE INDEX IF NOT EXISTS idx_ping_stats_system_created ON ping_stats (system, created)",
+			"CREATE INDEX IF NOT EXISTS idx_dns_stats_system_created ON dns_stats (system, created)",
+			"CREATE INDEX IF NOT EXISTS idx_http_stats_system_created ON http_stats (system, created)",
+			"CREATE INDEX IF NOT EXISTS idx_speedtest_stats_system_created ON speedtest_stats (system, created)",
+
+			// Data retention indexes for efficient cleanup operations
+			"CREATE INDEX IF NOT EXISTS idx_ping_stats_created ON ping_stats (created)",
+			"CREATE INDEX IF NOT EXISTS idx_dns_stats_created ON dns_stats (created)",
+			"CREATE INDEX IF NOT EXISTS idx_http_stats_created ON http_stats (created)",
+			"CREATE INDEX IF NOT EXISTS idx_speedtest_stats_created ON speedtest_stats (created)",
+
+			// Alert and system indexes for faster lookups
+			"CREATE INDEX IF NOT EXISTS idx_alerts_system_name ON alerts (system, name)",
+			"CREATE INDEX IF NOT EXISTS idx_alerts_history_system_created ON alerts_history (system, created)",
+			"CREATE INDEX IF NOT EXISTS idx_alerts_history_created ON alerts_history (created)",
+			"CREATE INDEX IF NOT EXISTS idx_systems_status ON systems (status)",
+			"CREATE INDEX IF NOT EXISTS idx_systems_host ON systems (host)",
+			"CREATE INDEX IF NOT EXISTS idx_systems_updated ON systems (updated)",
+
+			// User and authentication indexes
+			"CREATE INDEX IF NOT EXISTS idx_user_settings_user ON user_settings (user)",
+			"CREATE INDEX IF NOT EXISTS idx_fingerprints_system ON fingerprints (system)",
+		}
+
+		for _, indexSQL := range indexes {
+			if _, err := app.DB().NewQuery(indexSQL).Execute(); err != nil {
+				return err
+			}
+		}
+
 		// Get all systems that don't have fingerprint records
 		var systemIds []string
 		err = app.DB().NewQuery(`
@@ -1602,6 +1635,32 @@ func init() {
 
 		return nil
 	}, func(app core.App) error {
+		// Remove performance indexes during rollback
+		indexes := []string{
+			"DROP INDEX IF EXISTS idx_ping_stats_system_created",
+			"DROP INDEX IF EXISTS idx_dns_stats_system_created",
+			"DROP INDEX IF EXISTS idx_http_stats_system_created",
+			"DROP INDEX IF EXISTS idx_speedtest_stats_system_created",
+			"DROP INDEX IF EXISTS idx_ping_stats_created",
+			"DROP INDEX IF EXISTS idx_dns_stats_created",
+			"DROP INDEX IF EXISTS idx_http_stats_created",
+			"DROP INDEX IF EXISTS idx_speedtest_stats_created",
+			"DROP INDEX IF EXISTS idx_alerts_system_name",
+			"DROP INDEX IF EXISTS idx_alerts_history_system_created",
+			"DROP INDEX IF EXISTS idx_alerts_history_created",
+			"DROP INDEX IF EXISTS idx_systems_status",
+			"DROP INDEX IF EXISTS idx_systems_host",
+			"DROP INDEX IF EXISTS idx_systems_updated",
+			"DROP INDEX IF EXISTS idx_user_settings_user",
+			"DROP INDEX IF EXISTS idx_fingerprints_system",
+		}
+
+		for _, indexSQL := range indexes {
+			if _, err := app.DB().NewQuery(indexSQL).Execute(); err != nil {
+				return err
+			}
+		}
+
 		return nil
 	})
 }

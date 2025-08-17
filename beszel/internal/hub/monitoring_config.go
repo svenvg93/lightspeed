@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/pocketbase/pocketbase/core"
 )
@@ -80,16 +81,29 @@ func (h *Hub) sendMonitoringConfigToSystem(systemId string, config system.Monito
 
 	// Send config via WebSocket if available
 	if system.WsConn != nil && system.WsConn.IsConnected() {
-		err := system.WsConn.SendMonitoringConfig(config)
+		// Create versioned configuration structure
+		versionedConfig := map[string]interface{}{
+			"config":  config,
+			"version": h.getNextConfigVersion(systemId),
+		}
+
+		err := system.WsConn.SendMonitoringConfig(versionedConfig)
 		if err != nil {
 			slog.Error("Failed to send monitoring config via WebSocket", "system", systemId, "err", err)
 		} else {
-			slog.Debug("Successfully sent monitoring config via WebSocket", "system", systemId)
+			slog.Debug("Successfully sent monitoring config via WebSocket", "system", systemId, "version", versionedConfig["version"])
 		}
 		return err
 	}
 
 	return nil
+}
+
+// getNextConfigVersion generates the next configuration version for a system
+func (h *Hub) getNextConfigVersion(systemId string) int64 {
+	// Use Unix timestamp (seconds) for more reasonable version numbers
+	// In a production environment, you might want to use a more sophisticated versioning system
+	return time.Now().Unix()
 }
 
 // onSystemRecordUpdate handles system record updates to detect monitoring config changes

@@ -243,21 +243,49 @@ func (client *WebSocketClient) sendSystemData() error {
 
 // handleMonitoringConfigUpdate processes unified monitoring configuration updates from the hub.
 func (client *WebSocketClient) handleMonitoringConfigUpdate(msg *common.HubRequest[cbor.RawMessage]) error {
-	var config system.MonitoringConfig
-	if err := cbor.Unmarshal(msg.Data, &config); err != nil {
-		return err
+	var configUpdate struct {
+		Config  system.MonitoringConfig `cbor:"config"`
+		Version int64                   `cbor:"version"`
 	}
 
-	slog.Debug("Received monitoring config update",
-		"ping_enabled", config.Enabled.Ping,
-		"dns_enabled", config.Enabled.Dns,
-		"http_enabled", config.Enabled.Http,
-		"speedtest_enabled", config.Enabled.Speedtest,
-		"ping_targets", len(config.Ping.Targets),
-		"dns_targets", len(config.Dns.Targets),
-		"http_targets", len(config.Http.Targets),
-		"speedtest_targets", len(config.Speedtest.Targets))
+	if err := cbor.Unmarshal(msg.Data, &configUpdate); err != nil {
+		// Fallback to old format without version
+		var config system.MonitoringConfig
+		if err := cbor.Unmarshal(msg.Data, &config); err != nil {
+			return err
+		}
 
+		slog.Debug("Received monitoring config update (legacy format)",
+			"ping_enabled", config.Enabled.Ping,
+			"dns_enabled", config.Enabled.Dns,
+			"http_enabled", config.Enabled.Http,
+			"speedtest_enabled", config.Enabled.Speedtest,
+			"ping_targets", len(config.Ping.Targets),
+			"dns_targets", len(config.Dns.Targets),
+			"http_targets", len(config.Http.Targets),
+			"speedtest_targets", len(config.Speedtest.Targets))
+
+		// Use legacy update method
+		return client.updateConfigurationLegacy(&config)
+	}
+
+	slog.Debug("Received monitoring config update (versioned)",
+		"version", configUpdate.Version,
+		"ping_enabled", configUpdate.Config.Enabled.Ping,
+		"dns_enabled", configUpdate.Config.Enabled.Dns,
+		"http_enabled", configUpdate.Config.Enabled.Http,
+		"speedtest_enabled", configUpdate.Config.Enabled.Speedtest,
+		"ping_targets", len(configUpdate.Config.Ping.Targets),
+		"dns_targets", len(configUpdate.Config.Dns.Targets),
+		"http_targets", len(configUpdate.Config.Http.Targets),
+		"speedtest_targets", len(configUpdate.Config.Speedtest.Targets))
+
+	// Use optimized configuration update
+	return client.agent.UpdateConfigurationOptimized(&configUpdate.Config, configUpdate.Version)
+}
+
+// updateConfigurationLegacy handles configuration updates in the old format
+func (client *WebSocketClient) updateConfigurationLegacy(config *system.MonitoringConfig) error {
 	// Update ping configuration if enabled
 	if config.Enabled.Ping && len(config.Ping.Targets) > 0 {
 		interval := config.Ping.Interval
