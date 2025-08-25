@@ -4,6 +4,7 @@ package hub
 import (
 	"beszel"
 	"beszel/internal/alerts"
+	"beszel/internal/entities/system"
 	"beszel/internal/hub/config"
 	"beszel/internal/hub/systems"
 	"beszel/internal/records"
@@ -31,11 +32,12 @@ import (
 type Hub struct {
 	core.App
 	*alerts.AlertManager
-	um      *users.UserManager
-	rm      *records.RecordManager
-	sm      *systems.SystemManager
-	authKey string // Base64 authentication key for agents
-	appURL  string
+	um            *users.UserManager
+	rm            *records.RecordManager
+	sm            *systems.SystemManager
+	configManager *ConfigurationManager // Optimized configuration management
+	authKey       string                 // Base64 authentication key for agents
+	appURL        string
 }
 
 // NewHub creates a new Hub instance with default configuration
@@ -47,6 +49,7 @@ func NewHub(app core.App) *Hub {
 	hub.um = users.NewUserManager(hub)
 	hub.rm = records.NewRecordManager(hub)
 	hub.sm = systems.NewSystemManager(hub)
+	hub.configManager = NewConfigurationManager(hub) // Initialize configuration manager
 	hub.appURL, _ = GetEnv("APP_URL")
 
 	// Generate base64 authentication key for agents
@@ -121,6 +124,14 @@ func GetEnv(key string) (value string, exists bool) {
 }
 
 func (h *Hub) StartHub() error {
+	// Add shutdown hook for configuration manager
+	h.App.OnTerminate().BindFunc(func(e *core.TerminateEvent) error {
+		if h.configManager != nil {
+			h.configManager.Stop()
+		}
+		return e.Next()
+	})
+
 	h.App.OnServe().BindFunc(func(e *core.ServeEvent) error {
 		// initialize settings / collections
 		if err := h.initialize(e); err != nil {
@@ -156,6 +167,10 @@ func (h *Hub) StartHub() error {
 
 	// handle system record updates (for initial config sending on startup)
 	h.App.OnRecordAfterUpdateSuccess("systems").BindFunc(h.onSystemRecordUpdate)
+	// handle monitoring configuration changes
+	h.App.OnRecordAfterUpdateSuccess("monitoring_config").BindFunc(h.onMonitoringConfigUpdate)
+	h.App.OnRecordAfterCreateSuccess("monitoring_config").BindFunc(h.onMonitoringConfigUpdate)
+	h.App.OnRecordAfterDeleteSuccess("monitoring_config").BindFunc(h.onMonitoringConfigDelete)
 
 	if pb, ok := h.App.(*pocketbase.PocketBase); ok {
 		// log.Println("Starting pocketbase")
@@ -357,6 +372,10 @@ func (h *Hub) registerApiRoutes(se *core.ServeEvent) error {
 	})
 	// API endpoint to get config.yml content
 	se.Router.GET("/api/beszel/config-yaml", config.GetYamlConfig)
+	// Configuration management endpoints
+	se.Router.GET("/api/beszel/config/stats", h.getConfigurationStats)
+	se.Router.POST("/api/beszel/config/sync-all", h.syncConfigurationToAllAgents)
+	se.Router.POST("/api/beszel/config/sync/{id}", h.syncConfigurationToAgent)
 	// handle agent websocket connection
 	se.Router.GET("/api/beszel/agent-connect", h.handleAgentConnect)
 	// get or create universal tokens
@@ -413,4 +432,135 @@ func (h *Hub) MakeLink(parts ...string) string {
 		base = fmt.Sprintf("%s/%s", base, url.PathEscape(part))
 	}
 	return base
+}
+
+// getConfigurationStats returns statistics about the configuration manager
+func (h *Hub) getConfigurationStats(e *core.RequestEvent) error {
+	info, _ := e.RequestInfo()
+	if info.Auth == nil {
+		return apis.NewForbiddenError("Forbidden", nil)
+	}
+
+	stats := map[string]interface{}{
+		"config_manager_initialized": h.configManager != nil,
+	}
+
+	if h.configManager != nil {
+		configStats := h.configManager.GetConfigurationStats()
+		for key, value := range configStats {
+			stats[key] = value
+		}
+	}
+
+	return e.JSON(http.StatusOK, stats)
+}
+
+// syncConfigurationToAllAgents triggers configuration sync to all connected agents
+func (h *Hub) syncConfigurationToAllAgents(e *core.RequestEvent) error {
+	info, _ := e.RequestInfo()
+	if info.Auth == nil || info.Auth.GetString("role") != "admin" {
+		return apis.NewForbiddenError("Admin access required", nil)
+	}
+
+	if h.configManager == nil {
+		return e.JSON(http.StatusServiceUnavailable, map[string]string{
+			"error": "Configuration manager not initialized",
+		})
+	}
+
+	err := h.configManager.SendConfigurationToAllAgents()
+	if err != nil {
+		return e.JSON(http.StatusInternalServerError, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	return e.JSON(http.StatusOK, map[string]string{
+		"status": "Configuration sync queued for all agents",
+	})
+}
+
+// syncConfigurationToAgent triggers configuration sync to a specific agent
+func (h *Hub) syncConfigurationToAgent(e *core.RequestEvent) error {
+	info, _ := e.RequestInfo()
+	if info.Auth == nil || info.Auth.GetString("role") != "admin" {
+		return apis.NewForbiddenError("Admin access required", nil)
+	}
+
+	if h.configManager == nil {
+		return e.JSON(http.StatusServiceUnavailable, map[string]string{
+			"error": "Configuration manager not initialized",
+		})
+	}
+
+	systemID := e.Request.PathValue("id")
+	if systemID == "" {
+		return e.JSON(http.StatusBadRequest, map[string]string{
+			"error": "System ID required",
+		})
+	}
+
+	err := h.configManager.SendConfigurationToAgent(systemID, 1) // High priority
+	if err != nil {
+		return e.JSON(http.StatusInternalServerError, map[string]string{
+			"error": err.Error(),
+		})
+	}
+
+	return e.JSON(http.StatusOK, map[string]string{
+		"status": "Configuration sync triggered for system " + systemID,
+	})
+}
+
+// onMonitoringConfigUpdate handles monitoring configuration updates
+func (h *Hub) onMonitoringConfigUpdate(e *core.RecordEvent) error {
+	systemID := e.Record.GetString("system")
+	if systemID == "" {
+		return e.Next()
+	}
+
+	h.Logger().Debug("Monitoring configuration updated", "system", systemID)
+
+	// Use configuration manager to queue the update if available
+	if h.configManager != nil {
+		// Clear cache for this system to force reload
+		h.configManager.cache.Delete(systemID)
+		
+		// Queue configuration update with normal priority
+		if config, err := h.configManager.GetConfiguration(systemID); err == nil {
+			h.configManager.QueueConfigurationUpdate(systemID, config.Config, 2)
+		}
+	} else {
+		// Fallback to direct config sending
+		if systemRecord, err := h.FindRecordById("systems", systemID); err == nil {
+			go h.SendMonitoringConfigToAgent(systemRecord)
+		}
+	}
+
+	return e.Next()
+}
+
+// onMonitoringConfigDelete handles monitoring configuration deletions
+func (h *Hub) onMonitoringConfigDelete(e *core.RecordEvent) error {
+	systemID := e.Record.GetString("system")
+	if systemID == "" {
+		return e.Next()
+	}
+
+	h.Logger().Debug("Monitoring configuration deleted", "system", systemID)
+
+	// Use configuration manager to send empty config if available
+	if h.configManager != nil {
+		// Clear cache for this system
+		h.configManager.cache.Delete(systemID)
+		
+		// Queue empty configuration update with high priority
+		emptyConfig := system.MonitoringConfig{}
+		h.configManager.QueueConfigurationUpdate(systemID, emptyConfig, 1)
+	} else {
+		// Fallback to direct config sending with empty config
+		go h.sendMonitoringConfigToSystem(systemID, system.MonitoringConfig{})
+	}
+
+	return e.Next()
 }

@@ -11,7 +11,19 @@ import (
 )
 
 // SendMonitoringConfigToAgent sends unified monitoring configuration to an agent via WebSocket
+// This method now uses the optimized ConfigurationManager for improved performance and caching
 func (h *Hub) SendMonitoringConfigToAgent(systemRecord *core.Record) error {
+	// Use the configuration manager if available
+	if h.configManager != nil {
+		return h.configManager.SendConfigurationToAgent(systemRecord.Id, 1) // High priority
+	}
+
+	// Fallback to legacy method if configuration manager not initialized
+	return h.sendMonitoringConfigToAgentLegacy(systemRecord)
+}
+
+// sendMonitoringConfigToAgentLegacy provides backward compatibility
+func (h *Hub) sendMonitoringConfigToAgentLegacy(systemRecord *core.Record) error {
 	// Get monitoring config from the monitoring_config collection
 	monitoringConfigRecord, err := h.FindFirstRecordByFilter("monitoring_config", "system = {:system}", map[string]any{"system": systemRecord.Id})
 
