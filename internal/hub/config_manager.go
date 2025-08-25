@@ -190,7 +190,45 @@ func (cm *ConfigurationManager) SendConfigurationToAgent(systemID string, priori
 		return fmt.Errorf("failed to get configuration for system %s: %w", systemID, err)
 	}
 
-	return cm.sendConfigToSystem(systemID, config)
+	return cm.sendConfigToSystemWithCacheClear(systemID, config)
+}
+
+// sendConfigToSystemWithCacheClear sends configuration and tells agent to clear its cache
+func (cm *ConfigurationManager) sendConfigToSystemWithCacheClear(systemID string, config *CachedConfiguration) error {
+	// Find the system in the system manager
+	if cm.hub.sm == nil {
+		return fmt.Errorf("system manager not initialized")
+	}
+
+	system, exists := cm.hub.sm.GetSystem(systemID)
+	if !exists || system == nil {
+		return fmt.Errorf("system not found: %s", systemID)
+	}
+
+	// Send config via WebSocket if available
+	if system.WsConn != nil && system.WsConn.IsConnected() {
+		versionedConfig := map[string]interface{}{
+			"config":       config.Config,
+			"version":      config.Version,
+			"clear_cache":  true, // Tell agent to clear its configuration cache
+			"force_reload": true, // Force immediate reload of configuration
+		}
+
+		err := system.WsConn.SendMonitoringConfig(versionedConfig)
+		if err != nil {
+			return fmt.Errorf("failed to send config via WebSocket: %w", err)
+		}
+
+		// Update send statistics
+		config.SendCount++
+		config.LastSent = time.Now()
+		cm.cache.Store(systemID, config)
+
+		slog.Info("Real-time configuration pushed to agent", "system", systemID, "version", config.Version, "cache_cleared", true)
+		return nil
+	}
+
+	return fmt.Errorf("system %s not connected via WebSocket", systemID)
 }
 
 // SendConfigurationToAllAgents sends configuration updates to all connected agents

@@ -137,6 +137,23 @@ func (ws *WsConn) RequestSystemData(data *system.CombinedData) error {
 	case message = <-ws.responseChan:
 	}
 	defer message.Close()
+	
+	// Clear existing test results to prevent old results from persisting
+	// when agent config changes remove targets. CBOR unmarshaling only adds/updates
+	// fields but doesn't remove existing map entries that are no longer sent.
+	if data.Stats.PingResults != nil {
+		data.Stats.PingResults = nil
+	}
+	if data.Stats.DnsResults != nil {
+		data.Stats.DnsResults = nil
+	}
+	if data.Stats.HttpResults != nil {
+		data.Stats.HttpResults = nil
+	}
+	if data.Stats.SpeedtestResults != nil {
+		data.Stats.SpeedtestResults = nil
+	}
+	
 	return cbor.Unmarshal(message.Data.Bytes(), data)
 }
 

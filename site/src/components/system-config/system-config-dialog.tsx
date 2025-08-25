@@ -250,7 +250,7 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 			const updatedSystem = await pb.collection("systems").update(system.id, expectedPerformanceData)
 			console.log("Updated system record:", updatedSystem)
 
-			toast.success(t`Configuration saved successfully. Remember to restart the agent for changes to take effect.`)
+			toast.success(t`Configuration saved and pushed to agent successfully. Changes will take effect immediately.`)
 		} catch (error) {
 			console.error("Failed to save configs:", error)
 			toast.error(t`Failed to save configuration. Please try again.`)
@@ -272,7 +272,7 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 				<DialogHeader>
 					<DialogTitle>{t`System Monitoring Configuration`}</DialogTitle>
 					<DialogDescription>
-						{t`Configure monitoring targets and intervals for ${system.name}. Note: The agent will need to be restarted for configuration changes to take effect.`}
+						{t`Configure monitoring targets and intervals for ${system.name}. Changes will be pushed to the agent automatically and take effect immediately.`}
 					</DialogDescription>
 				</DialogHeader>
 				<Tabs defaultValue="speedtest" className="w-full">

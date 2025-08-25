@@ -60,14 +60,21 @@ func (dm *DnsManager) UpdateConfig(targets []system.DnsTarget, cronExpression st
 	dm.Lock()
 	defer dm.Unlock()
 
-	slog.Debug("UpdateConfig called", "targets_count", len(targets), "cron_expression", cronExpression)
+	oldTargetsCount := len(dm.targets)
+	oldResultsCount := len(dm.results)
+	
+	slog.Debug("UpdateConfig called", "old_targets", oldTargetsCount, "new_targets", len(targets), "cron_expression", cronExpression)
 
 	// Update cron expression
 	dm.cronExpression = cronExpression
 
-	// Clear existing targets
+	// Clear existing targets and results to prevent stale data
 	dm.targets = make(map[string]*dnsTarget)
 	dm.results = make(map[string]*system.DnsResult)
+	
+	if oldTargetsCount > 0 || oldResultsCount > 0 {
+		slog.Info("Cleared old DNS configuration", "old_targets", oldTargetsCount, "old_results", oldResultsCount)
+	}
 
 	// Add new targets
 	for _, target := range targets {
@@ -111,7 +118,6 @@ func (dm *DnsManager) GetResults() map[string]*system.DnsResult {
 
 	// If no results are available, return nil to indicate no DNS lookups have run
 	if len(dm.results) == 0 {
-		slog.Debug("No DNS results available - no lookups have run recently")
 		return nil
 	}
 
@@ -130,9 +136,7 @@ func (dm *DnsManager) GetResults() map[string]*system.DnsResult {
 
 	// Clear the results after they've been retrieved
 	// This ensures DNS data is only sent once per test run
-	slog.Debug("Clearing DNS results", "count_before_clear", len(dm.results))
 	dm.results = make(map[string]*system.DnsResult)
-	slog.Debug("DNS results cleared")
 
 	return results
 }

@@ -238,39 +238,32 @@ func (client *WebSocketClient) handleHubRequest(msg *common.HubRequest[cbor.RawM
 // sendSystemData gathers and sends current system statistics to the hub.
 func (client *WebSocketClient) sendSystemData() error {
 	sysStats := client.agent.gatherStats(client.token)
+	
+	slog.Debug("WebSocket sending system data", "speedtest_results_count", len(sysStats.Stats.SpeedtestResults))
+	for serverID, result := range sysStats.Stats.SpeedtestResults {
+		slog.Debug("WebSocket sending speedtest result", "server_id", serverID, "download", result.DownloadSpeed, "upload", result.UploadSpeed, "last_checked", result.LastChecked)
+	}
+	
 	return client.sendMessage(sysStats)
 }
 
 // handleMonitoringConfigUpdate processes unified monitoring configuration updates from the hub.
 func (client *WebSocketClient) handleMonitoringConfigUpdate(msg *common.HubRequest[cbor.RawMessage]) error {
 	var configUpdate struct {
-		Config  system.MonitoringConfig `cbor:"config"`
-		Version int64                   `cbor:"version"`
+		Config      system.MonitoringConfig `cbor:"config"`
+		Version     int64                   `cbor:"version"`
+		ClearCache  bool                    `cbor:"clear_cache"`
+		ForceReload bool                    `cbor:"force_reload"`
 	}
 
 	if err := cbor.Unmarshal(msg.Data, &configUpdate); err != nil {
-		// Fallback to old format without version
-		var config system.MonitoringConfig
-		if err := cbor.Unmarshal(msg.Data, &config); err != nil {
-			return err
-		}
-
-		slog.Debug("Received monitoring config update (legacy format)",
-			"ping_enabled", config.Enabled.Ping,
-			"dns_enabled", config.Enabled.Dns,
-			"http_enabled", config.Enabled.Http,
-			"speedtest_enabled", config.Enabled.Speedtest,
-			"ping_targets", len(config.Ping.Targets),
-			"dns_targets", len(config.Dns.Targets),
-			"http_targets", len(config.Http.Targets),
-			"speedtest_targets", len(config.Speedtest.Targets))
-
-		// Use legacy update method
-		return client.updateConfigurationLegacy(&config)
+		return fmt.Errorf("failed to unmarshal configuration update: %w", err)
 	}
 
 	slog.Debug("Received monitoring config update (versioned)",
 		"version", configUpdate.Version,
+		"clear_cache", configUpdate.ClearCache,
+		"force_reload", configUpdate.ForceReload,
 		"ping_enabled", configUpdate.Config.Enabled.Ping,
 		"dns_enabled", configUpdate.Config.Enabled.Dns,
 		"http_enabled", configUpdate.Config.Enabled.Http,
@@ -280,70 +273,27 @@ func (client *WebSocketClient) handleMonitoringConfigUpdate(msg *common.HubReque
 		"http_targets", len(configUpdate.Config.Http.Targets),
 		"speedtest_targets", len(configUpdate.Config.Speedtest.Targets))
 
-	// Use optimized configuration update
-	return client.agent.UpdateConfigurationOptimized(&configUpdate.Config, configUpdate.Version)
+	// Use optimized configuration update with cache clearing support
+	return client.agent.UpdateConfigurationOptimized(&configUpdate.Config, configUpdate.Version, configUpdate.ClearCache, configUpdate.ForceReload)
 }
 
-// updateConfigurationLegacy handles configuration updates in the old format
-func (client *WebSocketClient) updateConfigurationLegacy(config *system.MonitoringConfig) error {
-	// Update ping configuration if enabled
-	if config.Enabled.Ping && len(config.Ping.Targets) > 0 {
-		interval := config.Ping.Interval
-		if interval == "" {
-			interval = config.GlobalInterval
-		}
-		client.agent.UpdatePingConfig(config.Ping.Targets, interval)
-	} else {
-		// Disable ping if not enabled or no targets
-		client.agent.UpdatePingConfig([]system.PingTarget{}, "")
-	}
-
-	// Update DNS configuration if enabled
-	if config.Enabled.Dns && len(config.Dns.Targets) > 0 {
-		interval := config.Dns.Interval
-		if interval == "" {
-			interval = config.GlobalInterval
-		}
-		client.agent.UpdateDnsConfig(config.Dns.Targets, interval)
-	} else {
-		// Disable DNS if not enabled or no targets
-		client.agent.UpdateDnsConfig([]system.DnsTarget{}, "")
-	}
-
-	// Update HTTP configuration if enabled
-	if config.Enabled.Http && len(config.Http.Targets) > 0 {
-		interval := config.Http.Interval
-		if interval == "" {
-			interval = config.GlobalInterval
-		}
-		client.agent.UpdateHttpConfig(config.Http.Targets, interval)
-	} else {
-		// Disable HTTP if not enabled or no targets
-		client.agent.UpdateHttpConfig([]system.HttpTarget{}, "")
-	}
-
-	// Update speedtest configuration if enabled
-	if config.Enabled.Speedtest && len(config.Speedtest.Targets) > 0 {
-		interval := config.Speedtest.Interval
-		if interval == "" {
-			interval = config.GlobalInterval
-		}
-		client.agent.UpdateSpeedtestConfig(config.Speedtest.Targets, interval)
-	} else {
-		// Disable speedtest if not enabled or no targets
-		client.agent.UpdateSpeedtestConfig([]system.SpeedtestTarget{}, "")
-	}
-
-	return nil
-}
 
 // sendMessage encodes the given data to CBOR and sends it as a binary message over the WebSocket connection to the hub.
 func (client *WebSocketClient) sendMessage(data any) error {
 	bytes, err := cbor.Marshal(data)
 	if err != nil {
+		slog.Debug("WebSocket failed to marshal data", "error", err)
 		return err
 	}
-	return client.Conn.WriteMessage(gws.OpcodeBinary, bytes)
+	
+	slog.Debug("WebSocket sending CBOR message", "size_bytes", len(bytes))
+	err = client.Conn.WriteMessage(gws.OpcodeBinary, bytes)
+	if err != nil {
+		slog.Debug("WebSocket failed to send message", "error", err)
+	} else {
+		slog.Debug("WebSocket message sent successfully")
+	}
+	return err
 }
 
 // getUserAgent returns one of two User-Agent strings based on current time.

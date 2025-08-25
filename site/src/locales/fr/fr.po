@@ -105,8 +105,8 @@ msgid "Active"
 msgstr ""
 
 #: src/components/routes/home.tsx
-msgid "Active Alerts"
-msgstr "Alertes actives"
+#~ msgid "Active Alerts"
+#~ msgstr "Alertes actives"
 
 #: src/components/add-system.tsx
 msgid "Add <0>System</0>"
@@ -183,6 +183,11 @@ msgstr ""
 msgid "ASN"
 msgstr ""
 
+#. Use 'Key' if your language requires many more characters
+#: src/components/add-system.tsx
+msgid "Auth Key"
+msgstr ""
+
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
 msgstr "La copie automatique nécessite un contexte sécurisé."
@@ -238,8 +243,8 @@ msgid "Backups"
 msgstr "Sauvegardes"
 
 #: src/lib/utils.ts
-msgid "Bandwidth"
-msgstr "Bande passante"
+#~ msgid "Bandwidth"
+#~ msgstr "Bande passante"
 
 #: src/components/login/auth-form.tsx
 msgid "Beszel supports OpenID Connect and many OAuth2 authentication providers."
@@ -323,8 +328,12 @@ msgid "Command line instructions"
 msgstr "Instructions en ligne de commande"
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Configuration saved successfully. Remember to restart the agent for changes to take effect."
+msgid "Configuration saved and pushed to agent successfully. Changes will take effect immediately."
 msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Configuration saved successfully. Remember to restart the agent for changes to take effect."
+#~ msgstr ""
 
 #: src/components/dns-config/dns-config-dialog.tsx
 #~ msgid "Configure DNS"
@@ -348,8 +357,12 @@ msgstr ""
 
 #. placeholder {0}: system.name
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Configure monitoring targets and intervals for {0}. Note: The agent will need to be restarted for configuration changes to take effect."
+msgid "Configure monitoring targets and intervals for {0}. Changes will be pushed to the agent automatically and take effect immediately."
 msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Configure monitoring targets and intervals for {0}. Note: The agent will need to be restarted for configuration changes to take effect."
+#~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
 #~ msgid "Configure ping monitoring targets for {0}."
@@ -365,8 +378,8 @@ msgid "Confirm password"
 msgstr "Confirmer le mot de passe"
 
 #: src/components/routes/home.tsx
-msgid "Connection is down"
-msgstr ""
+#~ msgid "Connection is down"
+#~ msgstr ""
 
 #: src/components/systems-table/systems-table-columns.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -432,8 +445,8 @@ msgstr "Copier YAML"
 #~ msgstr "CPU"
 
 #: src/lib/utils.ts
-msgid "CPU Usage"
-msgstr "Utilisation du CPU"
+#~ msgid "CPU Usage"
+#~ msgstr "Utilisation du CPU"
 
 #: src/components/login/auth-form.tsx
 msgid "Create account"
@@ -500,8 +513,8 @@ msgstr "Supprimer l'empreinte"
 #~ msgstr ""
 
 #: src/lib/utils.ts
-msgid "Disk Usage"
-msgstr "Utilisation du disque"
+#~ msgid "Disk Usage"
+#~ msgstr "Utilisation du disque"
 
 #: src/components/routes/system.tsx
 #~ msgid "Disk usage of {extraFsName}"
@@ -517,6 +530,10 @@ msgstr ""
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "DNS Configuration Saved"
 #~ msgstr ""
+
+#: src/lib/utils.ts
+msgid "DNS Failures"
+msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "DNS lookup performance"
@@ -537,6 +554,10 @@ msgstr ""
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "DNS Lookup Targets"
 #~ msgstr ""
+
+#: src/lib/utils.ts
+msgid "DNS Lookup Time"
+msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "DNS Monitoring"
@@ -639,12 +660,9 @@ msgstr "Erreur"
 msgid "Error Code"
 msgstr ""
 
-#. placeholder {0}: alert.value
-#. placeholder {1}: info.unit
-#. placeholder {2}: alert.min
 #: src/components/routes/home.tsx
-msgid "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
-msgstr "Dépasse {0}{1} dans {2, plural, one {la dernière # minute} other {les dernières # minutes}}"
+#~ msgid "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
+#~ msgstr "Dépasse {0}{1} dans {2, plural, one {la dernière # minute} other {les dernières # minutes}}"
 
 #: src/components/routes/settings/config-yaml.tsx
 msgid "Existing systems not defined in <0>config.yml</0> will be deleted. Please make regular backups."
@@ -738,7 +756,6 @@ msgstr "Général"
 msgid "Grid"
 msgstr "Grille"
 
-#: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgctxt "Button to copy install command"
 msgid "Homebrew command"
@@ -759,8 +776,16 @@ msgstr "Hôte / IP"
 msgid "HTTP"
 msgstr ""
 
+#: src/lib/utils.ts
+msgid "HTTP Failures"
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "HTTP Monitoring"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "HTTP Response Time"
 msgstr ""
 
 #: src/components/routes/system.tsx
@@ -781,8 +806,8 @@ msgstr "Si vous avez perdu le mot de passe de votre compte administrateur, vous 
 #~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Invalid Configuration"
-msgstr ""
+#~ msgid "Invalid Configuration"
+#~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
 #: src/components/system-config/system-config-dialog.tsx
@@ -832,16 +857,16 @@ msgstr "Clair"
 #~ msgstr ""
 
 #: src/lib/utils.ts
-msgid "Load Average 15m"
-msgstr ""
+#~ msgid "Load Average 15m"
+#~ msgstr ""
 
 #: src/lib/utils.ts
-msgid "Load Average 1m"
-msgstr ""
+#~ msgid "Load Average 1m"
+#~ msgstr ""
 
 #: src/lib/utils.ts
-msgid "Load Average 5m"
-msgstr ""
+#~ msgid "Load Average 5m"
+#~ msgstr ""
 
 #. Short label for load average
 #: src/components/systems-table/systems-table-columns.tsx
@@ -883,8 +908,8 @@ msgid "Manage display and notification preferences."
 msgstr "Gérer les préférences d'affichage et de notification."
 
 #: src/components/add-system.tsx
-msgid "Manual setup instructions"
-msgstr "Guide pour une installation manuelle"
+#~ msgid "Manual setup instructions"
+#~ msgstr "Guide pour une installation manuelle"
 
 #. Chart select field. Please try to keep this short.
 #: src/components/routes/system.tsx
@@ -900,8 +925,8 @@ msgstr ""
 #~ msgstr "Mémoire"
 
 #: src/lib/utils.ts
-msgid "Memory Usage"
-msgstr "Utilisation de la mémoire"
+#~ msgid "Memory Usage"
+#~ msgstr "Utilisation de la mémoire"
 
 #: src/components/routes/system.tsx
 #~ msgid "Memory usage of docker containers"
@@ -925,8 +950,8 @@ msgstr "Nom"
 #~ msgstr "Net"
 
 #: src/components/routes/system.tsx
-msgid "Network Interface Speed"
-msgstr ""
+#~ msgid "Network Interface Speed"
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "Network Speed"
@@ -1125,6 +1150,10 @@ msgstr ""
 #~ msgid "Ping Configuration Saved"
 #~ msgstr ""
 
+#: src/lib/utils.ts
+msgid "Ping Latency"
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "Ping Monitoring"
 msgstr ""
@@ -1132,6 +1161,10 @@ msgstr ""
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "Ping monitoring configuration has been updated successfully."
 #~ msgstr ""
+
+#: src/lib/utils.ts
+msgid "Ping Packet Loss"
+msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "Ping Targets"
@@ -1201,8 +1234,8 @@ msgstr ""
 
 #. Use 'Key' if your language requires many more characters
 #: src/components/add-system.tsx
-msgid "Public Key"
-msgstr "Clé publique"
+#~ msgid "Public Key"
+#~ msgstr "Clé publique"
 
 #. Disk read
 #: src/components/routes/system.tsx
@@ -1334,8 +1367,16 @@ msgstr "Trier par"
 msgid "Speedtest"
 msgstr ""
 
+#: src/lib/utils.ts
+msgid "Speedtest Download"
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "Speedtest Monitoring"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Speedtest Upload"
 msgstr ""
 
 #. Context: alert state (active or resolved)
@@ -1407,8 +1448,8 @@ msgstr ""
 #~ msgstr "Temp."
 
 #: src/lib/utils.ts
-msgid "Temperature"
-msgstr "Température"
+#~ msgid "Temperature"
+#~ msgstr "Température"
 
 #: src/components/routes/settings/general.tsx
 #~ msgid "Temperature unit"
@@ -1436,6 +1477,10 @@ msgstr "Cette action ne peut pas être annulée. Cela supprimera définitivement
 
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "This will permanently delete all selected records from the database."
+msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Thresholds"
 msgstr ""
 
 #: src/components/routes/system.tsx
@@ -1488,40 +1533,72 @@ msgid "Tokens and fingerprints are used to authenticate WebSocket connections to
 msgstr "Les tokens et les empreintes sont utilisés pour authentifier les connexions WebSocket vers le hub."
 
 #: src/lib/utils.ts
-msgid "Triggers when 1 minute load average exceeds a threshold"
+#~ msgid "Triggers when 1 minute load average exceeds a threshold"
+#~ msgstr ""
+
+#: src/lib/utils.ts
+#~ msgid "Triggers when 15 minute load average exceeds a threshold"
+#~ msgstr ""
+
+#: src/lib/utils.ts
+#~ msgid "Triggers when 5 minute load average exceeds a threshold"
+#~ msgstr ""
+
+#: src/lib/utils.ts
+#~ msgid "Triggers when any sensor exceeds a threshold"
+#~ msgstr "Déclenchement lorsque tout capteur dépasse un seuil"
+
+#: src/lib/utils.ts
+msgid "Triggers when average DNS lookup time exceeds threshold"
 msgstr ""
 
 #: src/lib/utils.ts
-msgid "Triggers when 15 minute load average exceeds a threshold"
+msgid "Triggers when average download speed across all servers drops below threshold"
 msgstr ""
 
 #: src/lib/utils.ts
-msgid "Triggers when 5 minute load average exceeds a threshold"
+msgid "Triggers when average HTTP response time exceeds threshold"
 msgstr ""
 
 #: src/lib/utils.ts
-msgid "Triggers when any sensor exceeds a threshold"
-msgstr "Déclenchement lorsque tout capteur dépasse un seuil"
+msgid "Triggers when average latency across all ping targets exceeds threshold"
+msgstr ""
 
 #: src/lib/utils.ts
-msgid "Triggers when combined up/down exceeds a threshold"
-msgstr "Déclenchement lorsque le montant/descendant combinée dépasse un seuil"
+msgid "Triggers when average packet loss across all ping targets exceeds threshold"
+msgstr ""
 
 #: src/lib/utils.ts
-msgid "Triggers when CPU usage exceeds a threshold"
-msgstr "Déclenchement lorsque l'utilisation du CPU dépasse un seuil"
+msgid "Triggers when average upload speed across all servers drops below threshold"
+msgstr ""
 
 #: src/lib/utils.ts
-msgid "Triggers when memory usage exceeds a threshold"
-msgstr "Déclenchement lorsque l'utilisation de la mémoire dépasse un seuil"
+#~ msgid "Triggers when combined up/down exceeds a threshold"
+#~ msgstr "Déclenchement lorsque le montant/descendant combinée dépasse un seuil"
+
+#: src/lib/utils.ts
+#~ msgid "Triggers when CPU usage exceeds a threshold"
+#~ msgstr "Déclenchement lorsque l'utilisation du CPU dépasse un seuil"
+
+#: src/lib/utils.ts
+msgid "Triggers when DNS lookup failure rate exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Triggers when HTTP request failure rate exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+#~ msgid "Triggers when memory usage exceeds a threshold"
+#~ msgstr "Déclenchement lorsque l'utilisation de la mémoire dépasse un seuil"
 
 #: src/lib/utils.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Se déclenche lorsque le statut passe de \"Joignable\" à \"Injoignable\""
 
 #: src/lib/utils.ts
-msgid "Triggers when usage of any disk exceeds a threshold"
-msgstr "Déclenchement lorsque l'utilisation de tout disque dépasse un seuil"
+#~ msgid "Triggers when usage of any disk exceeds a threshold"
+#~ msgstr "Déclenchement lorsque l'utilisation de tout disque dépasse un seuil"
 
 #: src/components/add-system.tsx
 msgid "Type tag and press Tab or comma"
@@ -1625,7 +1702,6 @@ msgstr "Notifications Webhook / Push"
 msgid "When enabled, this token allows agents to self-register without prior system creation. Expires after one hour or on hub restart."
 msgstr "Lorsqu'il est activé, ce token permet aux agents de s'auto-enregistrer sans création préalable du système. Expire après une heure ou au redémarrage du hub."
 
-#: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgctxt "Button to copy install command"
 msgid "Windows command"

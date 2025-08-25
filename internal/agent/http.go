@@ -59,14 +59,21 @@ func (hm *HttpManager) UpdateConfig(targets []system.HttpTarget, cronExpression 
 	hm.Lock()
 	defer hm.Unlock()
 
-	slog.Debug("UpdateConfig called", "targets_count", len(targets), "cron_expression", cronExpression)
+	oldTargetsCount := len(hm.targets)
+	oldResultsCount := len(hm.results)
+	
+	slog.Debug("UpdateConfig called", "old_targets", oldTargetsCount, "new_targets", len(targets), "cron_expression", cronExpression)
 
 	// Use cron expression directly
 	hm.cronExpression = cronExpression
 
-	// Clear existing targets
+	// Clear existing targets and results to prevent stale data
 	hm.targets = make(map[string]*httpTarget)
 	hm.results = make(map[string]*system.HttpResult)
+	
+	if oldTargetsCount > 0 || oldResultsCount > 0 {
+		slog.Info("Cleared old HTTP configuration", "old_targets", oldTargetsCount, "old_results", oldResultsCount)
+	}
 
 	// Add new targets
 	for _, target := range targets {
@@ -90,14 +97,30 @@ func (hm *HttpManager) UpdateConfig(targets []system.HttpTarget, cronExpression 
 
 // GetResults returns the current HTTP results
 func (hm *HttpManager) GetResults() map[string]*system.HttpResult {
-	hm.RLock()
-	defer hm.RUnlock()
+	hm.Lock()
+	defer hm.Unlock()
 
-	// Return a copy of the results
+	// If no results are available, return nil to indicate no HTTP checks have run
+	if len(hm.results) == 0 {
+		return nil
+	}
+
+	// Create a copy to avoid race conditions
 	results := make(map[string]*system.HttpResult)
 	for url, result := range hm.results {
-		results[url] = result
+		results[url] = &system.HttpResult{
+			URL:          result.URL,
+			Status:       result.Status,
+			ResponseTime: result.ResponseTime,
+			StatusCode:   result.StatusCode,
+			ErrorCode:    result.ErrorCode,
+			LastChecked:  result.LastChecked,
+		}
 	}
+
+	// Clear the results after they've been retrieved
+	// This ensures HTTP data is only sent once per test run
+	hm.results = make(map[string]*system.HttpResult)
 
 	return results
 }

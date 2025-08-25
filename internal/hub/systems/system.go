@@ -259,6 +259,7 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 
 	// Create speedtest_stats records if we have speedtest data and it's new
 	if data.Stats.SpeedtestResults != nil && len(data.Stats.SpeedtestResults) > 0 {
+		
 		// Check if we have new speedtest data by comparing LastChecked times
 		var hasNewData bool
 		for _, result := range data.Stats.SpeedtestResults {

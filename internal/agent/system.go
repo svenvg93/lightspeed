@@ -191,6 +191,10 @@ func (a *Agent) getSystemStats() system.Stats {
 		if speedtestResults != nil {
 			systemStats.SpeedtestResults = speedtestResults
 			slog.Debug("Speedtest results collected", "count", len(systemStats.SpeedtestResults))
+			// Debug log each speedtest result
+			for serverID, result := range systemStats.SpeedtestResults {
+				slog.Debug("Speedtest result from manager", "server_id", serverID, "download", result.DownloadSpeed, "upload", result.UploadSpeed, "latency", result.Latency, "last_checked", result.LastChecked)
+			}
 		} else {
 			slog.Debug("No speedtest results available - no tests have run recently")
 		}

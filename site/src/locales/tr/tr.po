@@ -105,8 +105,8 @@ msgid "Active"
 msgstr "Aktif"
 
 #: src/components/routes/home.tsx
-msgid "Active Alerts"
-msgstr "Aktif Uyarılar"
+#~ msgid "Active Alerts"
+#~ msgstr "Aktif Uyarılar"
 
 #: src/components/add-system.tsx
 msgid "Add <0>System</0>"
@@ -183,6 +183,11 @@ msgstr "Emin misiniz?"
 msgid "ASN"
 msgstr ""
 
+#. Use 'Key' if your language requires many more characters
+#: src/components/add-system.tsx
+msgid "Auth Key"
+msgstr ""
+
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
 msgstr "Otomatik kopyalama güvenli bir bağlam gerektirir."
@@ -238,8 +243,8 @@ msgid "Backups"
 msgstr "Yedekler"
 
 #: src/lib/utils.ts
-msgid "Bandwidth"
-msgstr "Bant Genişliği"
+#~ msgid "Bandwidth"
+#~ msgstr "Bant Genişliği"
 
 #: src/components/login/auth-form.tsx
 msgid "Beszel supports OpenID Connect and many OAuth2 authentication providers."
@@ -323,8 +328,12 @@ msgid "Command line instructions"
 msgstr "Komut satırı talimatları"
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Configuration saved successfully. Remember to restart the agent for changes to take effect."
+msgid "Configuration saved and pushed to agent successfully. Changes will take effect immediately."
 msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Configuration saved successfully. Remember to restart the agent for changes to take effect."
+#~ msgstr ""
 
 #: src/components/dns-config/dns-config-dialog.tsx
 #~ msgid "Configure DNS"
@@ -348,8 +357,12 @@ msgstr ""
 
 #. placeholder {0}: system.name
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Configure monitoring targets and intervals for {0}. Note: The agent will need to be restarted for configuration changes to take effect."
+msgid "Configure monitoring targets and intervals for {0}. Changes will be pushed to the agent automatically and take effect immediately."
 msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Configure monitoring targets and intervals for {0}. Note: The agent will need to be restarted for configuration changes to take effect."
+#~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
 #~ msgid "Configure ping monitoring targets for {0}."
@@ -365,8 +378,8 @@ msgid "Confirm password"
 msgstr "Şifreyi onayla"
 
 #: src/components/routes/home.tsx
-msgid "Connection is down"
-msgstr "Bağlantı kesildi"
+#~ msgid "Connection is down"
+#~ msgstr "Bağlantı kesildi"
 
 #: src/components/systems-table/systems-table-columns.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -432,8 +445,8 @@ msgstr "YAML'ı kopyala"
 #~ msgstr "CPU"
 
 #: src/lib/utils.ts
-msgid "CPU Usage"
-msgstr "CPU Kullanımı"
+#~ msgid "CPU Usage"
+#~ msgstr "CPU Kullanımı"
 
 #: src/components/login/auth-form.tsx
 msgid "Create account"
@@ -500,8 +513,8 @@ msgstr "Parmak izini sil"
 #~ msgstr "Disk birimi"
 
 #: src/lib/utils.ts
-msgid "Disk Usage"
-msgstr "Disk Kullanımı"
+#~ msgid "Disk Usage"
+#~ msgstr "Disk Kullanımı"
 
 #: src/components/routes/system.tsx
 #~ msgid "Disk usage of {extraFsName}"
@@ -517,6 +530,10 @@ msgstr ""
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "DNS Configuration Saved"
 #~ msgstr ""
+
+#: src/lib/utils.ts
+msgid "DNS Failures"
+msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "DNS lookup performance"
@@ -537,6 +554,10 @@ msgstr ""
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "DNS Lookup Targets"
 #~ msgstr ""
+
+#: src/lib/utils.ts
+msgid "DNS Lookup Time"
+msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "DNS Monitoring"
@@ -639,12 +660,9 @@ msgstr "Hata"
 msgid "Error Code"
 msgstr ""
 
-#. placeholder {0}: alert.value
-#. placeholder {1}: info.unit
-#. placeholder {2}: alert.min
 #: src/components/routes/home.tsx
-msgid "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
-msgstr "Son {2, plural, one {# dakika} other {# dakika}} içinde {0}{1} aşıyor"
+#~ msgid "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
+#~ msgstr "Son {2, plural, one {# dakika} other {# dakika}} içinde {0}{1} aşıyor"
 
 #: src/components/routes/settings/config-yaml.tsx
 msgid "Existing systems not defined in <0>config.yml</0> will be deleted. Please make regular backups."
@@ -738,7 +756,6 @@ msgstr "Genel"
 msgid "Grid"
 msgstr "Izgara"
 
-#: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgctxt "Button to copy install command"
 msgid "Homebrew command"
@@ -759,8 +776,16 @@ msgstr "Host / IP"
 msgid "HTTP"
 msgstr ""
 
+#: src/lib/utils.ts
+msgid "HTTP Failures"
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "HTTP Monitoring"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "HTTP Response Time"
 msgstr ""
 
 #: src/components/routes/system.tsx
@@ -781,8 +806,8 @@ msgstr "Yönetici hesabınızın şifresini kaybettiyseniz, aşağıdaki komutu 
 #~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Invalid Configuration"
-msgstr ""
+#~ msgid "Invalid Configuration"
+#~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
 #: src/components/system-config/system-config-dialog.tsx
@@ -832,16 +857,16 @@ msgstr "Açık"
 #~ msgstr "Yük Ortalaması"
 
 #: src/lib/utils.ts
-msgid "Load Average 15m"
-msgstr "Yük Ortalaması 15d"
+#~ msgid "Load Average 15m"
+#~ msgstr "Yük Ortalaması 15d"
 
 #: src/lib/utils.ts
-msgid "Load Average 1m"
-msgstr "Yük Ortalaması 1d"
+#~ msgid "Load Average 1m"
+#~ msgstr "Yük Ortalaması 1d"
 
 #: src/lib/utils.ts
-msgid "Load Average 5m"
-msgstr "Yük Ortalaması 5d"
+#~ msgid "Load Average 5m"
+#~ msgstr "Yük Ortalaması 5d"
 
 #. Short label for load average
 #: src/components/systems-table/systems-table-columns.tsx
@@ -883,8 +908,8 @@ msgid "Manage display and notification preferences."
 msgstr "Görüntüleme ve bildirim tercihlerini yönetin."
 
 #: src/components/add-system.tsx
-msgid "Manual setup instructions"
-msgstr "Manuel kurulum talimatları"
+#~ msgid "Manual setup instructions"
+#~ msgstr "Manuel kurulum talimatları"
 
 #. Chart select field. Please try to keep this short.
 #: src/components/routes/system.tsx
@@ -900,8 +925,8 @@ msgstr ""
 #~ msgstr "Bellek"
 
 #: src/lib/utils.ts
-msgid "Memory Usage"
-msgstr "Bellek Kullanımı"
+#~ msgid "Memory Usage"
+#~ msgstr "Bellek Kullanımı"
 
 #: src/components/routes/system.tsx
 #~ msgid "Memory usage of docker containers"
@@ -925,8 +950,8 @@ msgstr "Ad"
 #~ msgstr "Ağ"
 
 #: src/components/routes/system.tsx
-msgid "Network Interface Speed"
-msgstr ""
+#~ msgid "Network Interface Speed"
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "Network Speed"
@@ -1125,6 +1150,10 @@ msgstr ""
 #~ msgid "Ping Configuration Saved"
 #~ msgstr ""
 
+#: src/lib/utils.ts
+msgid "Ping Latency"
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "Ping Monitoring"
 msgstr ""
@@ -1132,6 +1161,10 @@ msgstr ""
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "Ping monitoring configuration has been updated successfully."
 #~ msgstr ""
+
+#: src/lib/utils.ts
+msgid "Ping Packet Loss"
+msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "Ping Targets"
@@ -1201,8 +1234,8 @@ msgstr ""
 
 #. Use 'Key' if your language requires many more characters
 #: src/components/add-system.tsx
-msgid "Public Key"
-msgstr "Genel Anahtar"
+#~ msgid "Public Key"
+#~ msgstr "Genel Anahtar"
 
 #. Disk read
 #: src/components/routes/system.tsx
@@ -1334,8 +1367,16 @@ msgstr "Sıralama Ölçütü"
 msgid "Speedtest"
 msgstr ""
 
+#: src/lib/utils.ts
+msgid "Speedtest Download"
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "Speedtest Monitoring"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Speedtest Upload"
 msgstr ""
 
 #. Context: alert state (active or resolved)
@@ -1407,8 +1448,8 @@ msgstr ""
 #~ msgstr "Sıc"
 
 #: src/lib/utils.ts
-msgid "Temperature"
-msgstr "Sıcaklık"
+#~ msgid "Temperature"
+#~ msgstr "Sıcaklık"
 
 #: src/components/routes/settings/general.tsx
 #~ msgid "Temperature unit"
@@ -1437,6 +1478,10 @@ msgstr "Bu işlem geri alınamaz. Bu, veritabanından {name} için tüm mevcut k
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "This will permanently delete all selected records from the database."
 msgstr "Bu, seçilen tüm kayıtları veritabanından kalıcı olarak silecektir."
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Thresholds"
+msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "Throughput of {extraFsName}"
@@ -1488,40 +1533,72 @@ msgid "Tokens and fingerprints are used to authenticate WebSocket connections to
 msgstr "Token'lar ve parmak izleri hub'a WebSocket bağlantılarını doğrulamak için kullanılır."
 
 #: src/lib/utils.ts
-msgid "Triggers when 1 minute load average exceeds a threshold"
-msgstr "1 dakikalık yük ortalaması bir eşiği aştığında tetiklenir"
+#~ msgid "Triggers when 1 minute load average exceeds a threshold"
+#~ msgstr "1 dakikalık yük ortalaması bir eşiği aştığında tetiklenir"
 
 #: src/lib/utils.ts
-msgid "Triggers when 15 minute load average exceeds a threshold"
-msgstr "15 dakikalık yük ortalaması bir eşiği aştığında tetiklenir"
+#~ msgid "Triggers when 15 minute load average exceeds a threshold"
+#~ msgstr "15 dakikalık yük ortalaması bir eşiği aştığında tetiklenir"
 
 #: src/lib/utils.ts
-msgid "Triggers when 5 minute load average exceeds a threshold"
-msgstr "5 dakikalık yük ortalaması bir eşiği aştığında tetiklenir"
+#~ msgid "Triggers when 5 minute load average exceeds a threshold"
+#~ msgstr "5 dakikalık yük ortalaması bir eşiği aştığında tetiklenir"
 
 #: src/lib/utils.ts
-msgid "Triggers when any sensor exceeds a threshold"
-msgstr "Herhangi bir sensör bir eşiği aştığında tetiklenir"
+#~ msgid "Triggers when any sensor exceeds a threshold"
+#~ msgstr "Herhangi bir sensör bir eşiği aştığında tetiklenir"
 
 #: src/lib/utils.ts
-msgid "Triggers when combined up/down exceeds a threshold"
-msgstr "Birleştirilmiş yukarı/aşağı bir eşiği aştığında tetiklenir"
+msgid "Triggers when average DNS lookup time exceeds threshold"
+msgstr ""
 
 #: src/lib/utils.ts
-msgid "Triggers when CPU usage exceeds a threshold"
-msgstr "CPU kullanımı bir eşiği aştığında tetiklenir"
+msgid "Triggers when average download speed across all servers drops below threshold"
+msgstr ""
 
 #: src/lib/utils.ts
-msgid "Triggers when memory usage exceeds a threshold"
-msgstr "Bellek kullanımı bir eşiği aştığında tetiklenir"
+msgid "Triggers when average HTTP response time exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Triggers when average latency across all ping targets exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Triggers when average packet loss across all ping targets exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Triggers when average upload speed across all servers drops below threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+#~ msgid "Triggers when combined up/down exceeds a threshold"
+#~ msgstr "Birleştirilmiş yukarı/aşağı bir eşiği aştığında tetiklenir"
+
+#: src/lib/utils.ts
+#~ msgid "Triggers when CPU usage exceeds a threshold"
+#~ msgstr "CPU kullanımı bir eşiği aştığında tetiklenir"
+
+#: src/lib/utils.ts
+msgid "Triggers when DNS lookup failure rate exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Triggers when HTTP request failure rate exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+#~ msgid "Triggers when memory usage exceeds a threshold"
+#~ msgstr "Bellek kullanımı bir eşiği aştığında tetiklenir"
 
 #: src/lib/utils.ts
 msgid "Triggers when status switches between up and down"
 msgstr "Durum yukarı ve aşağı arasında değiştiğinde tetiklenir"
 
 #: src/lib/utils.ts
-msgid "Triggers when usage of any disk exceeds a threshold"
-msgstr "Herhangi bir diskin kullanımı bir eşiği aştığında tetiklenir"
+#~ msgid "Triggers when usage of any disk exceeds a threshold"
+#~ msgstr "Herhangi bir diskin kullanımı bir eşiği aştığında tetiklenir"
 
 #: src/components/add-system.tsx
 msgid "Type tag and press Tab or comma"
@@ -1625,7 +1702,6 @@ msgstr "Webhook / Anlık bildirimler"
 msgid "When enabled, this token allows agents to self-register without prior system creation. Expires after one hour or on hub restart."
 msgstr "Etkinleştirildiğinde, bu token agentların önceden sistem oluşturmadan kendilerini kaydetmelerine izin verir. Bir saat sonra veya hub yeniden başlatıldığında sona erer."
 
-#: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgctxt "Button to copy install command"
 msgid "Windows command"

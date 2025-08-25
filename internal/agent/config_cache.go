@@ -330,6 +330,15 @@ func (ocm *OptimizedConfigManager) HasChanged(systemID string, newConfig *system
 	return cached.Hash != newHash
 }
 
+// Clear clears all cached configurations
+func (ocm *OptimizedConfigManager) Clear() {
+	ocm.mutex.Lock()
+	defer ocm.mutex.Unlock()
+	
+	ocm.cache.Clear()
+	slog.Info("Configuration cache cleared by hub request")
+}
+
 // GetCacheStats returns cache statistics
 func (ocm *OptimizedConfigManager) GetCacheStats() map[string]interface{} {
 	return ocm.cache.GetStats()

@@ -59,14 +59,21 @@ func (pm *PingManager) UpdateConfig(targets []system.PingTarget, cronExpression 
 	pm.Lock()
 	defer pm.Unlock()
 
-	slog.Debug("UpdateConfig called", "targets_count", len(targets), "cron_expression", cronExpression)
+	oldTargetsCount := len(pm.targets)
+	oldResultsCount := len(pm.results)
+	
+	slog.Debug("UpdateConfig called", "old_targets", oldTargetsCount, "new_targets", len(targets), "cron_expression", cronExpression)
 
 	// Use cron expression directly - the cron library supports both 5-field and 6-field formats
 	pm.cronExpression = cronExpression
 
-	// Clear existing targets
+	// Clear existing targets and results to prevent stale data
 	pm.targets = make(map[string]*pingTarget)
 	pm.results = make(map[string]*system.PingResult)
+	
+	if oldTargetsCount > 0 || oldResultsCount > 0 {
+		slog.Info("Cleared old ping configuration", "old_targets", oldTargetsCount, "old_results", oldResultsCount)
+	}
 
 	// Add new targets
 	for _, target := range targets {
@@ -98,13 +105,11 @@ func (pm *PingManager) GetResults() map[string]*system.PingResult {
 
 	// If no results are available, return nil to indicate no ping tests have run
 	if len(pm.results) == 0 {
-
 		return nil
 	}
 
 	// Check if results are too old (more than 5 minutes)
 	if time.Since(pm.lastResultsTime) > 5*time.Minute {
-
 		pm.results = make(map[string]*system.PingResult)
 		return nil
 	}
@@ -121,6 +126,10 @@ func (pm *PingManager) GetResults() map[string]*system.PingResult {
 			LastChecked: result.LastChecked,
 		}
 	}
+
+	// Clear the results after they've been retrieved
+	// This ensures ping data is only sent once per test run
+	pm.results = make(map[string]*system.PingResult)
 
 	return results
 }

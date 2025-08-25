@@ -59,13 +59,21 @@ func (sm *SpeedtestManager) UpdateConfig(targets []system.SpeedtestTarget, cronE
 	sm.Lock()
 	defer sm.Unlock()
 
-	slog.Debug("UpdateConfig called", "targets_count", len(targets), "cron_expression", cronExpression)
+	oldTargetsCount := len(sm.targets)
+	oldResultsCount := len(sm.results)
+	
+	slog.Debug("UpdateConfig called", "old_targets", oldTargetsCount, "new_targets", len(targets), "cron_expression", cronExpression)
 
 	// Use cron expression directly
 	sm.cronExpression = cronExpression
 
-	// Clear existing targets
+	// Clear existing targets and results to prevent stale data
 	sm.targets = make(map[string]*speedtestTarget)
+	sm.results = make(map[string]*system.SpeedtestResult)
+	
+	if oldTargetsCount > 0 || oldResultsCount > 0 {
+		slog.Info("Cleared old speedtest configuration", "old_targets", oldTargetsCount, "old_results", oldResultsCount)
+	}
 
 	// Add new targets
 	for _, target := range targets {
@@ -92,8 +100,11 @@ func (sm *SpeedtestManager) GetResults() map[string]*system.SpeedtestResult {
 	sm.Lock()
 	defer sm.Unlock()
 
+	slog.Debug("GetResults called", "current_results_count", len(sm.results))
+
 	// If no results are available, return nil to indicate no speedtest tests have run
 	if len(sm.results) == 0 {
+		slog.Debug("No speedtest results available, returning nil")
 		return nil
 	}
 
@@ -168,7 +179,7 @@ func (sm *SpeedtestManager) performSpeedtestChecks() {
 		targets = append(targets, target)
 	}
 	sm.RUnlock()
-
+	
 	slog.Debug("Performing speedtest checks", "targets", len(targets))
 
 	// Check targets sequentially (one after another)

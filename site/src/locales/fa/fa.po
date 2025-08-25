@@ -105,8 +105,8 @@ msgid "Active"
 msgstr "فعال"
 
 #: src/components/routes/home.tsx
-msgid "Active Alerts"
-msgstr " هشدارهای فعال"
+#~ msgid "Active Alerts"
+#~ msgstr " هشدارهای فعال"
 
 #: src/components/add-system.tsx
 msgid "Add <0>System</0>"
@@ -183,6 +183,11 @@ msgstr "آیا مطمئن هستید؟"
 msgid "ASN"
 msgstr ""
 
+#. Use 'Key' if your language requires many more characters
+#: src/components/add-system.tsx
+msgid "Auth Key"
+msgstr ""
+
 #: src/components/copy-to-clipboard.tsx
 msgid "Automatic copy requires a secure context."
 msgstr "کپی خودکار نیاز به یک زمینه امن دارد."
@@ -238,8 +243,8 @@ msgid "Backups"
 msgstr "پشتیبان‌گیری‌ها"
 
 #: src/lib/utils.ts
-msgid "Bandwidth"
-msgstr "پهنای باند"
+#~ msgid "Bandwidth"
+#~ msgstr "پهنای باند"
 
 #: src/components/login/auth-form.tsx
 msgid "Beszel supports OpenID Connect and many OAuth2 authentication providers."
@@ -323,8 +328,12 @@ msgid "Command line instructions"
 msgstr "دستورالعمل‌های خط فرمان"
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Configuration saved successfully. Remember to restart the agent for changes to take effect."
+msgid "Configuration saved and pushed to agent successfully. Changes will take effect immediately."
 msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Configuration saved successfully. Remember to restart the agent for changes to take effect."
+#~ msgstr ""
 
 #: src/components/dns-config/dns-config-dialog.tsx
 #~ msgid "Configure DNS"
@@ -348,8 +357,12 @@ msgstr ""
 
 #. placeholder {0}: system.name
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Configure monitoring targets and intervals for {0}. Note: The agent will need to be restarted for configuration changes to take effect."
+msgid "Configure monitoring targets and intervals for {0}. Changes will be pushed to the agent automatically and take effect immediately."
 msgstr ""
+
+#: src/components/system-config/system-config-dialog.tsx
+#~ msgid "Configure monitoring targets and intervals for {0}. Note: The agent will need to be restarted for configuration changes to take effect."
+#~ msgstr ""
 
 #: src/components/ping-config/ping-config-dialog.tsx
 #~ msgid "Configure ping monitoring targets for {0}."
@@ -365,8 +378,8 @@ msgid "Confirm password"
 msgstr "تأیید رمز عبور"
 
 #: src/components/routes/home.tsx
-msgid "Connection is down"
-msgstr "اتصال قطع است"
+#~ msgid "Connection is down"
+#~ msgstr "اتصال قطع است"
 
 #: src/components/systems-table/systems-table-columns.tsx
 #: src/components/routes/settings/alerts-history-data-table.tsx
@@ -432,8 +445,8 @@ msgstr "کپی YAML"
 #~ msgstr "پردازنده"
 
 #: src/lib/utils.ts
-msgid "CPU Usage"
-msgstr "میزان استفاده از پردازنده"
+#~ msgid "CPU Usage"
+#~ msgstr "میزان استفاده از پردازنده"
 
 #: src/components/login/auth-form.tsx
 msgid "Create account"
@@ -500,8 +513,8 @@ msgstr "حذف اثر انگشت"
 #~ msgstr "واحد دیسک"
 
 #: src/lib/utils.ts
-msgid "Disk Usage"
-msgstr "میزان استفاده از دیسک"
+#~ msgid "Disk Usage"
+#~ msgstr "میزان استفاده از دیسک"
 
 #: src/components/routes/system.tsx
 #~ msgid "Disk usage of {extraFsName}"
@@ -517,6 +530,10 @@ msgstr ""
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "DNS Configuration Saved"
 #~ msgstr ""
+
+#: src/lib/utils.ts
+msgid "DNS Failures"
+msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "DNS lookup performance"
@@ -537,6 +554,10 @@ msgstr ""
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "DNS Lookup Targets"
 #~ msgstr ""
+
+#: src/lib/utils.ts
+msgid "DNS Lookup Time"
+msgstr ""
 
 #: src/components/routes/system.tsx
 msgid "DNS Monitoring"
@@ -639,12 +660,9 @@ msgstr "خطا"
 msgid "Error Code"
 msgstr ""
 
-#. placeholder {0}: alert.value
-#. placeholder {1}: info.unit
-#. placeholder {2}: alert.min
 #: src/components/routes/home.tsx
-msgid "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
-msgstr "در {2, plural, one {# دقیقه} other {# دقیقه}} گذشته از {0}{1} بیشتر است"
+#~ msgid "Exceeds {0}{1} in last {2, plural, one {# minute} other {# minutes}}"
+#~ msgstr "در {2, plural, one {# دقیقه} other {# دقیقه}} گذشته از {0}{1} بیشتر است"
 
 #: src/components/routes/settings/config-yaml.tsx
 msgid "Existing systems not defined in <0>config.yml</0> will be deleted. Please make regular backups."
@@ -738,7 +756,6 @@ msgstr "عمومی"
 msgid "Grid"
 msgstr "جدول"
 
-#: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgctxt "Button to copy install command"
 msgid "Homebrew command"
@@ -759,8 +776,16 @@ msgstr "میزبان / IP"
 msgid "HTTP"
 msgstr ""
 
+#: src/lib/utils.ts
+msgid "HTTP Failures"
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "HTTP Monitoring"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "HTTP Response Time"
 msgstr ""
 
 #: src/components/routes/system.tsx
@@ -781,8 +806,8 @@ msgstr "اگر رمز عبور حساب مدیر خود را گم کرده‌ا�
 #~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
-msgid "Invalid Configuration"
-msgstr ""
+#~ msgid "Invalid Configuration"
+#~ msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
 #: src/components/system-config/system-config-dialog.tsx
@@ -832,16 +857,16 @@ msgstr "روشن"
 #~ msgstr "میانگین بار"
 
 #: src/lib/utils.ts
-msgid "Load Average 15m"
-msgstr "میانگین بار ۱۵ دقیقه"
+#~ msgid "Load Average 15m"
+#~ msgstr "میانگین بار ۱۵ دقیقه"
 
 #: src/lib/utils.ts
-msgid "Load Average 1m"
-msgstr "میانگین بار ۱ دقیقه"
+#~ msgid "Load Average 1m"
+#~ msgstr "میانگین بار ۱ دقیقه"
 
 #: src/lib/utils.ts
-msgid "Load Average 5m"
-msgstr "میانگین بار ۵ دقیقه"
+#~ msgid "Load Average 5m"
+#~ msgstr "میانگین بار ۵ دقیقه"
 
 #. Short label for load average
 #: src/components/systems-table/systems-table-columns.tsx
@@ -883,8 +908,8 @@ msgid "Manage display and notification preferences."
 msgstr "مدیریت تنظیمات نمایش و اعلان‌ها."
 
 #: src/components/add-system.tsx
-msgid "Manual setup instructions"
-msgstr "دستورالعمل‌های راه‌اندازی دستی"
+#~ msgid "Manual setup instructions"
+#~ msgstr "دستورالعمل‌های راه‌اندازی دستی"
 
 #. Chart select field. Please try to keep this short.
 #: src/components/routes/system.tsx
@@ -900,8 +925,8 @@ msgstr ""
 #~ msgstr "حافظه"
 
 #: src/lib/utils.ts
-msgid "Memory Usage"
-msgstr "میزان استفاده از حافظه"
+#~ msgid "Memory Usage"
+#~ msgstr "میزان استفاده از حافظه"
 
 #: src/components/routes/system.tsx
 #~ msgid "Memory usage of docker containers"
@@ -925,8 +950,8 @@ msgstr "نام"
 #~ msgstr "شبکه"
 
 #: src/components/routes/system.tsx
-msgid "Network Interface Speed"
-msgstr ""
+#~ msgid "Network Interface Speed"
+#~ msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "Network Speed"
@@ -1125,6 +1150,10 @@ msgstr ""
 #~ msgid "Ping Configuration Saved"
 #~ msgstr ""
 
+#: src/lib/utils.ts
+msgid "Ping Latency"
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "Ping Monitoring"
 msgstr ""
@@ -1132,6 +1161,10 @@ msgstr ""
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "Ping monitoring configuration has been updated successfully."
 #~ msgstr ""
+
+#: src/lib/utils.ts
+msgid "Ping Packet Loss"
+msgstr ""
 
 #: src/components/system-config/system-config-dialog.tsx
 #~ msgid "Ping Targets"
@@ -1201,8 +1234,8 @@ msgstr ""
 
 #. Use 'Key' if your language requires many more characters
 #: src/components/add-system.tsx
-msgid "Public Key"
-msgstr "کلید عمومی"
+#~ msgid "Public Key"
+#~ msgstr "کلید عمومی"
 
 #. Disk read
 #: src/components/routes/system.tsx
@@ -1334,8 +1367,16 @@ msgstr "مرتب‌سازی بر اساس"
 msgid "Speedtest"
 msgstr ""
 
+#: src/lib/utils.ts
+msgid "Speedtest Download"
+msgstr ""
+
 #: src/components/routes/system.tsx
 msgid "Speedtest Monitoring"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Speedtest Upload"
 msgstr ""
 
 #. Context: alert state (active or resolved)
@@ -1407,8 +1448,8 @@ msgstr ""
 #~ msgstr "دما"
 
 #: src/lib/utils.ts
-msgid "Temperature"
-msgstr "دما"
+#~ msgid "Temperature"
+#~ msgstr "دما"
 
 #: src/components/routes/settings/general.tsx
 #~ msgid "Temperature unit"
@@ -1437,6 +1478,10 @@ msgstr "این عمل قابل برگشت نیست. این کار تمام رک�
 #: src/components/routes/settings/alerts-history-data-table.tsx
 msgid "This will permanently delete all selected records from the database."
 msgstr "این کار تمام رکوردهای انتخاب شده را برای همیشه از پایگاه داده حذف خواهد کرد."
+
+#: src/components/system-config/system-config-dialog.tsx
+msgid "Thresholds"
+msgstr ""
 
 #: src/components/routes/system.tsx
 #~ msgid "Throughput of {extraFsName}"
@@ -1488,40 +1533,72 @@ msgid "Tokens and fingerprints are used to authenticate WebSocket connections to
 msgstr "توکن‌ها و اثرات انگشت برای احراز هویت اتصالات WebSocket به هاب استفاده می‌شوند."
 
 #: src/lib/utils.ts
-msgid "Triggers when 1 minute load average exceeds a threshold"
-msgstr "هنگامی که میانگین بار ۱ دقیقه‌ای از یک آستانه فراتر رود، فعال می‌شود"
+#~ msgid "Triggers when 1 minute load average exceeds a threshold"
+#~ msgstr "هنگامی که میانگین بار ۱ دقیقه‌ای از یک آستانه فراتر رود، فعال می‌شود"
 
 #: src/lib/utils.ts
-msgid "Triggers when 15 minute load average exceeds a threshold"
-msgstr "هنگامی که میانگین بار ۱۵ دقیقه‌ای از یک آستانه فراتر رود، فعال می‌شود"
+#~ msgid "Triggers when 15 minute load average exceeds a threshold"
+#~ msgstr "هنگامی که میانگین بار ۱۵ دقیقه‌ای از یک آستانه فراتر رود، فعال می‌شود"
 
 #: src/lib/utils.ts
-msgid "Triggers when 5 minute load average exceeds a threshold"
-msgstr "هنگامی که میانگین بار ۵ دقیقه‌ای از یک آستانه فراتر رود، فعال می‌شود"
+#~ msgid "Triggers when 5 minute load average exceeds a threshold"
+#~ msgstr "هنگامی که میانگین بار ۵ دقیقه‌ای از یک آستانه فراتر رود، فعال می‌شود"
 
 #: src/lib/utils.ts
-msgid "Triggers when any sensor exceeds a threshold"
-msgstr "هنگامی که هر حسگری از یک آستانه فراتر رود، فعال می‌شود"
+#~ msgid "Triggers when any sensor exceeds a threshold"
+#~ msgstr "هنگامی که هر حسگری از یک آستانه فراتر رود، فعال می‌شود"
 
 #: src/lib/utils.ts
-msgid "Triggers when combined up/down exceeds a threshold"
-msgstr "هنگامی که مجموع بالا/پایین از یک آستانه فراتر رود، فعال می‌شود"
+msgid "Triggers when average DNS lookup time exceeds threshold"
+msgstr ""
 
 #: src/lib/utils.ts
-msgid "Triggers when CPU usage exceeds a threshold"
-msgstr "هنگامی که میزان استفاده از CPU از یک آستانه فراتر رود، فعال می‌شود"
+msgid "Triggers when average download speed across all servers drops below threshold"
+msgstr ""
 
 #: src/lib/utils.ts
-msgid "Triggers when memory usage exceeds a threshold"
-msgstr "هنگامی که میزان استفاده از حافظه از یک آستانه فراتر رود، فعال می‌شود"
+msgid "Triggers when average HTTP response time exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Triggers when average latency across all ping targets exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Triggers when average packet loss across all ping targets exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Triggers when average upload speed across all servers drops below threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+#~ msgid "Triggers when combined up/down exceeds a threshold"
+#~ msgstr "هنگامی که مجموع بالا/پایین از یک آستانه فراتر رود، فعال می‌شود"
+
+#: src/lib/utils.ts
+#~ msgid "Triggers when CPU usage exceeds a threshold"
+#~ msgstr "هنگامی که میزان استفاده از CPU از یک آستانه فراتر رود، فعال می‌شود"
+
+#: src/lib/utils.ts
+msgid "Triggers when DNS lookup failure rate exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+msgid "Triggers when HTTP request failure rate exceeds threshold"
+msgstr ""
+
+#: src/lib/utils.ts
+#~ msgid "Triggers when memory usage exceeds a threshold"
+#~ msgstr "هنگامی که میزان استفاده از حافظه از یک آستانه فراتر رود، فعال می‌شود"
 
 #: src/lib/utils.ts
 msgid "Triggers when status switches between up and down"
 msgstr "هنگامی که وضعیت بین بالا و پایین تغییر می‌کند، فعال می‌شود"
 
 #: src/lib/utils.ts
-msgid "Triggers when usage of any disk exceeds a threshold"
-msgstr "هنگامی که استفاده از هر دیسکی از یک آستانه فراتر رود، فعال می‌شود"
+#~ msgid "Triggers when usage of any disk exceeds a threshold"
+#~ msgstr "هنگامی که استفاده از هر دیسکی از یک آستانه فراتر رود، فعال می‌شود"
 
 #: src/components/add-system.tsx
 msgid "Type tag and press Tab or comma"
@@ -1625,7 +1702,6 @@ msgstr "اعلان‌های Webhook / Push"
 msgid "When enabled, this token allows agents to self-register without prior system creation. Expires after one hour or on hub restart."
 msgstr "هنگامی که فعال است، این توکن به عامل‌ها اجازه خودثبت‌نامی بدون ایجاد سیستم قبلی می‌دهد. پس از یک ساعت یا در راه‌اندازی مجدد هاب منقضی می‌شود."
 
-#: src/components/add-system.tsx
 #: src/components/routes/settings/tokens-fingerprints.tsx
 msgctxt "Button to copy install command"
 msgid "Windows command"

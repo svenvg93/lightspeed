@@ -167,17 +167,40 @@ func (a *Agent) gatherStats(sessionID string) *system.CombinedData {
 
 	data, isCached := a.cache.Get(sessionID)
 	if isCached {
+		slog.Debug("Using cached system data", "session_id", sessionID, "cache_hit", true)
 
 		// Create a copy of cached data and clear ping results to prevent duplicates
 		cachedData := *data
 		cachedData.Stats.PingResults = nil
 
+		// Debug log cached speedtest results
+		if cachedData.Stats.SpeedtestResults != nil {
+			slog.Debug("Cached speedtest results being sent", "count", len(cachedData.Stats.SpeedtestResults))
+			for serverID, result := range cachedData.Stats.SpeedtestResults {
+				slog.Debug("Cached speedtest result", "server_id", serverID, "download", result.DownloadSpeed, "upload", result.UploadSpeed, "latency", result.Latency, "last_checked", result.LastChecked)
+			}
+		} else {
+			slog.Debug("No cached speedtest results")
+		}
+
 		return &cachedData
 	}
+
+	slog.Debug("Gathering fresh system data", "session_id", sessionID, "cache_hit", false)
 
 	*data = system.CombinedData{
 		Stats: a.getSystemStats(),
 		Info:  a.systemInfo,
+	}
+
+	// Debug log fresh speedtest results before caching
+	if data.Stats.SpeedtestResults != nil {
+		slog.Debug("Fresh speedtest results being cached and sent", "count", len(data.Stats.SpeedtestResults))
+		for serverID, result := range data.Stats.SpeedtestResults {
+			slog.Debug("Fresh speedtest result", "server_id", serverID, "download", result.DownloadSpeed, "upload", result.UploadSpeed, "latency", result.Latency, "last_checked", result.LastChecked)
+		}
+	} else {
+		slog.Debug("No fresh speedtest results")
 	}
 
 	a.cache.Set(sessionID, data)
@@ -230,6 +253,9 @@ func (a *Agent) getFingerprint() string {
 func (a *Agent) UpdatePingConfig(targets []system.PingTarget, cronExpression string) {
 	if a.pingManager != nil {
 		a.pingManager.UpdateConfig(targets, cronExpression)
+		// Clear session cache to prevent stale ping results from being sent
+		a.cache.Clear()
+		slog.Debug("Session cache cleared after ping config update", "targets_count", len(targets))
 	}
 }
 
@@ -237,6 +263,9 @@ func (a *Agent) UpdatePingConfig(targets []system.PingTarget, cronExpression str
 func (a *Agent) UpdateDnsConfig(targets []system.DnsTarget, cronExpression string) {
 	if a.dnsManager != nil {
 		a.dnsManager.UpdateConfig(targets, cronExpression)
+		// Clear session cache to prevent stale DNS results from being sent
+		a.cache.Clear()
+		slog.Debug("Session cache cleared after DNS config update", "targets_count", len(targets))
 	}
 }
 
@@ -244,28 +273,49 @@ func (a *Agent) UpdateDnsConfig(targets []system.DnsTarget, cronExpression strin
 func (a *Agent) UpdateHttpConfig(targets []system.HttpTarget, cronExpression string) {
 	if a.httpManager != nil {
 		a.httpManager.UpdateConfig(targets, cronExpression)
+		// Clear session cache to prevent stale HTTP results from being sent
+		a.cache.Clear()
+		slog.Debug("Session cache cleared after HTTP config update", "targets_count", len(targets))
 	}
 }
 
 func (a *Agent) UpdateSpeedtestConfig(targets []system.SpeedtestTarget, cronExpression string) {
 	if a.speedtestManager != nil {
 		a.speedtestManager.UpdateConfig(targets, cronExpression)
+		// Clear session cache to prevent stale speedtest results from being sent
+		a.cache.Clear()
+		slog.Debug("Session cache cleared after speedtest config update", "targets_count", len(targets))
 	}
 }
 
 // UpdateConfigurationOptimized updates the agent configuration with caching and validation
-func (a *Agent) UpdateConfigurationOptimized(config *system.MonitoringConfig, version int64) error {
-	// Check if configuration has changed
-	if version <= a.lastConfigVersion {
-		slog.Debug("Configuration version not increased, skipping update", "current", a.lastConfigVersion, "received", version)
-		return nil
+func (a *Agent) UpdateConfigurationOptimized(config *system.MonitoringConfig, version int64, clearCache bool, forceReload bool) error {
+	// Handle cache clearing if requested
+	if clearCache {
+		slog.Info("Clearing configuration cache as requested by hub", "version", version)
+		a.configManager.cache.Clear()
+		a.cache.Clear() // Clear session cache to prevent stale results
+		a.lastConfigVersion = 0 // Reset to ensure update is processed
 	}
 
-	// Check if configuration has actually changed using cache
-	if !a.configManager.HasChanged("current", config, version) {
-		slog.Debug("Configuration content unchanged, skipping update", "version", version)
-		a.lastConfigVersion = version
-		return nil
+	// Force reload bypasses version checks
+	if !forceReload {
+		// Check if configuration has changed
+		if version <= a.lastConfigVersion {
+			slog.Debug("Configuration version not increased, skipping update", "current", a.lastConfigVersion, "received", version)
+			return nil
+		}
+
+		// Check if configuration has actually changed using cache
+		if !a.configManager.HasChanged("current", config, version) {
+			slog.Debug("Configuration content unchanged, skipping update", "version", version)
+			a.lastConfigVersion = version
+			return nil
+		}
+	} else {
+		slog.Info("Force reloading configuration", "version", version, "cache_cleared", clearCache)
+		// Also clear session cache on force reload to ensure fresh results
+		a.cache.Clear()
 	}
 
 	// Validate configuration
@@ -331,7 +381,15 @@ func (a *Agent) UpdateConfigurationOptimized(config *system.MonitoringConfig, ve
 
 	// Update version
 	a.lastConfigVersion = version
-	slog.Info("Configuration updated successfully", "version", version)
+	
+	// Always clear session cache after configuration update to ensure fresh results
+	a.cache.Clear()
+	
+	if clearCache || forceReload {
+		slog.Info("Configuration updated successfully (real-time push)", "version", version, "cache_cleared", clearCache, "force_reload", forceReload, "session_cache_cleared", true)
+	} else {
+		slog.Info("Configuration updated successfully", "version", version, "session_cache_cleared", true)
+	}
 
 	return nil
 }

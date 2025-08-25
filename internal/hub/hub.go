@@ -4,7 +4,6 @@ package hub
 import (
 	"beszel"
 	"beszel/internal/alerts"
-	"beszel/internal/entities/system"
 	"beszel/internal/hub/config"
 	"beszel/internal/hub/systems"
 	"beszel/internal/records"
@@ -519,23 +518,19 @@ func (h *Hub) onMonitoringConfigUpdate(e *core.RecordEvent) error {
 		return e.Next()
 	}
 
-	h.Logger().Debug("Monitoring configuration updated", "system", systemID)
+	h.Logger().Info("Monitoring configuration updated - pushing to agent immediately", "system", systemID)
 
-	// Use configuration manager to queue the update if available
-	if h.configManager != nil {
-		// Clear cache for this system to force reload
-		h.configManager.cache.Delete(systemID)
-		
-		// Queue configuration update with normal priority
-		if config, err := h.configManager.GetConfiguration(systemID); err == nil {
-			h.configManager.QueueConfigurationUpdate(systemID, config.Config, 2)
+	// Clear cache for this system to force reload from database
+	h.configManager.cache.Delete(systemID)
+	
+	// Push configuration update immediately with high priority
+	go func() {
+		if err := h.configManager.SendConfigurationToAgent(systemID, 1); err != nil {
+			h.Logger().Error("Failed to push configuration update to agent", "system", systemID, "error", err)
+		} else {
+			h.Logger().Info("Successfully pushed configuration update to agent", "system", systemID)
 		}
-	} else {
-		// Fallback to direct config sending
-		if systemRecord, err := h.FindRecordById("systems", systemID); err == nil {
-			go h.SendMonitoringConfigToAgent(systemRecord)
-		}
-	}
+	}()
 
 	return e.Next()
 }
@@ -547,20 +542,19 @@ func (h *Hub) onMonitoringConfigDelete(e *core.RecordEvent) error {
 		return e.Next()
 	}
 
-	h.Logger().Debug("Monitoring configuration deleted", "system", systemID)
+	h.Logger().Info("Monitoring configuration deleted - pushing empty config to agent immediately", "system", systemID)
 
-	// Use configuration manager to send empty config if available
-	if h.configManager != nil {
-		// Clear cache for this system
-		h.configManager.cache.Delete(systemID)
-		
-		// Queue empty configuration update with high priority
-		emptyConfig := system.MonitoringConfig{}
-		h.configManager.QueueConfigurationUpdate(systemID, emptyConfig, 1)
-	} else {
-		// Fallback to direct config sending with empty config
-		go h.sendMonitoringConfigToSystem(systemID, system.MonitoringConfig{})
-	}
+	// Clear cache for this system
+	h.configManager.cache.Delete(systemID)
+	
+	// Push empty configuration immediately with high priority
+	go func() {
+		if err := h.configManager.SendConfigurationToAgent(systemID, 1); err != nil {
+			h.Logger().Error("Failed to push empty configuration to agent", "system", systemID, "error", err)
+		} else {
+			h.Logger().Info("Successfully pushed empty configuration to agent", "system", systemID)
+		}
+	}()
 
 	return e.Next()
 }
