@@ -2,55 +2,67 @@ package agent
 
 import (
 	"beszel"
+	"beszel/internal/ghupdate"
 	"fmt"
 	"os"
-	"strings"
-
-	"github.com/blang/semver"
-	"github.com/rhysd/go-github-selfupdate/selfupdate"
+	"os/exec"
 )
 
 // Update updates beszel-agent to the latest version
 func Update() {
-	var latest *selfupdate.Release
-	var found bool
-	var err error
-	currentVersion := semver.MustParse(beszel.Version)
-	fmt.Println("beszel-agent", currentVersion)
-	fmt.Println("Checking for updates...")
-	updater, _ := selfupdate.NewUpdater(selfupdate.Config{
+	config := ghupdate.Config{
+		Repo:    "svenvg93/lightspeed", // Update this to your repository
+		Current: beszel.Version,
 		Filters: []string{"beszel-agent"},
-	})
-	latest, found, err = updater.DetectLatest("henrygd/beszel")
+	}
 
+	ghupdate.PrintUpdateInfo("beszel-agent", beszel.Version, "")
+
+	release, hasUpdate, err := ghupdate.CheckForUpdate(config)
 	if err != nil {
-		fmt.Println("Error checking for updates:", err)
+		fmt.Printf("Error checking for updates: %v\n", err)
 		os.Exit(1)
 	}
 
-	if !found {
-		fmt.Println("No updates found")
-		os.Exit(0)
-	}
-
-	fmt.Println("Latest version:", latest.Version)
-
-	if latest.Version.LTE(currentVersion) {
+	if !hasUpdate {
 		fmt.Println("You are up to date")
 		return
 	}
 
-	var binaryPath string
-	fmt.Printf("Updating from %s to %s...\n", currentVersion, latest.Version)
-	binaryPath, err = os.Executable()
+	latestVersion, err := release.Version()
 	if err != nil {
-		fmt.Println("Error getting binary path:", err)
+		fmt.Printf("Invalid release version: %v\n", err)
 		os.Exit(1)
 	}
-	err = selfupdate.UpdateTo(latest.AssetURL, binaryPath)
-	if err != nil {
-		fmt.Println("Please try rerunning with sudo. Error:", err)
+	fmt.Printf("Latest version: %s\n", latestVersion.String())
+
+	// Find appropriate asset for current platform
+	asset := release.FindAsset(config.Filters)
+	if asset == nil {
+		fmt.Println("No compatible release found for your platform")
 		os.Exit(1)
 	}
-	fmt.Printf("Successfully updated to %s\n\n%s\n", latest.Version, strings.TrimSpace(latest.ReleaseNotes))
+
+	ghupdate.PrintUpdateProgress(beszel.Version, latestVersion.String())
+
+	// Get current executable path
+	binaryPath, err := os.Executable()
+	if err != nil {
+		fmt.Printf("Error getting binary path: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Perform the update
+	err = ghupdate.UpdateBinary(asset, binaryPath)
+	if err != nil {
+		fmt.Printf("Please try rerunning with sudo. Error: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Set ownership to beszel:beszel if possible (similar to original beszel implementation)
+	if chownPath, err := exec.LookPath("chown"); err == nil {
+		exec.Command(chownPath, "beszel:beszel", binaryPath).Run()
+	}
+
+	ghupdate.PrintUpdateSuccess(latestVersion.String(), release.Body)
 }
