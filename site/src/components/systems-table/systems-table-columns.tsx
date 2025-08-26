@@ -296,7 +296,7 @@ export default function SystemsTableColumns(viewMode: "table" | "grid"): ColumnD
 							system={system}
 							className={
 								(system.status !== "up" && STATUS_COLORS.paused) ||
-								(version === globalThis.BESZEL.HUB_VERSION && STATUS_COLORS.up) ||
+								(version === globalThis.APEX.HUB_VERSION && STATUS_COLORS.up) ||
 								STATUS_COLORS.pending
 							}
 						/>
@@ -497,7 +497,11 @@ function SpeedMeterCell({ getValue, row, column }: { getValue: () => any; row: a
 	})
 	
 	if (!speed || speed === 0) {
-		return null
+		return (
+			<span className="tabular-nums text-muted-foreground">
+				-- Mbps
+			</span>
+		)
 	}
 
 	// If no expected speed is set, just show the value
@@ -561,7 +565,11 @@ function PerformanceDotCell({ getValue, row, column }: { getValue: () => any; ro
 	}
 
 	if (!value || value === 0) {
-		return null
+		return (
+			<span className="tabular-nums text-muted-foreground">
+				-- ms
+			</span>
+		)
 	}
 
 	if (!expectedValue) {

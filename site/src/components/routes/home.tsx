@@ -14,24 +14,19 @@ export const Home = memo(() => {
 	const { t } = useLingui()
 
 	useEffect(() => {
-		document.title = t`Dashboard` + " / Beszel"
+		document.title = t`Dashboard` + " / Apex"
 	}, [t])
 
 	useEffect(() => {
 		// make sure we have the latest list of systems
 		updateSystemList()
 
-		// subscribe to real time updates for systems / alerts / system_averages
+		// subscribe to real time updates for systems
 		pb.collection<SystemRecord>("systems").subscribe("*", (e) => {
 			updateRecordList(e, $systems)
 		})
-		pb.collection("system_averages").subscribe("*", () => {
-			// When system_averages are updated, refresh the system list to get latest averages
-			updateSystemList()
-		})
 		return () => {
 			pb.collection("systems").unsubscribe("*")
-			pb.collection("system_averages").unsubscribe("*")
 			// pb.collection('alerts').unsubscribe('*')
 		}
 	}, [])
@@ -57,7 +52,7 @@ export const Home = memo(() => {
 						target="_blank"
 						className="text-muted-foreground hover:text-foreground duration-75"
 					>
-						Beszel {globalThis.BESZEL.HUB_VERSION}
+						Apex {globalThis.APEX.HUB_VERSION}
 					</a>
 				</div>
 			</>

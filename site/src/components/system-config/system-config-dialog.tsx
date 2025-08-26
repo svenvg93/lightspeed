@@ -62,7 +62,7 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 	const [pingConfig, setPingConfig] = useState<{ targets: PingTarget[], interval: string, expected_latency?: number }>({ targets: [], interval: "*/3 * * * *" })
 	const [dnsConfig, setDnsConfig] = useState<{ targets: DnsTarget[], interval: string, expected_lookup_time?: number }>({ targets: [], interval: "*/5 * * * *" })
 	const [httpConfig, setHttpConfig] = useState<{ targets: HttpTarget[], interval: string, expected_response_time?: number }>({ targets: [], interval: "*/2 * * * *" })
-	const [speedtestConfig, setSpeedtestConfig] = useState<{ targets: SpeedtestTarget[], interval: string }>({ targets: [], interval: "0 */6 * * *" })
+	const [speedtestConfig, setSpeedtestConfig] = useState<{ targets: SpeedtestTarget[], interval: string, expected_download_speed?: number, expected_upload_speed?: number }>({ targets: [], interval: "0 */6 * * *" })
 	const [isLoading, setIsLoading] = useState(false)
 	const [isConfigLoading, setIsConfigLoading] = useState(true)
 	const [monitoringConfigId, setMonitoringConfigId] = useState<string | null>(null)
@@ -116,7 +116,9 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 						const speedtestData = typeof existingConfig.speedtest === 'string' ? JSON.parse(existingConfig.speedtest) : existingConfig.speedtest
 						setSpeedtestConfig({
 							targets: speedtestData.targets || [],
-							interval: speedtestData.interval || "0 */6 * * *"
+							interval: speedtestData.interval || "0 */6 * * *",
+							expected_download_speed: system.expected_performance?.download_speed,
+							expected_upload_speed: system.expected_performance?.upload_speed
 						})
 					}
 				}
@@ -139,7 +141,9 @@ export const SystemConfigDialog = memo(function SystemConfigDialog({ system }: {
 				})
 				setSpeedtestConfig({
 					targets: [],
-					interval: "0 */6 * * *"
+					interval: "0 */6 * * *",
+					expected_download_speed: system.expected_performance?.download_speed,
+					expected_upload_speed: system.expected_performance?.upload_speed
 				})
 			} finally {
 				setIsConfigLoading(false)

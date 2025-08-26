@@ -11,7 +11,7 @@ const routes = {
  * The base path of the application.
  * This is used to prepend the base path to all routes.
  */
-export const basePath = BESZEL?.BASE_PATH || ""
+export const basePath = APEX?.BASE_PATH || ""
 
 /**
  * Prepends the base path to the given path.

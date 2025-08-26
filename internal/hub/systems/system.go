@@ -5,10 +5,12 @@ import (
 	"beszel/internal/hub/ws"
 	"context"
 	"errors"
+	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/blang/semver"
+	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
 )
 
@@ -336,6 +338,13 @@ func (sys *System) createRecords(data *system.CombinedData) (*core.Record, error
 	if err := hub.SaveNoValidate(systemRecord); err != nil {
 		return nil, err
 	}
+
+	// Update current averages after saving all new stats
+	if err := sys.updateCurrentAverages(); err != nil {
+		// Log error but don't fail the entire update
+		sys.manager.hub.Logger().Error("Failed to update current averages", "system", sys.Id, "error", err)
+	}
+
 	return systemRecord, nil
 }
 
@@ -405,6 +414,182 @@ func (sys *System) closeWebSocketConnection() {
 	if sys.WsConn != nil {
 		sys.WsConn.Close(nil)
 	}
+}
+
+// updateCurrentAverages calculates and stores current averages directly in the system record
+// This provides real-time averages for the frontend without needing separate queries
+func (sys *System) updateCurrentAverages() error {
+	if sys.manager == nil || sys.manager.hub == nil {
+		return fmt.Errorf("system manager or hub is nil")
+	}
+
+	sys.manager.hub.Logger().Debug("Calculating current averages", "system", sys.Id)
+
+	// Calculate averages from the last 10 records of each stats table
+	averages := struct {
+		AP  float64 `json:"ap"`  // Average ping latency
+		APL float64 `json:"apl"` // Average ping packet loss
+		AD  float64 `json:"ad"`  // Average DNS lookup time
+		ADF float64 `json:"adf"` // Average DNS failure rate
+		AH  float64 `json:"ah"`  // Average HTTP response time
+		AHF float64 `json:"ahf"` // Average HTTP failure rate
+		ADL float64 `json:"adl"` // Average download speed
+		AUL float64 `json:"aul"` // Average upload speed
+		LastUpdated string `json:"last_updated"`
+	}{}
+
+	// Get current time for last_updated
+	averages.LastUpdated = time.Now().UTC().Format(time.RFC3339)
+
+	// Calculate ping averages from last 10 records
+	pingQuery := sys.manager.hub.DB().NewQuery(`
+		SELECT AVG(avg_rtt) as avg_latency, AVG(packet_loss) as avg_packet_loss
+		FROM (
+			SELECT avg_rtt, packet_loss
+			FROM ping_stats 
+			WHERE system = {:system}
+			ORDER BY created DESC
+			LIMIT 10
+		)
+	`).Bind(dbx.Params{
+		"system": sys.Id,
+	})
+
+	pingResult := struct {
+		AvgLatency    *float64 `db:"avg_latency"`
+		AvgPacketLoss *float64 `db:"avg_packet_loss"`
+	}{}
+
+	if err := pingQuery.One(&pingResult); err == nil {
+		if pingResult.AvgLatency != nil {
+			averages.AP = *pingResult.AvgLatency
+		}
+		if pingResult.AvgPacketLoss != nil {
+			averages.APL = *pingResult.AvgPacketLoss
+		}
+	}
+
+	// Calculate DNS averages from last 10 records
+	dnsQuery := sys.manager.hub.DB().NewQuery(`
+		SELECT AVG(lookup_time) as avg_lookup_time,
+		       (COUNT(CASE WHEN status != 'success' THEN 1 END) * 100.0 / COUNT(*)) as failure_rate
+		FROM (
+			SELECT lookup_time, status
+			FROM dns_stats 
+			WHERE system = {:system}
+			ORDER BY created DESC
+			LIMIT 10
+		)
+	`).Bind(dbx.Params{
+		"system": sys.Id,
+	})
+
+	dnsResult := struct {
+		AvgLookupTime *float64 `db:"avg_lookup_time"`
+		FailureRate   *float64 `db:"failure_rate"`
+	}{}
+
+	if err := dnsQuery.One(&dnsResult); err == nil {
+		if dnsResult.AvgLookupTime != nil {
+			averages.AD = *dnsResult.AvgLookupTime
+		}
+		if dnsResult.FailureRate != nil {
+			averages.ADF = *dnsResult.FailureRate
+		}
+	}
+
+	// Calculate HTTP averages from last 10 records
+	httpQuery := sys.manager.hub.DB().NewQuery(`
+		SELECT AVG(response_time) as avg_response_time,
+		       (COUNT(CASE WHEN status != 'success' THEN 1 END) * 100.0 / COUNT(*)) as failure_rate
+		FROM (
+			SELECT response_time, status
+			FROM http_stats 
+			WHERE system = {:system}
+			ORDER BY created DESC
+			LIMIT 10
+		)
+	`).Bind(dbx.Params{
+		"system": sys.Id,
+	})
+
+	httpResult := struct {
+		AvgResponseTime *float64 `db:"avg_response_time"`
+		FailureRate     *float64 `db:"failure_rate"`
+	}{}
+
+	if err := httpQuery.One(&httpResult); err == nil {
+		if httpResult.AvgResponseTime != nil {
+			averages.AH = *httpResult.AvgResponseTime
+		}
+		if httpResult.FailureRate != nil {
+			averages.AHF = *httpResult.FailureRate
+		}
+	}
+
+	// Calculate speedtest averages from last 10 records
+	speedtestQuery := sys.manager.hub.DB().NewQuery(`
+		SELECT AVG(download_speed) as avg_download, AVG(upload_speed) as avg_upload
+		FROM (
+			SELECT download_speed, upload_speed
+			FROM speedtest_stats 
+			WHERE system = {:system} AND status = 'success'
+			ORDER BY created DESC
+			LIMIT 10
+		)
+	`).Bind(dbx.Params{
+		"system": sys.Id,
+	})
+
+	speedtestResult := struct {
+		AvgDownload *float64 `db:"avg_download"`
+		AvgUpload   *float64 `db:"avg_upload"`
+	}{}
+
+	if err := speedtestQuery.One(&speedtestResult); err == nil {
+		if speedtestResult.AvgDownload != nil {
+			averages.ADL = *speedtestResult.AvgDownload
+		}
+		if speedtestResult.AvgUpload != nil {
+			averages.AUL = *speedtestResult.AvgUpload
+		}
+	}
+
+	sys.manager.hub.Logger().Debug("Calculated averages", "system", sys.Id,
+		"ping", averages.AP, "ping_loss", averages.APL,
+		"dns", averages.AD, "dns_failure", averages.ADF,
+		"http", averages.AH, "http_failure", averages.AHF,
+		"download", averages.ADL, "upload", averages.AUL)
+
+	// Update the system record with current averages
+	systemCollection, err := sys.manager.hub.FindCollectionByNameOrId("systems")
+	if err != nil {
+		return err
+	}
+
+	systemRecord, err := sys.manager.hub.FindRecordById(systemCollection, sys.Id)
+	if err != nil {
+		return err
+	}
+
+	systemRecord.Set("current_averages", averages)
+
+	if err := sys.manager.hub.Save(systemRecord); err != nil {
+		return err
+	}
+
+	sys.manager.hub.Logger().Debug("Updated current averages for system", 
+		"system", sys.Id,
+		"ping_latency", averages.AP,
+		"ping_packet_loss", averages.APL,
+		"dns_latency", averages.AD,
+		"dns_failure_rate", averages.ADF,
+		"http_latency", averages.AH,
+		"http_failure_rate", averages.AHF,
+		"download_speed", averages.ADL,
+		"upload_speed", averages.AUL)
+
+	return nil
 }
 
 // getJitter returns a channel that will be triggered after a random delay

@@ -3,7 +3,6 @@ package hub
 import (
 	"fmt"
 	"math"
-	"time"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/core"
@@ -42,7 +41,7 @@ func (h *Hub) calculateSystemAverages() error {
 			continue
 		}
 
-		// Store historical averages (no longer updating system record)
+		// Store historical averages
 		if err := h.storeHistoricalAverages(systemID, averages); err != nil {
 			h.Logger().Error("Failed to store historical averages", "system", systemID, "err", err)
 		} else {
@@ -51,11 +50,6 @@ func (h *Hub) calculateSystemAverages() error {
 				"dns_latency", averages.AD, "dns_failure_rate", averages.ADF,
 				"http_latency", averages.AH, "http_failure_rate", averages.AHF,
 				"download", averages.ADL, "upload", averages.AUL)
-		}
-
-		// Store historical averages in a separate collection
-		if err := h.storeHistoricalAverages(systemID, averages); err != nil {
-			h.Logger().Error("Failed to store historical averages", "system", systemID, "err", err)
 		}
 	}
 
@@ -296,20 +290,10 @@ func (h *Hub) storeHistoricalAverages(systemID string, averages *SystemAverages)
 	// Find the system_averages collection
 	collection, err := h.FindCollectionByNameOrId("system_averages")
 	if err != nil {
-		// Collection doesn't exist yet, just log for now
-		h.Logger().Debug("Historical averages calculated (collection not found)",
-			"system", systemID,
-			"ping_latency", averages.AP,
-			"ping_packet_loss", averages.APL,
-			"dns_latency", averages.AD,
-			"dns_failure_rate", averages.ADF,
-			"http_latency", averages.AH,
-			"http_failure_rate", averages.AHF,
-			"download_speed", averages.ADL,
-			"upload_speed", averages.AUL,
-			"timestamp", time.Now().UTC(),
-		)
-		return nil
+		// Collection doesn't exist - this is an error since averages won't be displayed
+		h.Logger().Error("system_averages collection not found - averages will not be displayed",
+			"system", systemID, "error", err)
+		return fmt.Errorf("system_averages collection not found: %w", err)
 	}
 
 	// Create a new record with the averages

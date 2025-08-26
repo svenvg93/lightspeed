@@ -219,8 +219,12 @@ func (pm *PingManager) fping(target *pingTarget, result *system.PingResult) {
 	cmd = exec.CommandContext(ctx, cmd.Path, cmd.Args[1:]...)
 
 	// Execute fping
-	output, _ := cmd.CombinedOutput()
+	output, err := cmd.CombinedOutput()
 	outputStr := string(output)
+
+	if err != nil {
+		slog.Debug("fping command error (this may be normal)", "host", target.Host, "error", err, "output", outputStr)
+	}
 
 	// fping returns non-zero exit code even on successful pings, so we always parse output
 	pm.parseFpingOutput(target.Host, outputStr, result)
@@ -233,8 +237,11 @@ func (pm *PingManager) parseFpingOutput(host, output string, result *system.Ping
 
 	// If output is empty, skip this result
 	if strings.TrimSpace(output) == "" {
+		slog.Debug("Empty fping output", "host", host)
 		return
 	}
+
+	slog.Debug("Parsing fping output", "host", host, "output", output)
 
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {

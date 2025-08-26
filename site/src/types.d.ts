@@ -3,7 +3,7 @@ import { Unit, Os } from "./lib/enums"
 
 // global window properties
 declare global {
-	var BESZEL: {
+	var APEX: {
 		BASE_PATH: string
 		HUB_VERSION: string
 		HUB_URL: string
@@ -28,6 +28,16 @@ export interface SystemRecord extends RecordModel {
 	status: "up" | "down" | "paused" | "pending"
 	info: SystemInfo
 	averages?: {
+		ap?: number   // Average ping latency
+		apl?: number  // Average ping packet loss
+		ad?: number   // Average DNS lookup time
+		adf?: number  // Average DNS failure rate
+		ah?: number   // Average HTTP response time
+		ahf?: number  // Average HTTP failure rate
+		adl?: number  // Average download
+		aul?: number  // Average upload
+	}
+	current_averages?: {
 		ap?: number   // Average ping latency
 		apl?: number  // Average ping packet loss
 		ad?: number   // Average DNS lookup time

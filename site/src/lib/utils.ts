@@ -68,42 +68,16 @@ export const updateSystemList = (() => {
 		try {
 			const records = await pb
 				.collection<SystemRecord>("systems")
-				.getFullList({ sort: "+name", fields: "id,name,host,info,status,monitoring_config,tags,expected_performance" })
+				.getFullList({ sort: "+name", fields: "id,name,host,info,status,monitoring_config,tags,expected_performance,current_averages" })
 
 			if (records.length) {
-				// Fetch the latest averages from system_averages collection
-				const averagesRecords = await pb
-					.collection("system_averages")
-					.getFullList({ 
-						sort: "-created", 
-						fields: "system,ping_latency,ping_packet_loss,dns_latency,dns_failure_rate,http_latency,http_failure_rate,download_speed,upload_speed,created" 
-					})
-
-				// Create a map of the latest averages for each system
-				const latestAverages = new Map<string, any>()
-				for (const avgRecord of averagesRecords) {
-					const systemId = avgRecord.system
-					if (!latestAverages.has(systemId)) {
-						latestAverages.set(systemId, {
-							ap: avgRecord.ping_latency,
-							apl: avgRecord.ping_packet_loss,
-							ad: avgRecord.dns_latency,
-							adf: avgRecord.dns_failure_rate,
-							ah: avgRecord.http_latency,
-							ahf: avgRecord.http_failure_rate,
-							adl: avgRecord.download_speed,
-							aul: avgRecord.upload_speed,
-						})
-					}
-				}
-
-				// Merge the latest averages with the system records
-				const systemsWithLatestAverages = records.map(system => ({
+				// Use current_averages from systems table directly
+				const systemsWithAverages = records.map(system => ({
 					...system,
-					averages: latestAverages.get(system.id) || null
+					averages: system.current_averages || null
 				}))
 
-				$systems.set(systemsWithLatestAverages)
+				$systems.set(systemsWithAverages)
 			} else {
 				verifyAuth()
 			}
@@ -299,7 +273,7 @@ function getStorageValue(key: string, defaultValue: any) {
 
 /** Hook to sync value in local storage */
 export function useLocalStorage<T>(key: string, defaultValue: T) {
-	key = `besz-${key}`
+	key = `apex-${key}`
 	const [value, setValue] = useState(() => {
 		return getStorageValue(key, defaultValue)
 	})
@@ -494,16 +468,16 @@ export const alertInfo: Record<string, AlertInfo> = {
 /**
  * Retuns value of system host, truncating full path if socket.
  * @example
- * // Assuming system.host is "/var/run/beszel.sock"
- * const hostname = getHostDisplayValue(system) // hostname will be "beszel.sock"
+ * // Assuming system.host is "/var/run/apex.sock"
+ * const hostname = getHostDisplayValue(system) // hostname will be "apex.sock"
  */
 export const getHostDisplayValue = (system: SystemRecord): string => system.host.slice(system.host.lastIndexOf("/") + 1)
 
 /** Generate a random token for the agent */
 export const generateToken = () => crypto?.randomUUID() ?? (performance.now() * Math.random()).toString(16)
 
-/** Get the hub URL from the global BESZEL object */
-export const getHubURL = () => BESZEL?.HUB_URL || window.location.origin
+/** Get the hub URL from the global APEX object */
+export const getHubURL = () => APEX?.HUB_URL || window.location.origin
 
 /** Map of system IDs to their corresponding tokens (used to avoid fetching in add-system dialog) */
 export const tokenMap = new Map<SystemRecord["id"], FingerprintRecord["token"]>()

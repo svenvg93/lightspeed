@@ -334,12 +334,12 @@ func (h *Hub) startServer(se *core.ServeEvent) error {
 func (h *Hub) registerCronJobs(_ *core.ServeEvent) error {
 	// delete old records based on retention policy once every hour
 	h.Cron().MustAdd("delete old records", "8 * * * *", h.rm.DeleteOldRecords)
-	// calculate system averages every 5 minutes
-	h.Cron().MustAdd("calculate system averages", "*/5 * * * *", func() {
-		if err := h.calculateSystemAverages(); err != nil {
-			h.Logger().Error("Failed to calculate system averages", "err", err)
-		}
-	})
+	// NOTE: Disabled old batch average calculation system in favor of real-time current_averages
+	// h.Cron().MustAdd("calculate system averages", "*/5 * * * *", func() {
+	// 	if err := h.calculateSystemAverages(); err != nil {
+	// 		h.Logger().Error("Failed to calculate system averages", "err", err)
+	// 	}
+	// })
 
 	return nil
 }
